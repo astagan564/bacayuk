@@ -297,26 +297,34 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     return 'forest';
   };
 
+  const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+  const includesGlossaryTerm = (text: string, values: string[]) =>
+    values
+      .map((value) => value.trim())
+      .filter(Boolean)
+      .some((value) => new RegExp(`(^|[^\\p{L}\\p{N}])${escapeRegExp(value)}([^\\p{L}\\p{N}]|$)`, 'iu').test(text));
+
   const extractGlossaryCandidates = (manuscript: string) => {
     const terms = [
-      { id: 'forest', wordEn: 'Forest', translationId: 'Hutan', phonetic: 'for-est', emoji: '🌲', match: /hutan/i },
-      { id: 'river', wordEn: 'River', translationId: 'Sungai', phonetic: 'ri-ver', emoji: '💧', match: /sungai/i },
-      { id: 'friend', wordEn: 'Friend', translationId: 'Sahabat', phonetic: 'frend', emoji: '🤝', match: /sahabat|teman/i },
-      { id: 'rabbit', wordEn: 'Rabbit', translationId: 'Kelinci', phonetic: 'rab-bit', emoji: '🐰', match: /kelinci/i },
-      { id: 'butterfly', wordEn: 'Butterfly', translationId: 'Kupu-kupu', phonetic: 'but-ter-fly', emoji: '🦋', match: /kupu-kupu|kupu/i },
-      { id: 'star', wordEn: 'Star', translationId: 'Bintang', phonetic: 'star', emoji: '⭐', match: /bintang/i },
-      { id: 'tree', wordEn: 'Tree', translationId: 'Pohon', phonetic: 'tree', emoji: '🌳', match: /pohon/i },
-      { id: 'flower', wordEn: 'Flower', translationId: 'Bunga', phonetic: 'flow-er', emoji: '🌼', match: /bunga/i },
-      { id: 'dragon', wordEn: 'Dragon', translationId: 'Naga', phonetic: 'dra-gon', emoji: '🐉', match: /naga/i },
-      { id: 'castle', wordEn: 'Castle', translationId: 'Istana', phonetic: 'cas-tle', emoji: '🏰', match: /istana/i },
-      { id: 'sea', wordEn: 'Sea', translationId: 'Laut', phonetic: 'see', emoji: '🌊', match: /laut/i },
-      { id: 'light', wordEn: 'Light', translationId: 'Cahaya', phonetic: 'light', emoji: '✨', match: /cahaya/i },
+      { id: 'forest', wordEn: 'Forest', translationId: 'Hutan', phonetic: 'for-est', emoji: '🌲', aliases: ['hutan'] },
+      { id: 'river', wordEn: 'River', translationId: 'Sungai', phonetic: 'ri-ver', emoji: '💧', aliases: ['sungai'] },
+      { id: 'friend', wordEn: 'Friend', translationId: 'Sahabat', phonetic: 'frend', emoji: '🤝', aliases: ['sahabat', 'teman'] },
+      { id: 'rabbit', wordEn: 'Rabbit', translationId: 'Kelinci', phonetic: 'rab-bit', emoji: '🐰', aliases: ['kelinci'] },
+      { id: 'butterfly', wordEn: 'Butterfly', translationId: 'Kupu-kupu', phonetic: 'but-ter-fly', emoji: '🦋', aliases: ['kupu-kupu', 'kupu'] },
+      { id: 'star', wordEn: 'Star', translationId: 'Bintang', phonetic: 'star', emoji: '⭐', aliases: ['bintang'] },
+      { id: 'tree', wordEn: 'Tree', translationId: 'Pohon', phonetic: 'tree', emoji: '🌳', aliases: ['pohon'] },
+      { id: 'flower', wordEn: 'Flower', translationId: 'Bunga', phonetic: 'flow-er', emoji: '🌼', aliases: ['bunga'] },
+      { id: 'dragon', wordEn: 'Dragon', translationId: 'Naga', phonetic: 'dra-gon', emoji: '🐉', aliases: ['naga'] },
+      { id: 'castle', wordEn: 'Castle', translationId: 'Istana', phonetic: 'cas-tle', emoji: '🏰', aliases: ['istana'] },
+      { id: 'sea', wordEn: 'Sea', translationId: 'Laut', phonetic: 'see', emoji: '🌊', aliases: ['laut'] },
+      { id: 'light', wordEn: 'Light', translationId: 'Cahaya', phonetic: 'light', emoji: '✨', aliases: ['cahaya'] },
     ];
 
     return terms
-      .filter((term) => term.match.test(manuscript))
+      .filter((term) => includesGlossaryTerm(manuscript, term.aliases))
       .slice(0, 12)
-      .map(({ match, ...term }) => term);
+      .map(({ aliases, ...term }) => term);
   };
 
   const inferPipelineStatus = (story: Story): NonNullable<Story['pipelineStatus']> => {
@@ -532,18 +540,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     showToast(`Draft "${draftStory.title}" siap direview.`);
   };
 
-  const normalizeStoryForSave = (story: Story): Story => ({
-    ...story,
-    id: story.id.trim(),
-    title: story.title.trim(),
-    author: story.author.trim(),
-    category: story.category.trim(),
-    targetAge: story.targetAge.trim(),
-    description: story.description.trim(),
-    moralMessage: story.moralMessage.trim(),
-    coverImage: story.coverImage.trim(),
-    status: story.status || 'draft',
-    pages: story.pages.map((page, index) => ({
+  const normalizeStoryForSave = (story: Story): Story => {
+    const pages = story.pages.map((page, index) => ({
       ...page,
       pageNumber: index + 1,
       title: page.title?.trim() || `Halaman ${index + 1}`,
@@ -551,9 +549,34 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       textEn: page.textEn?.trim(),
       illustrationType: page.illustrationType || 'forest',
       colors: page.colors || createBlankPage(index + 1).colors,
-    })),
-    glossary: (story.glossary || []).filter((item) => item.wordEn.trim() && item.translationId.trim()),
-  });
+    }));
+    const storyText = [
+      story.title,
+      story.description,
+      story.moralMessage,
+      ...pages.flatMap((page) => [page.title, page.text, page.textEn || '']),
+    ].join('\n');
+
+    return {
+      ...story,
+      id: story.id.trim(),
+      title: story.title.trim(),
+      author: story.author.trim(),
+      category: story.category.trim(),
+      targetAge: story.targetAge.trim(),
+      description: story.description.trim(),
+      moralMessage: story.moralMessage.trim(),
+      coverImage: story.coverImage.trim(),
+      status: story.status || 'draft',
+      pages,
+      glossary: (story.glossary || []).filter(
+        (item) =>
+          item.wordEn.trim() &&
+          item.translationId.trim() &&
+          includesGlossaryTerm(storyText, [item.wordEn, item.translationId])
+      ),
+    };
+  };
 
   const validateStory = (story: Story): string[] => {
     const errors: string[] = [];
