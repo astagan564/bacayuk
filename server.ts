@@ -31,6 +31,60 @@ function isValidAdminPin(pin: unknown) {
   return Boolean(configuredPin && typeof pin === 'string' && pin === configuredPin);
 }
 
+const GEMINI_TEXT_MODELS = Array.from(
+  new Set(
+    [
+      process.env.GEMINI_MODEL,
+      process.env.GEMINI_TEXT_MODEL,
+      'gemini-3.6-flash',
+      'gemini-3.5-flash-lite',
+      'gemini-2.5-flash',
+    ].filter((model): model is string => Boolean(model?.trim()))
+  )
+);
+
+function isGeminiModelUnavailable(error: unknown) {
+  const detail = error as { status?: number; message?: string };
+  const message = typeof detail?.message === 'string' ? detail.message.toLowerCase() : '';
+
+  return (
+    detail?.status === 404 ||
+    message.includes('not_found') ||
+    message.includes('no longer available') ||
+    message.includes('model') && message.includes('not found')
+  );
+}
+
+async function generateGeminiJson(ai: GoogleGenAI, contents: string) {
+  let lastError: unknown;
+
+  for (const model of GEMINI_TEXT_MODELS) {
+    try {
+      const response = await ai.models.generateContent({
+        model,
+        contents,
+        config: {
+          responseMimeType: 'application/json',
+        },
+      });
+
+      return {
+        model,
+        text: response.text || '',
+      };
+    } catch (error) {
+      lastError = error;
+      if (!isGeminiModelUnavailable(error)) {
+        throw error;
+      }
+
+      console.warn(`Gemini model ${model} unavailable, trying fallback model...`);
+    }
+  }
+
+  throw lastError || new Error('No Gemini text models are configured.');
+}
+
 function normalizeStory(story: Story): Story {
   return {
     ...story,
@@ -332,18 +386,11 @@ Format JSON yang HARUS dikembalikan (tanpa markdown pembungkus selain json):
   }
 }`;
 
-      const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: prompt,
-        config: {
-          responseMimeType: 'application/json',
-        },
-      });
-
-      const responseText = response.text || '';
+      const response = await generateGeminiJson(ai, prompt);
+      const responseText = response.text;
       const parsedJson = JSON.parse(responseText);
 
-      res.json(parsedJson);
+      res.json({ ...parsedJson, model: response.model });
     } catch (error) {
       console.error('Error generating story:', error);
       res.status(500).json({ error: 'Failed to generate story with Gemini.' });
@@ -394,14 +441,7 @@ Book title: ${title}
 Pages:
 ${pages.map((page) => `Page ${page.pageNumber}${page.title ? ` - ${page.title}` : ''}:\n${page.text}`).join('\n\n')}`;
 
-      const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: prompt,
-        config: {
-          responseMimeType: 'application/json',
-        },
-      });
-
+      const response = await generateGeminiJson(ai, prompt);
       const parsedJson = JSON.parse(response.text || '{}');
       const translations = Array.isArray(parsedJson.translations)
         ? parsedJson.translations
@@ -419,7 +459,7 @@ ${pages.map((page) => `Page ${page.pageNumber}${page.title ? ` - ${page.title}` 
         return res.status(502).json({ error: 'AI tidak mengembalikan hasil terjemahan yang valid.' });
       }
 
-      res.json({ translations });
+      res.json({ translations, model: response.model });
     } catch (error) {
       console.error('Error translating story:', error);
       res.status(500).json({ error: 'Gagal membuat terjemahan cerita.' });

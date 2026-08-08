@@ -127,6 +127,7 @@ drop policy if exists "Client can manage purchase receipts" on public.purchase_r
 drop policy if exists "Client can manage reading activities" on public.user_reading_activities;
 
 grant select on public.admin_stories to anon, authenticated;
+grant select on public.admin_stories to service_role;
 revoke all on public.users from anon, authenticated;
 revoke all on public.admin_settings from anon, authenticated;
 revoke all on public.discount_coupons from anon, authenticated;
