@@ -23,8 +23,34 @@ import {
 
 declare global {
   interface Window {
-    snap: any;
+    snap?: {
+      pay: (
+        token: string,
+        callbacks: {
+          onSuccess: (result: MidtransPaymentResult) => void | Promise<void>;
+          onPending: (result: MidtransPaymentResult) => void;
+          onError: (result: MidtransPaymentResult) => void;
+          onClose: () => void;
+        }
+      ) => void;
+    };
   }
+}
+
+interface MidtransPaymentResult {
+  order_id?: string;
+  payment_type?: string;
+}
+
+interface CreateTransactionResponse {
+  token: string;
+  orderId: string;
+  amount: number;
+  discountAmount: number;
+  couponCode: string | null;
+  storyId: string;
+  storyTitle: string;
+  purchaseType: 'book' | 'vip';
 }
 
 interface PaymentGatewayModalProps {
@@ -110,28 +136,45 @@ export const PaymentGatewayModal: React.FC<PaymentGatewayModalProps> = ({
     setIsProcessing(true);
 
     try {
-      const transactionId = `TRX-${Math.floor(100000 + Math.random() * 900000)}`;
-      
       const response = await fetch('/api/create-transaction', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          transactionId,
-          amount: finalPrice,
+          purchaseType,
+          storyId: story?.id,
+          storyTitle: story?.title,
           customerName: customerName.trim(),
           customerEmail: customerEmail.trim().toLowerCase(),
-          storyTitle: purchaseType === 'vip' ? 'Langganan VIP 1 Bulan' : (story?.title || 'Unknown')
+          couponCode: appliedCouponCode,
         })
       });
 
-      const data = await response.json();
+      const data: CreateTransactionResponse & { error?: string } = await response.json();
       
       if (!response.ok) {
         throw new Error(data.error || 'Gagal memuat token transaksi');
       }
 
+      if (!window.snap) {
+        throw new Error('Midtrans Snap belum siap. Mohon coba lagi.');
+      }
+
       window.snap.pay(data.token, {
-        onSuccess: async function (result: any) {
+        onSuccess: async function (result) {
+          const orderId = result.order_id || data.orderId;
+          const verifyResponse = await fetch('/api/verify-transaction', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ orderId }),
+          });
+          const verification = await verifyResponse.json();
+
+          if (!verifyResponse.ok || !verification.isPaid) {
+            setIsProcessing(false);
+            setErrorMessage('Pembayaran belum terverifikasi oleh server. Harap tunggu atau coba cek kembali.');
+            return;
+          }
+
           const expires = new Date();
           expires.setHours(expires.getHours() + adminSettings.downloadLinkExpireHours);
           
@@ -143,9 +186,9 @@ export const PaymentGatewayModal: React.FC<PaymentGatewayModalProps> = ({
               storyTitle: story.title,
               customerName: customerName.trim(),
               customerEmail: customerEmail.trim().toLowerCase(),
-              transactionId: result.order_id || transactionId,
+              transactionId: orderId,
               paymentMethod: result.payment_type || 'midtrans',
-              amount: finalPrice,
+              amount: data.amount,
               purchasedAt: new Date().toISOString(),
               downloadCount: 0,
               tokenExpiresAt: expires.toISOString(),
@@ -161,9 +204,9 @@ export const PaymentGatewayModal: React.FC<PaymentGatewayModalProps> = ({
               storyTitle: 'Langganan VIP 1 Bulan',
               customerName: customerName.trim(),
               customerEmail: customerEmail.trim().toLowerCase(),
-              transactionId: result.order_id || transactionId,
+              transactionId: orderId,
               paymentMethod: result.payment_type || 'midtrans',
-              amount: finalPrice,
+              amount: data.amount,
               purchasedAt: new Date().toISOString(),
               downloadCount: 0,
               tokenExpiresAt: expires.toISOString(),
@@ -177,15 +220,15 @@ export const PaymentGatewayModal: React.FC<PaymentGatewayModalProps> = ({
 
           // Log transaction to admin store
           adminStore.addTransaction({
-            id: result.order_id || transactionId,
+            id: orderId,
             customerName: customerName.trim(),
             customerEmail: customerEmail.trim().toLowerCase(),
             storyId: purchaseType === 'vip' ? 'vip_sub' : (story?.id || 'unknown'),
             storyTitle: purchaseType === 'vip' ? 'Langganan VIP 1 Bulan' : (story?.title || 'Unknown'),
             paymentMethod: result.payment_type || 'midtrans',
-            amount: finalPrice,
-            discountAmount: appliedDiscount,
-            couponCode: appliedCouponCode || undefined,
+            amount: data.amount,
+            discountAmount: data.discountAmount,
+            couponCode: data.couponCode || undefined,
             status: 'success',
             createdAt: new Date().toISOString(),
             paidAt: new Date().toISOString(),
@@ -194,11 +237,11 @@ export const PaymentGatewayModal: React.FC<PaymentGatewayModalProps> = ({
           setIsProcessing(false);
           setIsSuccess(true);
         },
-        onPending: function (result: any) {
+        onPending: function () {
           setIsProcessing(false);
           setErrorMessage('Pembayaran tertunda. Harap selesaikan pembayaran Anda.');
         },
-        onError: function (result: any) {
+        onError: function () {
           setIsProcessing(false);
           setErrorMessage('Terjadi kesalahan saat memproses pembayaran.');
         },

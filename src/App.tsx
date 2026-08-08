@@ -135,6 +135,29 @@ export default function App() {
     }, 3000);
   };
 
+  const verifyAdminPinAndOpen = async (pin: string) => {
+    try {
+      const response = await fetch('/api/verify-admin-pin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pin }),
+      });
+      const result = await response.json();
+
+      if (response.ok && result.ok) {
+        setShowAdminPinPrompt(false);
+        setCurrentView('admin');
+        return;
+      }
+
+      showToast(result.error || '❌ PIN Admin salah!');
+    } catch {
+      showToast('❌ Tidak dapat memverifikasi PIN Admin.');
+    }
+
+    setShowAdminPinPrompt(false);
+  };
+
   // Anti-Right Click & Copy Protection Handlers
   useEffect(() => {
     const settings = adminStore.getSettings();
@@ -760,29 +783,15 @@ export default function App() {
               placeholder="••••"
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
-                  const adminPin = import.meta.env.VITE_ADMIN_PIN || 'admin123';
-                  if (e.currentTarget.value === adminPin) { // PIN Admin
-                    setShowAdminPinPrompt(false);
-                    setCurrentView('admin');
-                  } else {
-                    showToast('❌ PIN Admin salah!');
-                    setShowAdminPinPrompt(false);
-                  }
+                  verifyAdminPinAndOpen(e.currentTarget.value);
                 }
               }}
             />
             <div className="flex gap-2 mt-2">
               <button 
                 onClick={() => {
-                  const input = document.querySelector('input[placeholder="••••"]') as HTMLInputElement;
-                  const adminPin = import.meta.env.VITE_ADMIN_PIN || 'admin123';
-                  if (input && input.value === adminPin) {
-                    setShowAdminPinPrompt(false);
-                    setCurrentView('admin');
-                  } else {
-                    showToast('❌ PIN Admin salah!');
-                    setShowAdminPinPrompt(false);
-                  }
+                  const input = document.querySelector('input[type="password"]') as HTMLInputElement;
+                  verifyAdminPinAndOpen(input?.value || '');
                 }} 
                 className="flex-1 py-3 rounded-xl font-black text-xs bg-purple-600 text-white hover:bg-purple-500 shadow-md"
               >

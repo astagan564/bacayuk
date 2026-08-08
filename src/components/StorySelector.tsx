@@ -47,9 +47,7 @@ export const StorySelector: React.FC<StorySelectorProps> = ({
 
   const adminSettings = adminStore.getSettings();
   
-  const user = userAuthStore.getUser();
-  const purchases = paymentStore.getPurchases();
-  const isVipUser = user && Object.keys(purchases).length > 0;
+  const isVipUser = userAuthStore.isVip();
 
   return (
     <div className="w-full max-w-7xl mx-auto px-4 py-6 flex flex-col gap-8">

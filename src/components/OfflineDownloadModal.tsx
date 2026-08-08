@@ -1,6 +1,7 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { Story } from '../types';
 import { paymentStore, PurchaseReceipt } from '../utils/paymentStore';
+import { userAuthStore } from '../utils/userAuthStore';
 import { generateStoryPDF, generateStoryEPUB } from '../utils/fileGenerators';
 import {
   Download,
@@ -35,7 +36,29 @@ export const OfflineDownloadModal: React.FC<OfflineDownloadModalProps> = ({
 
   useEffect(() => {
     const data = paymentStore.getStoryPurchase(story.id);
-    setPurchase(data);
+    if (data) {
+      setPurchase(data);
+      return;
+    }
+
+    const user = userAuthStore.getUser();
+    if (userAuthStore.isVip() && user) {
+      setPurchase({
+        storyId: story.id,
+        storyTitle: story.title,
+        customerName: user.name,
+        customerEmail: user.email,
+        transactionId: `VIP-${user.id}`,
+        paymentMethod: 'vip',
+        amount: 0,
+        purchasedAt: user.createdAt,
+        downloadCount: 0,
+        tokenExpiresAt: user.vipExpiresAt || new Date().toISOString(),
+      });
+      return;
+    }
+
+    setPurchase(null);
   }, [story.id]);
 
   const isTokenExpired = () => {
@@ -44,8 +67,8 @@ export const OfflineDownloadModal: React.FC<OfflineDownloadModalProps> = ({
     return Date.now() > expires;
   };
 
-  const handleRenewToken = () => {
-    const updated = paymentStore.renewToken(story.id);
+  const handleRenewToken = async () => {
+    const updated = await paymentStore.renewToken(story.id);
     setPurchase(updated);
     setDownloadNotice('✅ Masa berlaku link unduhan diperbarui untuk 24 jam ke depan!');
     setTimeout(() => setDownloadNotice(null), 3500);
@@ -64,6 +87,10 @@ export const OfflineDownloadModal: React.FC<OfflineDownloadModalProps> = ({
 
   const handleDownloadPdf = async () => {
     if (!purchase) return;
+    if (purchase.paymentMethod !== 'vip' && purchase.downloadCount >= 3) {
+      setDownloadNotice('❌ Batas 3 kali unduh sudah tercapai. Perbarui masa berlaku link untuk mengunduh lagi.');
+      return;
+    }
 
     setIsGeneratingPdf(true);
     try {
@@ -76,7 +103,8 @@ export const OfflineDownloadModal: React.FC<OfflineDownloadModalProps> = ({
       const cleanTitle = story.title.replace(/[^a-zA-Z0-9]/g, '_');
       triggerFileSave(pdfBlob, `${cleanTitle}_Cetak_Buku.pdf`);
 
-      const newCount = paymentStore.incrementDownloadCount(story.id);
+      const newCount =
+        purchase.paymentMethod === 'vip' ? purchase.downloadCount + 1 : paymentStore.incrementDownloadCount(story.id);
       setPurchase((prev) => (prev ? { ...prev, downloadCount: newCount } : null));
 
       setDownloadNotice('🎉 File PDF Siap Cetak berhasil diunduh dengan stempel Watermark!');
@@ -90,6 +118,10 @@ export const OfflineDownloadModal: React.FC<OfflineDownloadModalProps> = ({
 
   const handleDownloadEpub = async () => {
     if (!purchase) return;
+    if (purchase.paymentMethod !== 'vip' && purchase.downloadCount >= 3) {
+      setDownloadNotice('❌ Batas 3 kali unduh sudah tercapai. Perbarui masa berlaku link untuk mengunduh lagi.');
+      return;
+    }
 
     setIsGeneratingEpub(true);
     try {
@@ -102,7 +134,8 @@ export const OfflineDownloadModal: React.FC<OfflineDownloadModalProps> = ({
       const cleanTitle = story.title.replace(/[^a-zA-Z0-9]/g, '_');
       triggerFileSave(epubBlob, `${cleanTitle}_Tablet.epub`);
 
-      const newCount = paymentStore.incrementDownloadCount(story.id);
+      const newCount =
+        purchase.paymentMethod === 'vip' ? purchase.downloadCount + 1 : paymentStore.incrementDownloadCount(story.id);
       setPurchase((prev) => (prev ? { ...prev, downloadCount: newCount } : null));
 
       setDownloadNotice('🎉 File EPUB E-Book berhasil diunduh!');
@@ -115,6 +148,7 @@ export const OfflineDownloadModal: React.FC<OfflineDownloadModalProps> = ({
   };
 
   const expired = isTokenExpired();
+  const downloadLimitReached = !!purchase && purchase.paymentMethod !== 'vip' && purchase.downloadCount >= 3;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
@@ -198,11 +232,18 @@ export const OfflineDownloadModal: React.FC<OfflineDownloadModalProps> = ({
           {expired && (
             <button
               onClick={handleRenewToken}
+              disabled={purchase?.paymentMethod === 'vip'}
               className="mt-1 py-2 px-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-amber-950 font-extrabold text-xs shadow-sm flex items-center justify-center gap-1.5 transition-transform hover:scale-[1.02]"
             >
               <RefreshCw className="w-3.5 h-3.5" />
               <span>Perbarui Masa Berlaku Dynamic Link (Gratis)</span>
             </button>
+          )}
+
+          {downloadLimitReached && (
+            <div className="text-[11px] font-bold text-rose-600 dark:text-rose-300">
+              Batas unduh 3 kali sudah tercapai untuk token ini.
+            </div>
           )}
         </div>
 
@@ -241,7 +282,7 @@ export const OfflineDownloadModal: React.FC<OfflineDownloadModalProps> = ({
 
             <button
               onClick={handleDownloadPdf}
-              disabled={isGeneratingPdf || expired}
+              disabled={isGeneratingPdf || expired || downloadLimitReached}
               className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white font-black text-xs shadow-md transition-transform hover:scale-105 flex items-center justify-center gap-1.5 shrink-0 disabled:opacity-50"
             >
               {isGeneratingPdf ? (
@@ -279,7 +320,7 @@ export const OfflineDownloadModal: React.FC<OfflineDownloadModalProps> = ({
 
             <button
               onClick={handleDownloadEpub}
-              disabled={isGeneratingEpub || expired}
+              disabled={isGeneratingEpub || expired || downloadLimitReached}
               className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-xs shadow-md transition-transform hover:scale-105 flex items-center justify-center gap-1.5 shrink-0 disabled:opacity-50"
             >
               {isGeneratingEpub ? (

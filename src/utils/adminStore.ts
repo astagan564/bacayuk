@@ -33,7 +33,7 @@ export interface TransactionRecord {
   customerPhone?: string;
   storyId: string;
   storyTitle: string;
-  paymentMethod: 'qris' | 'gopay' | 'ovo' | 'va_bca' | 'va_mandiri';
+  paymentMethod: 'qris' | 'gopay' | 'ovo' | 'va_bca' | 'va_mandiri' | 'midtrans' | 'vip' | string;
   amount: number;
   discountAmount?: number;
   couponCode?: string;
@@ -397,11 +397,13 @@ export const adminStore = {
     try {
       const receiptsStr = localStorage.getItem('buku_cerita_purchases_v1');
       if (receiptsStr) {
-        const receipts = JSON.parse(receiptsStr);
-        const validReceipts = receipts.filter((r: { tokenExpiresAt?: string }) => {
-          if (!r.tokenExpiresAt) return true;
-          return new Date(r.tokenExpiresAt).getTime() > now;
-        });
+        const receipts = JSON.parse(receiptsStr) as Record<string, { tokenExpiresAt?: string }>;
+        const validReceipts = Object.fromEntries(
+          Object.entries(receipts).filter(([, receipt]) => {
+            if (!receipt.tokenExpiresAt) return true;
+            return new Date(receipt.tokenExpiresAt).getTime() > now;
+          })
+        );
         localStorage.setItem('buku_cerita_purchases_v1', JSON.stringify(validReceipts));
       }
     } catch (e) {

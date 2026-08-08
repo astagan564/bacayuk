@@ -297,135 +297,177 @@ export async function generateStoryPDF(story: Story, customer: CustomerInfo): Pr
 /**
  * Generates an EPUB document (HTML-based structured e-book container) for mobile/tablet reader apps.
  */
+function escapeHtml(value: unknown): string {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function crc32(bytes: Uint8Array): number {
+  let crc = 0xffffffff;
+  for (const byte of bytes) {
+    crc ^= byte;
+    for (let bit = 0; bit < 8; bit++) {
+      crc = (crc >>> 1) ^ (0xedb88320 & -(crc & 1));
+    }
+  }
+  return (crc ^ 0xffffffff) >>> 0;
+}
+
+function uint16(value: number): Uint8Array {
+  return new Uint8Array([value & 0xff, (value >>> 8) & 0xff]);
+}
+
+function uint32(value: number): Uint8Array {
+  return new Uint8Array([
+    value & 0xff,
+    (value >>> 8) & 0xff,
+    (value >>> 16) & 0xff,
+    (value >>> 24) & 0xff,
+  ]);
+}
+
+function concatBytes(parts: Uint8Array[]): Uint8Array {
+  const size = parts.reduce((total, part) => total + part.length, 0);
+  const output = new Uint8Array(size);
+  let offset = 0;
+  for (const part of parts) {
+    output.set(part, offset);
+    offset += part.length;
+  }
+  return output;
+}
+
+function createStoredZip(entries: { path: string; content: string }[]): Uint8Array {
+  const encoder = new TextEncoder();
+  const localParts: Uint8Array[] = [];
+  const centralParts: Uint8Array[] = [];
+  let offset = 0;
+
+  for (const entry of entries) {
+    const nameBytes = encoder.encode(entry.path);
+    const contentBytes = encoder.encode(entry.content);
+    const checksum = crc32(contentBytes);
+    const localHeader = concatBytes([
+      uint32(0x04034b50),
+      uint16(20),
+      uint16(0),
+      uint16(0),
+      uint16(0),
+      uint16(0),
+      uint32(checksum),
+      uint32(contentBytes.length),
+      uint32(contentBytes.length),
+      uint16(nameBytes.length),
+      uint16(0),
+      nameBytes,
+    ]);
+
+    localParts.push(localHeader, contentBytes);
+    centralParts.push(
+      concatBytes([
+        uint32(0x02014b50),
+        uint16(20),
+        uint16(20),
+        uint16(0),
+        uint16(0),
+        uint16(0),
+        uint16(0),
+        uint32(checksum),
+        uint32(contentBytes.length),
+        uint32(contentBytes.length),
+        uint16(nameBytes.length),
+        uint16(0),
+        uint16(0),
+        uint16(0),
+        uint16(0),
+        uint32(0),
+        uint32(offset),
+        nameBytes,
+      ])
+    );
+
+    offset += localHeader.length + contentBytes.length;
+  }
+
+  const centralDirectory = concatBytes(centralParts);
+  return concatBytes([
+    ...localParts,
+    centralDirectory,
+    concatBytes([
+      uint32(0x06054b50),
+      uint16(0),
+      uint16(0),
+      uint16(entries.length),
+      uint16(entries.length),
+      uint32(centralDirectory.length),
+      uint32(offset),
+      uint16(0),
+    ]),
+  ]);
+}
+
 export async function generateStoryEPUB(story: Story, customer: CustomerInfo): Promise<Blob> {
-  const epubHtmlContent = `<!DOCTYPE html>
-<html lang="id">
+  const safeTitle = escapeHtml(story.title);
+  const safeDescription = escapeHtml(story.description);
+  const safeMoral = escapeHtml(story.moralMessage);
+  const safeCustomerName = escapeHtml(customer.name);
+  const safeCustomerEmail = escapeHtml(customer.email);
+  const safeTransactionId = escapeHtml(customer.transactionId);
+  const generatedDate = escapeHtml(new Date().toLocaleDateString('id-ID'));
+  const chapterSections = story.pages
+    .map((p) => {
+      const quiz = p.quizQuestion
+        ? `<section class="quiz-box"><h2>Kuis Pemahaman Halaman ${escapeHtml(p.pageNumber)}</h2><p><strong>${escapeHtml(
+            p.quizQuestion.question
+          )}</strong></p><ul>${p.quizQuestion.options.map((opt) => `<li>${escapeHtml(opt)}</li>`).join('')}</ul></section>`
+        : '';
+
+      return `<section class="page-card"><p class="page-number">Halaman ${escapeHtml(
+        p.pageNumber
+      )}</p><p>${escapeHtml(p.text)}</p>${quiz}<footer class="watermark-footer">Lisensi Digital: ${safeCustomerName} (${safeCustomerEmail}) - #${safeTransactionId} - Dilarang Memperbanyak</footer></section>`;
+    })
+    .join('');
+
+  const chapterContent = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="id">
 <head>
-  <meta charset="UTF-8">
-  <title>${story.title}</title>
+  <title>${safeTitle}</title>
   <style>
-    body {
-      font-family: 'Segoe UI', Georgia, serif;
-      line-height: 1.8;
-      color: #1e293b;
-      background-color: #fffdfa;
-      padding: 2rem;
-      max-width: 800px;
-      margin: 0 auto;
-    }
-    .cover-container {
-      text-align: center;
-      padding: 3rem 1rem;
-      background: linear-gradient(135deg, #fef3c7, #fde68a);
-      border-radius: 1.5rem;
-      border: 3px solid #f59e0b;
-      margin-bottom: 3rem;
-    }
-    .badge {
-      display: inline-block;
-      padding: 0.3rem 1rem;
-      background: #d97706;
-      color: white;
-      font-weight: bold;
-      border-radius: 999px;
-      font-size: 0.85rem;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-    h1 {
-      color: #78350f;
-      font-size: 2.2rem;
-      margin: 1rem 0;
-    }
-    .page-card {
-      background: white;
-      border: 2px solid #fef3c7;
-      border-radius: 1.25rem;
-      padding: 2rem;
-      margin-bottom: 2.5rem;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-    }
-    .page-number {
-      display: inline-block;
-      font-weight: font-black;
-      color: #b45309;
-      background: #fef3c7;
-      padding: 0.2rem 0.8rem;
-      border-radius: 0.5rem;
-      font-size: 0.9rem;
-      margin-bottom: 1rem;
-    }
-    .story-text {
-      font-size: 1.15rem;
-      color: #334155;
-    }
-    .quiz-box {
-      margin-top: 1.5rem;
-      padding: 1rem 1.25rem;
-      background: #eef2ff;
-      border-radius: 0.75rem;
-      border: 1px solid #c7d2fe;
-    }
-    .quiz-title {
-      font-weight: bold;
-      color: #4338ca;
-      font-size: 0.95rem;
-    }
-    .watermark-footer {
-      margin-top: 1.5rem;
-      padding-top: 0.75rem;
-      border-top: 1px dashed #fca5a5;
-      font-size: 0.75rem;
-      color: #dc2626;
-      text-align: center;
-      font-style: italic;
-    }
+    body { font-family: Georgia, serif; line-height: 1.8; color: #1e293b; background: #fffdfa; padding: 2rem; }
+    .cover-container, .page-card { border: 2px solid #fef3c7; border-radius: 1rem; padding: 1.5rem; margin-bottom: 2rem; }
+    .cover-container { text-align: center; background: #fef3c7; }
+    .badge, .page-number { color: #92400e; font-weight: bold; text-transform: uppercase; }
+    .quiz-box { margin-top: 1rem; padding: 1rem; background: #eef2ff; border: 1px solid #c7d2fe; border-radius: 0.75rem; }
+    .watermark-footer { margin-top: 1rem; border-top: 1px dashed #fca5a5; padding-top: 0.75rem; color: #dc2626; font-size: 0.8rem; font-style: italic; }
   </style>
 </head>
 <body>
-  <div class="cover-container">
-    <div class="badge">${story.category}</div>
-    <h1>${story.title}</h1>
-    <p style="color: #4b5563; font-style: italic;">${story.description}</p>
-    <p><strong>Pesan Moral:</strong> "${story.moralMessage}"</p>
-    <div class="watermark-footer">
-      🔒 DILISENSIKAN RESMI KEPADA: <strong>${customer.name}</strong> (${customer.email})<br>
-      ID Transaksi: #${customer.transactionId} | Tanggal: ${new Date().toLocaleDateString('id-ID')}
-    </div>
-  </div>
-
-  ${story.pages
-    .map(
-      (p) => `
-    <div class="page-card">
-      <div class="page-number">Halaman ${p.pageNumber}</div>
-      <div class="story-text">
-        <p>${p.text}</p>
-      </div>
-
-      ${
-        p.quizQuestion
-          ? `
-        <div class="quiz-box">
-          <div class="quiz-title">🧩 Kuis Pemahaman Halaman ${p.pageNumber}:</div>
-          <p><strong>${p.quizQuestion.question}</strong></p>
-          <ul>
-            ${p.quizQuestion.options.map((opt) => `<li>${opt}</li>`).join('')}
-          </ul>
-        </div>
-      `
-          : ''
-      }
-
-      <div class="watermark-footer">
-        🔒 Lisensi Digital: ${customer.name} (${customer.email}) — #${customer.transactionId} — Dilarang Memperbanyak
-      </div>
-    </div>
-  `
-    )
-    .join('')}
+  <section class="cover-container">
+    <p class="badge">${escapeHtml(story.category)}</p>
+    <h1>${safeTitle}</h1>
+    <p>${safeDescription}</p>
+    <p><strong>Pesan Moral:</strong> ${safeMoral}</p>
+    <footer class="watermark-footer">Lisensi Digital Resmi Kepada: <strong>${safeCustomerName}</strong> (${safeCustomerEmail})<br />ID Transaksi: #${safeTransactionId} | Tanggal: ${generatedDate}</footer>
+  </section>
+  ${chapterSections}
 </body>
 </html>`;
 
-  return new Blob([epubHtmlContent], { type: 'application/epub+zip' });
+  const containerXml = `<?xml version="1.0" encoding="UTF-8"?><container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container"><rootfiles><rootfile full-path="OEBPS/package.opf" media-type="application/oebps-package+xml"/></rootfiles></container>`;
+  const packageOpf = `<?xml version="1.0" encoding="UTF-8"?><package xmlns="http://www.idpf.org/2007/opf" version="3.0" unique-identifier="book-id"><metadata xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:identifier id="book-id">urn:uuid:${safeTransactionId}-${escapeHtml(story.id)}</dc:identifier><dc:title>${safeTitle}</dc:title><dc:language>id</dc:language><dc:creator>${escapeHtml(story.author)}</dc:creator></metadata><manifest><item id="nav" href="nav.xhtml" media-type="application/xhtml+xml" properties="nav"/><item id="chapter" href="chapter.xhtml" media-type="application/xhtml+xml"/></manifest><spine><itemref idref="chapter"/></spine></package>`;
+  const navXhtml = `<?xml version="1.0" encoding="UTF-8"?><html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" lang="id"><head><title>Daftar Isi</title></head><body><nav epub:type="toc"><h1>Daftar Isi</h1><ol><li><a href="chapter.xhtml">${safeTitle}</a></li></ol></nav></body></html>`;
+  const epubBytes = createStoredZip([
+    { path: 'mimetype', content: 'application/epub+zip' },
+    { path: 'META-INF/container.xml', content: containerXml },
+    { path: 'OEBPS/package.opf', content: packageOpf },
+    { path: 'OEBPS/nav.xhtml', content: navXhtml },
+    { path: 'OEBPS/chapter.xhtml', content: chapterContent },
+  ]);
+
+  return new Blob([epubBytes], { type: 'application/epub+zip' });
 }

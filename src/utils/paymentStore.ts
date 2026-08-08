@@ -4,7 +4,7 @@ export interface PurchaseReceipt {
   customerName: string;
   customerEmail: string;
   transactionId: string;
-  paymentMethod: 'qris' | 'gopay' | 'ovo' | 'va_bca' | 'va_mandiri';
+  paymentMethod: 'qris' | 'gopay' | 'ovo' | 'va_bca' | 'va_mandiri' | 'midtrans' | 'vip' | string;
   amount: number; // in IDR, e.g. 15000
   purchasedAt: string; // ISO date
   downloadCount: number; // starts at 0, max 3
