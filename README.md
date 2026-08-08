@@ -33,13 +33,7 @@ BacaYuk adalah aplikasi membaca buku cerita anak interaktif dengan fitur-fitur c
    ```
 
 2. Konfigurasi Environment Variables:
-   Buat file `.env.local` di root folder dan isi dengan key berikut:
-   ```env
-   GEMINI_API_KEY=your_gemini_api_key_here
-   VITE_SUPABASE_URL=your_supabase_url
-   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-   MIDTRANS_SERVER_KEY=your_midtrans_server_key
-   ```
+   Buat file `.env.local` di root folder dan copy `.env.example`
 
 3. Jalankan server pengembangan (menjalankan backend dan frontend):
    ```bash
