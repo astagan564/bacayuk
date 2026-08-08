@@ -162,6 +162,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [isGeneratingTranslation, setIsGeneratingTranslation] = useState(false);
   const [isGeneratingBookDraft, setIsGeneratingBookDraft] = useState(false);
   const [generatingEnhancement, setGeneratingEnhancement] = useState<'illustration' | 'glossary' | 'quiz_interactions' | null>(null);
+  const [generatingImagePageNumber, setGeneratingImagePageNumber] = useState<number | null>(null);
 
   // New Coupon Form State
   const [newCouponCode, setNewCouponCode] = useState('');
@@ -535,6 +536,52 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       showToast(error instanceof Error ? error.message : 'Gagal membuat enhancement.');
     } finally {
       setGeneratingEnhancement(null);
+    }
+  };
+
+  const handleGeneratePageImage = async (page: StoryPage, pageIndex: number) => {
+    if (!editingStory) return;
+    if (!adminPin) {
+      showToast('PIN admin tidak tersedia untuk generate gambar.');
+      return;
+    }
+
+    setGeneratingImagePageNumber(page.pageNumber);
+    try {
+      const response = await fetch('/api/admin/generate-page-image', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-pin': adminPin,
+        },
+        body: JSON.stringify({
+          storyId: editingStory.id,
+          storyTitle: editingStory.title,
+          targetAge: editingStory.targetAge,
+          pageNumber: page.pageNumber,
+          pageTitle: page.title,
+          pageText: page.text,
+          illustrationType: page.illustrationType,
+          illustrationPrompt: page.illustrationPrompt,
+        }),
+      });
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Gagal generate gambar halaman.');
+      }
+
+      updateEditingPage(pageIndex, {
+        ...page,
+        imageUrl: data.imageUrl,
+        illustrationType: 'custom',
+      });
+      showToast(`Gambar halaman ${page.pageNumber} berhasil dibuat.`);
+    } catch (error) {
+      console.error('Page image generation failed:', error);
+      showToast(error instanceof Error ? error.message : 'Gagal generate gambar halaman.');
+    } finally {
+      setGeneratingImagePageNumber(null);
     }
   };
 
@@ -2176,6 +2223,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                               className="reader-field mt-2 w-full p-2 text-[11px] rounded-lg"
                               placeholder="Image URL hasil generate / asset"
                             />
+                            <button
+                              type="button"
+                              onClick={() => handleGeneratePageImage(page, pageIndex)}
+                              disabled={generatingImagePageNumber === page.pageNumber}
+                              className="mt-2 w-full rounded-lg bg-[var(--magic-blue)] px-3 py-2 text-[11px] font-black text-white disabled:opacity-60 disabled:cursor-wait"
+                            >
+                              {generatingImagePageNumber === page.pageNumber ? 'Generate gambar...' : 'Generate gambar halaman'}
+                            </button>
                           </div>
                           <div>
                             <div className="mb-1 flex items-center justify-between gap-2">

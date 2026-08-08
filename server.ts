@@ -70,6 +70,15 @@ const GEMINI_TEXT_MODELS = Array.from(
     ].filter((model): model is string => Boolean(model?.trim()))
   )
 );
+const GEMINI_IMAGE_MODELS = Array.from(
+  new Set(
+    [
+      process.env.GEMINI_IMAGE_MODEL,
+      'gemini-3.1-flash-image',
+      'gemini-3-pro-image-preview',
+    ].filter((model): model is string => Boolean(model?.trim()))
+  )
+);
 
 function isGeminiModelUnavailable(error: unknown) {
   const detail = error as { status?: number; message?: string };
@@ -113,6 +122,48 @@ async function generateGeminiJson(ai: GoogleGenAI, contents: string) {
   throw lastError || new Error('No Gemini text models are configured.');
 }
 
+async function generateGeminiImage(ai: GoogleGenAI, prompt: string) {
+  let lastError: unknown;
+
+  for (const model of GEMINI_IMAGE_MODELS) {
+    try {
+      const interaction = await ai.interactions.create({
+        model,
+        input: prompt,
+        response_format: {
+          type: 'image',
+          aspect_ratio: '4:3',
+          image_size: '1K',
+        },
+      });
+      const outputBlocks = (interaction as {
+        outputs?: Array<{ type?: string; data?: string; mime_type?: string }>;
+      }).outputs;
+      const image = interaction.output_image || outputBlocks?.find((output) => output.type === 'image');
+      const data = image?.data;
+
+      if (!data) {
+        throw new Error('Gemini did not return image data.');
+      }
+
+      return {
+        model,
+        data,
+        mimeType: image.mime_type || 'image/png',
+      };
+    } catch (error) {
+      lastError = error;
+      if (!isGeminiModelUnavailable(error)) {
+        throw error;
+      }
+
+      console.warn(`Gemini image model ${model} unavailable, trying fallback model...`);
+    }
+  }
+
+  throw lastError || new Error('No Gemini image models are configured.');
+}
+
 function normalizeStory(story: Story): Story {
   return {
     ...story,
@@ -122,6 +173,22 @@ function normalizeStory(story: Story): Story {
       pageNumber: index + 1,
     })),
   };
+}
+
+function createStorageSlug(value: string, fallback = 'story') {
+  return value
+    .toLowerCase()
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 60) || fallback;
+}
+
+function imageExtensionFromMimeType(mimeType: string) {
+  if (mimeType.includes('webp')) return 'webp';
+  if (mimeType.includes('jpeg') || mimeType.includes('jpg')) return 'jpg';
+  return 'png';
 }
 
 function cleanAiText(value: unknown, maxLength: number, fallback = '') {
@@ -952,6 +1019,82 @@ ${pageContext}`,
     } catch (error) {
       console.error('Error generating story enhancement:', error);
       res.status(500).json({ error: 'Gagal membuat enhancement cerita dengan AI.' });
+    }
+  });
+
+  app.post('/api/admin/generate-page-image', async (req, res) => {
+    if (!isValidAdminPin(req.headers['x-admin-pin'])) {
+      return res.status(403).json({ error: 'PIN admin tidak valid.' });
+    }
+
+    try {
+      const storyId = cleanOneLine(req.body?.storyId, 100, 'story');
+      const storyTitle = cleanOneLine(req.body?.storyTitle, 120, 'BacaYuk Story');
+      const targetAge = cleanOneLine(req.body?.targetAge, 40, '4-8 Tahun');
+      const pageNumber = Math.max(1, Number(req.body?.pageNumber) || 1);
+      const pageTitle = cleanOneLine(req.body?.pageTitle, 100, `Halaman ${pageNumber}`);
+      const pageText = cleanAiText(req.body?.pageText, 1800);
+      const illustrationType = normalizeIllustrationType(req.body?.illustrationType, `${pageTitle} ${pageText}`);
+      const illustrationPrompt = cleanAiText(req.body?.illustrationPrompt, 700);
+
+      if (!pageText && !illustrationPrompt) {
+        return res.status(400).json({ error: 'Teks halaman atau prompt ilustrasi diperlukan.' });
+      }
+
+      const apiKey = process.env.GEMINI_API_KEY;
+      if (!apiKey) {
+        return res.status(400).json({ error: 'GEMINI_API_KEY is not configured.' });
+      }
+
+      const prompt = `Create one polished illustration for a children's storybook page.
+
+Book: ${storyTitle}
+Target age: ${targetAge}
+Page ${pageNumber}: ${pageTitle}
+Scene type: ${illustrationType}
+Scene prompt: ${illustrationPrompt || `${pageTitle}. ${pageText}`}
+Story text context: ${pageText}
+
+Art direction:
+- Colorful, warm children's storybook illustration.
+- Indonesian-friendly characters/settings when context suggests Indonesia.
+- One clear focal action.
+- Keep recurring characters visually consistent with the written prompt.
+- Avoid scary, violent, dark, or photorealistic adult styling.
+- No readable text, captions, speech bubbles, logos, or watermark inside the image.
+- Leave clean room for app-rendered story text outside the image.`;
+
+      const ai = new GoogleGenAI({ apiKey });
+      const generatedImage = await generateGeminiImage(ai, prompt);
+      const imageBuffer = Buffer.from(generatedImage.data, 'base64');
+      const contentType = generatedImage.mimeType;
+      const extension = imageExtensionFromMimeType(contentType);
+      const storySlug = createStorageSlug(storyId || storyTitle, 'story');
+      const objectPath = `${storySlug}/page-${String(pageNumber).padStart(2, '0')}-${Date.now()}.${extension}`;
+      const supabase = getSupabaseAdminClient();
+      const { error } = await supabase
+        .storage
+        .from('story-images')
+        .upload(objectPath, imageBuffer, {
+          contentType,
+          upsert: true,
+        });
+
+      if (error) {
+        throw error;
+      }
+
+      const { data } = supabase.storage.from('story-images').getPublicUrl(objectPath);
+
+      res.json({
+        imageUrl: data.publicUrl,
+        path: objectPath,
+        model: generatedImage.model,
+        mimeType: contentType,
+      });
+    } catch (error) {
+      console.error('Error generating page image:', error);
+      res.status(500).json({ error: 'Gagal generate gambar halaman.' });
     }
   });
 
