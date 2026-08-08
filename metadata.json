@@ -1,0 +1,6 @@
+{
+  "name": "Baca yuk - Buku Cerita Anak Interaktif",
+  "description": "Aplikasi buku cerita anak interaktif.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

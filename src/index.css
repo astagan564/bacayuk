@@ -1,0 +1,193 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
+@import "tailwindcss";
+
+/* Override Tailwind v4 default media dark mode to use class strategy */
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  /* =========================================
+     PRIMITIVE COLORS (Palette Dasar)
+     ========================================= */
+  --color-sky-100: #e0f2fe;
+  --color-sky-300: #7dd3fc;
+  --color-sky-500: #0ea5e9;
+  
+  --color-yellow-100: #fef9c3;
+  --color-yellow-400: #facc15;
+  --color-yellow-500: #eab308;
+  
+  --color-rose-100: #ffe4e6;
+  --color-rose-400: #fb7185;
+  --color-rose-500: #f43f5e;
+  
+  --color-emerald-100: #d1fae5;
+  --color-emerald-400: #34d399;
+  --color-emerald-500: #10b981;
+  
+  --color-slate-50: #f8fafc;
+  --color-slate-100: #f1f5f9;
+  --color-slate-800: #1e293b;
+  --color-slate-900: #0f172a;
+
+  /* =========================================
+     SEMANTIC COLORS (Warna Berdasarkan Fungsi)
+     ========================================= */
+  /* Backgrounds */
+  --bg-primary: var(--color-sky-100);
+  --bg-surface: var(--color-slate-50);
+  --bg-card: #ffffff;
+  
+  /* Text */
+  --text-primary: var(--color-slate-900);
+  --text-secondary: var(--color-slate-800);
+  --text-muted: #64748b;
+  --text-inverse: #ffffff;
+  
+  /* Actions / Buttons */
+  --action-primary: var(--color-rose-500);
+  --action-primary-hover: var(--color-rose-400);
+  --action-secondary: var(--color-yellow-400);
+  --action-secondary-hover: var(--color-yellow-500);
+  
+  /* Feedback */
+  --success: var(--color-emerald-500);
+  --warning: var(--color-yellow-500);
+  --error: var(--color-rose-500);
+  --info: var(--color-sky-500);
+
+  /* =========================================
+     TYPOGRAPHY (Teks)
+     ========================================= */
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-display: 'Inter', system-ui, sans-serif;
+  
+  --text-xs: 0.875rem;   /* 14px */
+  --text-sm: 1rem;       /* 16px */
+  --text-base: 1.125rem; /* 18px - Base teks lebih besar untuk anak */
+  --text-lg: 1.25rem;    /* 20px */
+  --text-xl: 1.5rem;     /* 24px */
+  --text-2xl: 2rem;      /* 32px */
+  --text-3xl: 2.5rem;    /* 40px */
+  --text-4xl: 3.5rem;    /* 56px */
+  
+  --font-weight-normal: 400;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-weight-black: 900;
+
+  /* =========================================
+     SPACING (Jarak/Ruang)
+     ========================================= */
+  --space-1: 0.25rem;  /* 4px */
+  --space-2: 0.5rem;   /* 8px */
+  --space-3: 0.75rem;  /* 12px */
+  --space-4: 1rem;     /* 16px */
+  --space-5: 1.25rem;  /* 20px */
+  --space-6: 1.5rem;   /* 24px */
+  --space-8: 2rem;     /* 32px */
+  --space-12: 3rem;    /* 48px */
+  --space-16: 4rem;    /* 64px */
+
+  /* =========================================
+     RADII (Kelengkungan Sudut)
+     ========================================= */
+  --radius-sm: 0.5rem;     /* 8px */
+  --radius-md: 0.75rem;    /* 12px */
+  --radius-lg: 1rem;       /* 16px */
+  --radius-xl: 1.5rem;     /* 24px */
+  --radius-full: 9999px;   /* Bulat sempurna */
+  --radius-blob: 40% 60% 70% 30% / 40% 50% 60% 50%; /* Bentuk organik playful */
+
+  /* =========================================
+     SHADOWS & ELEVATION (Bayangan)
+     ========================================= */
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.1);
+  --shadow-playful: 4px 4px 0px rgba(0, 0, 0, 0.15); /* Bayangan tajam ala kartun */
+
+  /* =========================================
+     ANIMATIONS & TRANSITIONS (Animasi)
+     ========================================= */
+  --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-bouncy: 0.5s cubic-bezier(0.68, -0.55, 0.26, 1.55);
+}
+
+@keyframes page-turn-next {
+  0% { transform: perspective(2000px) rotateY(0deg); opacity: 1; }
+  100% { transform: perspective(2000px) rotateY(-90deg); opacity: 0.2; }
+}
+
+@keyframes page-turn-prev {
+  0% { transform: perspective(2000px) rotateY(0deg); opacity: 1; }
+  100% { transform: perspective(2000px) rotateY(90deg); opacity: 0.2; }
+}
+
+.animate-page-turn-next {
+  animation: page-turn-next 0.45s cubic-bezier(0.4, 0.0, 0.2, 1) forwards;
+  z-index: 50;
+}
+
+.animate-page-turn-prev {
+  animation: page-turn-prev 0.45s cubic-bezier(0.4, 0.0, 0.2, 1) forwards;
+  z-index: 50;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.28s ease-out both;
+}
+
+/* =========================================
+   DARK MODE TOKENS (Tema Gelap)
+   ========================================= */
+.dark {
+  /* Backgrounds */
+  --bg-primary: var(--color-slate-900);
+  --bg-surface: var(--color-slate-800);
+  --bg-card: var(--color-slate-950);
+  
+  /* Text */
+  --text-primary: var(--color-slate-100);
+  --text-secondary: var(--color-slate-300);
+  --text-muted: var(--color-slate-400);
+  --text-inverse: var(--color-slate-900);
+  
+  /* Actions (Sedikit lebih terang untuk visibilitas di dark mode) */
+  --action-primary: var(--color-rose-400);
+  --action-primary-hover: var(--color-rose-500);
+  --action-secondary: var(--color-yellow-300);
+  --action-secondary-hover: var(--color-yellow-400);
+  
+  /* Shadows untuk dark mode (lebih pekat) */
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.5);
+  --shadow-playful: 4px 4px 0px rgba(0, 0, 0, 0.6);
+}
+
+/* =========================================
+   BASE STYLES
+   ========================================= */
+@layer base {
+  body {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    font-weight: var(--font-weight-bold);
+    line-height: 1.2;
+    margin-bottom: var(--space-4);
+  }
+}
