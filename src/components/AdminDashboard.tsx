@@ -2088,8 +2088,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
                   return (
                     <section className="reader-soft-panel rounded-2xl overflow-hidden border border-[#eadbc1] dark:border-blue-900/60">
-                      <div className="grid grid-cols-1 lg:grid-cols-[11rem_1fr_14rem] min-h-[26rem]">
-                        <aside className="border-b lg:border-b-0 lg:border-r border-[#eadbc1] dark:border-blue-900/60 bg-white/45 dark:bg-slate-950/30 p-3">
+                      <div className="grid grid-cols-1 xl:grid-cols-[14rem_minmax(32rem,1fr)_18rem] min-h-[42rem] xl:h-[calc(100dvh-15rem)]">
+                        <aside className="border-b xl:border-b-0 xl:border-r border-[#eadbc1] dark:border-blue-900/60 bg-white/45 dark:bg-slate-950/30 p-3 overflow-hidden">
                           <div className="flex items-center justify-between gap-2 mb-3">
                             <span className="font-black text-[11px] text-[var(--muted-ink)] dark:text-blue-200">
                               Halaman
@@ -2106,7 +2106,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                               + Halaman
                             </button>
                           </div>
-                          <div className="flex lg:flex-col gap-2 overflow-x-auto lg:overflow-x-visible">
+                          <div className="flex xl:flex-col gap-2 overflow-x-auto xl:overflow-x-hidden xl:overflow-y-auto xl:max-h-[calc(100dvh-20rem)] pr-1">
                             {editingStory.pages.map((pageItem, idx) => (
                               <button
                                 key={`${pageItem.pageNumber}-${idx}`}
@@ -2129,9 +2129,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                           </div>
                         </aside>
 
-                        <div className="p-4 sm:p-5 bg-[#fffaf0]/70 dark:bg-slate-950/50">
-                          <div className="min-h-[23rem] rounded-2xl border border-[#eadbc1] dark:border-blue-900/60 bg-gradient-to-br from-emerald-100 to-amber-100 dark:from-slate-900 dark:to-slate-800 p-4 sm:p-6 flex flex-col justify-between gap-4">
-                            <div>
+                        <div className="p-4 sm:p-5 bg-[#fffaf0]/70 dark:bg-slate-950/50 min-w-0">
+                          <div className="h-full min-h-[38rem] rounded-2xl border border-[#eadbc1] dark:border-blue-900/60 bg-gradient-to-br from-emerald-100 to-amber-100 dark:from-slate-900 dark:to-slate-800 p-4 sm:p-6 flex flex-col gap-4">
+                            <div className="shrink-0">
                               <input
                                 value={page.title || ''}
                                 onChange={(e) => updatePage({ ...page, title: e.target.value })}
@@ -2141,19 +2141,19 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                               <textarea
                                 value={page.text}
                                 onChange={(e) => updatePage({ ...page, text: e.target.value })}
-                                rows={7}
+                                rows={5}
                                 className="mt-4 w-full resize-none rounded-2xl bg-white/70 dark:bg-slate-950/70 p-4 text-sm leading-7 font-bold text-slate-800 dark:text-slate-100 outline-none border border-white/70 dark:border-blue-900/50"
                                 placeholder="Teks cerita halaman ini"
                               />
                             </div>
                             <div
                               onClick={(e) => handleCanvasInteractionClick(e, page, pageIndex)}
-                              className={`relative min-h-36 rounded-2xl bg-white/65 dark:bg-slate-950/70 overflow-hidden border border-white/70 dark:border-blue-900/50 ${
+                              className={`relative flex-1 min-h-[20rem] rounded-2xl bg-white/65 dark:bg-slate-950/70 overflow-hidden border border-white/70 dark:border-blue-900/50 ${
                                 interactionPlaceMode ? 'cursor-crosshair ring-2 ring-[var(--story-green)]' : ''
                               }`}
                             >
                               {renderPageImagePreview(page, 'absolute inset-0 opacity-95')}
-                              {page.imageUrl && <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-black/10 to-transparent" />}
+                              {page.imageUrl && <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent" />}
                               <div className="relative z-10 p-4">
                               <div className="mb-2 flex items-center justify-between gap-2">
                                 <span className="text-[10px] font-black text-[var(--story-green)] dark:text-emerald-300">
@@ -2188,7 +2188,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                           </div>
                         </div>
 
-                        <aside className="border-t lg:border-t-0 lg:border-l border-[#eadbc1] dark:border-blue-900/60 bg-white/45 dark:bg-slate-950/30 p-3 flex flex-col gap-3">
+                        <aside className="border-t xl:border-t-0 xl:border-l border-[#eadbc1] dark:border-blue-900/60 bg-white/45 dark:bg-slate-950/30 p-4 flex flex-col gap-3 overflow-y-auto">
                           <div>
                             <div className="mb-1 flex items-center justify-between gap-2">
                               <label className="block text-[10px] font-black text-[var(--muted-ink)] dark:text-blue-200">
