@@ -161,6 +161,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [interactionPlaceMode, setInteractionPlaceMode] = useState(false);
   const [isGeneratingTranslation, setIsGeneratingTranslation] = useState(false);
   const [isGeneratingBookDraft, setIsGeneratingBookDraft] = useState(false);
+  const [generatingEnhancement, setGeneratingEnhancement] = useState<'illustration' | 'glossary' | 'quiz_interactions' | null>(null);
 
   // New Coupon Form State
   const [newCouponCode, setNewCouponCode] = useState('');
@@ -434,6 +435,95 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       showToast(error instanceof Error ? error.message : 'Gagal membuat translation.');
     } finally {
       setIsGeneratingTranslation(false);
+    }
+  };
+
+  const handleGenerateEnhancement = async (
+    mode: 'illustration' | 'glossary' | 'quiz_interactions',
+    pageNumber?: number
+  ) => {
+    if (!editingStory) return;
+    if (!adminPin) {
+      showToast('PIN admin tidak tersedia untuk generate enhancement.');
+      return;
+    }
+
+    const sourcePages = pageNumber
+      ? editingStory.pages.filter((page) => page.pageNumber === pageNumber)
+      : editingStory.pages;
+
+    if (sourcePages.length === 0) {
+      showToast('Tidak ada halaman untuk diproses.');
+      return;
+    }
+
+    setGeneratingEnhancement(mode);
+    try {
+      const response = await fetch('/api/admin/generate-book-enhancement', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-pin': adminPin,
+        },
+        body: JSON.stringify({
+          mode,
+          title: editingStory.title,
+          targetAge: editingStory.targetAge,
+          pages: sourcePages.map((page) => ({
+            pageNumber: page.pageNumber,
+            title: page.title,
+            text: page.text,
+            illustrationType: page.illustrationType,
+          })),
+        }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data.error || 'Gagal membuat enhancement.');
+      }
+
+      if (mode === 'glossary') {
+        setEditingStory({
+          ...editingStory,
+          glossary: Array.isArray(data.glossary) ? data.glossary : [],
+          vocabularyQuiz: data.vocabularyQuiz || editingStory.vocabularyQuiz,
+          pipelineStatus: 'enhanced',
+        });
+        showToast(`Glosarium AI dibuat: ${Array.isArray(data.glossary) ? data.glossary.length : 0} kata.`);
+        return;
+      }
+
+      const enhancedPages = Array.isArray(data.pages) ? data.pages : [];
+      const nextPages = editingStory.pages.map((page) => {
+        const match = enhancedPages.find((item: { pageNumber?: number }) => item.pageNumber === page.pageNumber);
+        if (!match) return page;
+
+        if (mode === 'illustration') {
+          return {
+            ...page,
+            illustrationType: match.illustrationType || page.illustrationType,
+            illustrationPrompt: match.illustrationPrompt || page.illustrationPrompt,
+          };
+        }
+
+        return {
+          ...page,
+          interactiveElements: match.interactiveElements || page.interactiveElements || [],
+          quizQuestion: match.quizQuestion || page.quizQuestion,
+        };
+      });
+
+      setEditingStory({
+        ...editingStory,
+        pages: nextPages,
+        pipelineStatus: mode === 'illustration' ? 'illustrated' : 'enhanced',
+      });
+      showToast(`Enhancement AI diperbarui untuk ${enhancedPages.length} halaman.`);
+    } catch (error) {
+      console.error('Enhancement generation failed:', error);
+      showToast(error instanceof Error ? error.message : 'Gagal membuat enhancement.');
+    } finally {
+      setGeneratingEnhancement(null);
     }
   };
 
@@ -2032,9 +2122,19 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
                         <aside className="border-t lg:border-t-0 lg:border-l border-[#eadbc1] dark:border-blue-900/60 bg-white/45 dark:bg-slate-950/30 p-3 flex flex-col gap-3">
                           <div>
-                            <label className="block text-[10px] font-black mb-1 text-[var(--muted-ink)] dark:text-blue-200">
-                              Illustration
-                            </label>
+                            <div className="mb-1 flex items-center justify-between gap-2">
+                              <label className="block text-[10px] font-black text-[var(--muted-ink)] dark:text-blue-200">
+                                Illustration
+                              </label>
+                              <button
+                                type="button"
+                                onClick={() => handleGenerateEnhancement('illustration', page.pageNumber)}
+                                disabled={generatingEnhancement === 'illustration'}
+                                className="rounded-lg bg-[var(--story-green)]/12 px-2 py-1 text-[10px] font-black text-[var(--story-green)] disabled:opacity-50 dark:text-emerald-200"
+                              >
+                                {generatingEnhancement === 'illustration' ? 'Generating...' : 'Regenerate'}
+                              </button>
+                            </div>
                             <select
                               value={page.illustrationType}
                               onChange={(e) => updatePage({ ...page, illustrationType: e.target.value as StoryPage['illustrationType'] })}
@@ -2086,6 +2186,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                               <span>Kuis</span>
                               <span>{page.quizQuestion ? 'Ada' : '-'}</span>
                             </div>
+                            <button
+                              type="button"
+                              onClick={() => handleGenerateEnhancement('quiz_interactions', page.pageNumber)}
+                              disabled={generatingEnhancement === 'quiz_interactions'}
+                              className="mt-1 rounded-lg bg-[var(--magic-blue)]/12 px-2 py-2 text-[10px] font-black text-[var(--magic-blue)] disabled:opacity-50 dark:text-blue-200"
+                            >
+                              {generatingEnhancement === 'quiz_interactions' ? 'Generating...' : 'Regenerate kuis & interaksi'}
+                            </button>
                           </div>
                           <p className="text-[11px] leading-5 text-[var(--muted-ink)] dark:text-slate-300">
                             Pengaturan detail tetap tersedia di bagian Advanced di bawah.
@@ -2118,6 +2226,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       </p>
                     </div>
                     <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleGenerateEnhancement('glossary')}
+                        disabled={generatingEnhancement === 'glossary'}
+                        className="rounded-xl bg-[var(--story-green)]/12 px-3 py-2 text-[11px] font-black text-[var(--story-green)] disabled:opacity-50 dark:text-emerald-200"
+                      >
+                        {generatingEnhancement === 'glossary' ? 'Generating...' : 'Generate AI'}
+                      </button>
                       <button
                         type="button"
                         onClick={refreshGlossaryCandidates}
