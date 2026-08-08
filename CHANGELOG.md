@@ -11,11 +11,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Dark mode surfaces**: Unified promo, hero, modal, quiz, stats, recorder, rest reminder, changelog, and admin editor panels with shared reader surface tokens.
 - **Reader UI polish**: Replaced older amber/purple gradient-heavy modal treatments with calmer book-inspired surfaces, consistent borders, and clearer dark-mode contrast.
 - **Admin editor styling**: Updated story editor inputs and nested panels to use the same reader field and soft-panel styles as the public reading flows.
+- **Mobile-first reader layout**: Optimized reading mode for phones and tablets with single-page default, tighter book spacing, clearer page controls, larger touch targets, and a cleaner mobile tools sheet.
+- **Header responsiveness**: Reduced crowded mobile header actions, kept the theme toggle visible, and made the BacaYuk brand area truncate cleanly instead of overlapping account controls.
 
 ### Fixed
 - **Dark mode mismatch**: Fixed light cards and low-contrast text appearing inside dark mode by aligning reusable CSS selectors with the app's `.dark` class strategy.
 - **Invalid Tailwind class**: Removed remaining `slate-850` usages that could be ignored during build and cause inconsistent dark surfaces.
 - **Modal readability**: Improved text, divider, field, and button contrast across parent login, parental gate, vocabulary, reading stats, voice recorder, rest reminder, completion, and changelog modals.
+- **Reading footer overflow**: Hid the marketing footer while a story is open so mobile reading pages no longer appear to stretch into a long footer after scrolling.
+- **Homepage logo collision**: Fixed the front-page header where the logo text could be clipped behind parent login/logout and utility buttons on narrow screens.
 
 ## [0.0.1] - 2026-08-08
 

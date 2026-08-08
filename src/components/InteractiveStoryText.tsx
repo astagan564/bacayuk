@@ -117,23 +117,23 @@ export const InteractiveStoryText: React.FC<InteractiveStoryTextProps> = ({
 
   if (languageMode === 'dual') {
     return (
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-2 sm:gap-3">
         {/* Indonesian Version */}
-        <div className="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/20">
+        <div className="p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-amber-500/10 border border-amber-500/20">
           <div className="inline-flex items-center gap-1 text-[10px] font-black uppercase text-amber-800 dark:text-amber-300 mb-1">
             <span>🇮🇩 Bahasa Indonesia</span>
           </div>
-          <div className="text-sm sm:text-base leading-relaxed font-bold">
+          <div className="text-xs sm:text-base leading-relaxed font-bold">
             {renderTextWithGlossary(text, false)}
           </div>
         </div>
 
         {/* English Version */}
-        <div className="p-3 rounded-2xl bg-indigo-500/10 border border-indigo-500/20">
+        <div className="p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-indigo-500/10 border border-indigo-500/20">
           <div className="inline-flex items-center gap-1 text-[10px] font-black uppercase text-indigo-700 dark:text-indigo-300 mb-1">
             <span>🇬🇧 English Version (Tap words to translate)</span>
           </div>
-          <div className="text-sm sm:text-base leading-relaxed font-bold text-indigo-950 dark:text-indigo-100">
+          <div className="text-xs sm:text-base leading-relaxed font-bold text-indigo-950 dark:text-indigo-100">
             {renderTextWithGlossary(activeEnText, true)}
           </div>
         </div>

@@ -312,7 +312,7 @@ export const Flipbook3D: React.FC<FlipbookProps> = ({
 
   return (
     <div
-      className="relative w-full max-w-6xl mx-auto flex flex-col items-center justify-center p-2 sm:p-4 select-none"
+      className="relative w-full max-w-6xl mx-auto flex flex-col items-center justify-center p-2 sm:p-3 lg:p-4 select-none"
       onContextMenu={(e) => e.preventDefault()}
       onCopy={(e) => {
         e.preventDefault();
@@ -335,7 +335,7 @@ export const Flipbook3D: React.FC<FlipbookProps> = ({
       {/* 3D Book Container */}
       <div
         ref={containerRef}
-        className={`relative w-full aspect-[3/4] sm:aspect-[16/10] max-h-[85vh] sm:max-h-[75vh] flex rounded-2xl shadow-2xl overflow-hidden border-4 transition-colors duration-500 ${
+        className={`relative w-full aspect-[3/4] md:aspect-[4/5] lg:aspect-[16/10] max-h-[calc(100dvh-9.5rem)] md:max-h-[calc(100dvh-8.5rem)] lg:max-h-[75vh] flex rounded-2xl shadow-2xl overflow-hidden border-2 lg:border-4 transition-colors duration-500 ${
           isNight
             ? 'bg-slate-900 border-indigo-900/80 shadow-indigo-950/80'
             : 'bg-amber-50 border-amber-900/30 shadow-2xl'
@@ -364,7 +364,7 @@ export const Flipbook3D: React.FC<FlipbookProps> = ({
         <div
           className={`relative h-full transition-all duration-300 ${
             isDoubleView ? 'w-1/2 border-r border-amber-900/10' : 'w-full'
-          } flex flex-col justify-between p-4 sm:p-6 md:p-8 overflow-hidden ${
+          } flex flex-col justify-between p-3 sm:p-5 lg:p-8 overflow-hidden ${
             isFlipping && turningDirection === 'prev' ? 'animate-page-turn-prev' : ''
           } ${
             isFlipping && !isDoubleView && turningDirection === 'next' ? 'animate-page-turn-next' : ''
@@ -454,7 +454,7 @@ export const Flipbook3D: React.FC<FlipbookProps> = ({
                   style={{ left: `${elem.x}%`, top: `${elem.y}%` }}
                 >
                   <div
-                    className={`text-2xl sm:text-4xl p-1.5 rounded-full bg-white/70 shadow-md backdrop-blur-xs flex items-center justify-center border border-white/80 ${
+                    className={`min-h-11 min-w-11 text-2xl sm:text-4xl p-1.5 rounded-full bg-white/80 shadow-md backdrop-blur-xs flex items-center justify-center border border-white/80 ring-2 ring-white/60 sm:ring-0 animate-pulse sm:animate-none ${
                       isAnimated
                         ? elem.animation === 'hop'
                           ? 'animate-bounce text-amber-600 scale-125 ring-4 ring-amber-300'
@@ -469,7 +469,7 @@ export const Flipbook3D: React.FC<FlipbookProps> = ({
                     {elem.emoji || '✨'}
                   </div>
                   {/* Tooltip Label */}
-                  <span className="absolute left-1/2 -translate-x-1/2 bottom-full mb-1 opacity-0 group-hover:opacity-100 transition-opacity bg-amber-950 text-white text-[10px] sm:text-xs px-2 py-0.5 rounded-md whitespace-nowrap shadow-lg pointer-events-none">
+                  <span className="absolute left-1/2 -translate-x-1/2 bottom-full mb-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity bg-amber-950 text-white text-[10px] sm:text-xs px-2 py-0.5 rounded-md whitespace-nowrap shadow-lg pointer-events-none">
                     {elem.label}
                   </span>
                 </div>
@@ -532,7 +532,7 @@ export const Flipbook3D: React.FC<FlipbookProps> = ({
         {/* --- RIGHT PAGE (For Double Page Spread) --- */}
         {isDoubleView && (
           <div
-            className={`relative w-1/2 h-full flex flex-col justify-between p-4 sm:p-6 md:p-8 overflow-hidden ${
+            className={`relative w-1/2 h-full flex flex-col justify-between p-4 sm:p-5 lg:p-8 overflow-hidden ${
               isFlipping && turningDirection === 'next' ? 'animate-page-turn-next' : ''
             }`}
             style={{
@@ -618,7 +618,7 @@ export const Flipbook3D: React.FC<FlipbookProps> = ({
                         style={{ left: `${elem.x}%`, top: `${elem.y}%` }}
                       >
                         <div
-                          className={`text-2xl sm:text-4xl p-1.5 rounded-full bg-white/70 shadow-md backdrop-blur-xs flex items-center justify-center border border-white/80 ${
+                          className={`min-h-11 min-w-11 text-2xl sm:text-4xl p-1.5 rounded-full bg-white/80 shadow-md backdrop-blur-xs flex items-center justify-center border border-white/80 ring-2 ring-white/60 sm:ring-0 animate-pulse sm:animate-none ${
                             isAnimated
                               ? elem.animation === 'hop'
                                 ? 'animate-bounce text-amber-600 scale-125 ring-4 ring-amber-300'
@@ -630,7 +630,7 @@ export const Flipbook3D: React.FC<FlipbookProps> = ({
                         >
                           {elem.emoji || '✨'}
                         </div>
-                        <span className="absolute left-1/2 -translate-x-1/2 bottom-full mb-1 opacity-0 group-hover:opacity-100 transition-opacity bg-amber-950 text-white text-[10px] sm:text-xs px-2 py-0.5 rounded-md whitespace-nowrap shadow-lg pointer-events-none">
+                        <span className="absolute left-1/2 -translate-x-1/2 bottom-full mb-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity bg-amber-950 text-white text-[10px] sm:text-xs px-2 py-0.5 rounded-md whitespace-nowrap shadow-lg pointer-events-none">
                           {elem.label}
                         </span>
                       </div>
@@ -714,7 +714,7 @@ export const Flipbook3D: React.FC<FlipbookProps> = ({
       <button
         onClick={handlePrev}
         disabled={currentPageIndex === 0}
-        className={`hidden sm:block absolute left-1 sm:left-2 top-1/2 -translate-y-1/2 p-3 rounded-full shadow-2xl disabled:opacity-20 disabled:cursor-not-allowed transition-all hover:scale-110 z-40 ${
+        className={`hidden lg:block absolute left-1 sm:left-2 top-1/2 -translate-y-1/2 p-3 rounded-full shadow-2xl disabled:opacity-20 disabled:cursor-not-allowed transition-all hover:scale-110 z-40 ${
           isNight
             ? 'bg-indigo-900/90 hover:bg-indigo-800 text-yellow-300 ring-2 ring-indigo-500/50'
             : 'bg-amber-900/80 hover:bg-amber-900 text-white'
@@ -727,7 +727,7 @@ export const Flipbook3D: React.FC<FlipbookProps> = ({
       <button
         onClick={handleNext}
         disabled={currentPageIndex + (isDoubleView ? 2 : 1) > maxAllowedIndex}
-        className={`hidden sm:block absolute right-1 sm:right-2 top-1/2 -translate-y-1/2 p-3 rounded-full shadow-2xl disabled:opacity-20 disabled:cursor-not-allowed transition-all hover:scale-110 z-40 ${
+        className={`hidden lg:block absolute right-1 sm:right-2 top-1/2 -translate-y-1/2 p-3 rounded-full shadow-2xl disabled:opacity-20 disabled:cursor-not-allowed transition-all hover:scale-110 z-40 ${
           isNight
             ? 'bg-indigo-900/90 hover:bg-indigo-800 text-yellow-300 ring-2 ring-indigo-500/50'
             : 'bg-amber-900/80 hover:bg-amber-900 text-white'

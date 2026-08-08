@@ -1,5 +1,16 @@
 ## Pembaruan UI - 2026-08-08
 
+### Mode baca lebih nyaman di HP dan tablet
+- Tampilan membaca sekarang lebih mengutamakan 1 halaman di layar kecil agar cerita tidak terasa sempit.
+- Tombol lanjut, kembali, daftar halaman, rekam suara, unduh offline, bahasa, tema, dan ukuran teks dibuat lebih mudah disentuh.
+- Panel alat baca di HP dibuat lebih rapi sehingga orang tua tidak perlu mencari tombol kecil-kecil saat mendampingi anak.
+- Daftar halaman kini tampil seperti lembar pilihan yang lebih nyaman dibuka di HP maupun tablet.
+
+### Header dan footer lebih rapi
+- Saat anak sedang membaca, footer tidak lagi muncul memanjang setelah halaman digulir.
+- Tombol di navbar mode baca disederhanakan agar toggle tema tetap terlihat di layar HP.
+- Logo BacaYuk di halaman depan kini tidak lagi terpotong oleh tombol akun orang tua, notifikasi, atau tombol lain di layar sempit.
+
 ### Tampilan dark mode lebih konsisten
 - Banner promo, kartu atas, modal, kuis, statistik, rekam suara, pengingat istirahat, changelog, dan panel admin sekarang memakai warna gelap yang lebih seragam.
 - Teks di dark mode dibuat lebih jelas agar tetap nyaman dibaca anak dan orang tua.

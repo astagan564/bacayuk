@@ -268,7 +268,10 @@ export default function App() {
     speechRate: 0.9,
     speechPitch: 1.0,
     fontSize: 'base',
-    displayView: typeof window !== 'undefined' && window.innerWidth < 640 ? 'single' : 'double',
+    displayView:
+      typeof window !== 'undefined' && window.matchMedia('(min-width: 1024px) and (orientation: landscape)').matches
+        ? 'double'
+        : 'single',
     themeMode: 'day',
     languageMode: 'id',
   });
@@ -387,33 +390,33 @@ export default function App() {
 
   return (
     <div
-      className={`min-h-screen flex flex-col justify-between font-sans transition-colors duration-500 ${isNight
+      className={`min-h-screen flex flex-col ${selectedStory ? 'justify-start' : 'justify-between'} font-sans transition-colors duration-500 ${isNight
         ? 'night-paper text-slate-100 selection:bg-blue-700'
         : 'app-paper text-[var(--ink)] selection:bg-[#e7a93b]/40'
         }`}
     >
       {/* Top Main Navigation Bar */}
       <header
-        className={`w-full px-4 py-3 border-b flex items-center justify-between z-40 transition-colors duration-500 backdrop-blur-xl ${isNight
+        className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 border-b flex items-center justify-between gap-2 z-40 transition-colors duration-500 backdrop-blur-xl ${isNight
           ? 'bg-[#101923]/92 text-slate-100 border-blue-900/50'
           : 'bg-[#fffaf0]/92 text-[var(--ink)] border-[#eadbc1]'
           }`}
       >
         <div
           onClick={handleBackToLibrary}
-            className="flex items-center gap-2.5 cursor-pointer transition-opacity hover:opacity-85"
+            className="flex min-w-0 flex-1 items-center gap-2 sm:gap-2.5 cursor-pointer transition-opacity hover:opacity-85"
         >
           <div
-            className={`p-2 rounded-xl shadow-sm ${isNight
+            className={`shrink-0 p-2 rounded-xl shadow-sm ${isNight
               ? 'bg-[#233754] text-[#dbeafe]'
               : 'bg-[#2f8f6b] text-white'
               }`}
           >
             <BookOpen className="w-6 h-6" />
           </div>
-          <div className="flex flex-col justify-center -space-y-0.5">
+          <div className="min-w-0 flex flex-col justify-center -space-y-0.5">
             <h1
-              className={`text-base sm:text-lg font-extrabold tracking-normal ${isNight ? 'text-blue-100' : 'text-[var(--ink)]'
+              className={`truncate text-sm sm:text-lg font-extrabold tracking-normal ${isNight ? 'text-blue-100' : 'text-[var(--ink)]'
                 }`}
             >
               BacaYuk
@@ -427,10 +430,10 @@ export default function App() {
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex min-w-0 items-center justify-end gap-1 sm:gap-2">
           {/* Parent Auth Profile Status */}
           {currentUser ? (
-            <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold ${isNight ? 'bg-blue-950/40 border-blue-800 text-blue-100' : 'bg-white/80 border-[#eadbc1] text-[var(--ink)]'}`}>
+            <div className={`${selectedStory ? 'hidden sm:flex' : 'flex'} items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-xl border text-xs font-bold ${isNight ? 'bg-blue-950/40 border-blue-800 text-blue-100' : 'bg-white/80 border-[#eadbc1] text-[var(--ink)]'}`}>
               <User className="w-4 h-4 text-[var(--story-green)] shrink-0" />
               <span className="hidden md:inline truncate max-w-[120px]">{currentUser.name}</span>
               <button
@@ -448,16 +451,16 @@ export default function App() {
           ) : (
             <button
               onClick={() => setShowLoginModal(true)}
-              className="btn-primary flex items-center gap-1.5 px-3 py-1.5 text-xs shrink-0"
+              className={`btn-primary ${selectedStory ? 'hidden sm:flex' : 'flex'} items-center gap-1.5 px-2.5 sm:px-3 py-1.5 text-xs shrink-0`}
               title="Daftar/Masuk Akun Gratis Orang Tua"
             >
               <User className="w-4 h-4" />
-              <span>Masuk orang tua</span>
+              <span className="hidden sm:inline">Masuk orang tua</span>
             </button>
           )}
 
           {/* What's New Button */}
-          <div className="relative">
+          <div className={`${selectedStory ? 'hidden sm:block' : 'block'} relative`}>
             <button
               onClick={toggleWhatsNew}
               className={`relative flex items-center justify-center p-2 rounded-xl transition-colors ${
@@ -488,9 +491,9 @@ export default function App() {
                   </div>
                   <div className={`p-3 sm:p-4 text-xs sm:text-sm space-y-2 ${isNight ? 'text-slate-300' : 'text-slate-600'}`}>
                     <ul className="list-disc pl-4 space-y-1">
-                      <li><strong>Kelola buku</strong> untuk mengatur koleksi dan harga.</li>
-                      <li><strong>Pengaturan orang tua</strong> untuk durasi membaca dan istirahat.</li>
-                      <li><strong>Baca tanpa internet</strong> lewat PDF atau EPUB.</li>
+                      <li><strong>Mode baca mobile</strong> kini lebih lega untuk HP dan tablet.</li>
+                      <li><strong>Navbar lebih rapi</strong> dengan tombol tema yang tetap terlihat.</li>
+                      <li><strong>Header depan</strong> tidak lagi memotong logo BacaYuk.</li>
                     </ul>
                   </div>
                   <div className={`p-3 border-t ${isNight ? 'border-slate-700 bg-slate-800/50' : 'border-slate-100 bg-slate-50'}`}>
@@ -512,7 +515,7 @@ export default function App() {
           {/* User Settings Button */}
           <button
             onClick={() => setCurrentView('userSettings')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition-transform hover:scale-[1.02] shrink-0 border ${isNight ? 'bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-600' : 'bg-white/80 hover:bg-white text-[var(--ink)] border-[#eadbc1]'}`}
+            className={`${selectedStory ? 'hidden md:flex' : 'flex'} items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition-transform hover:scale-[1.02] shrink-0 border ${isNight ? 'bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-600' : 'bg-white/80 hover:bg-white text-[var(--ink)] border-[#eadbc1]'}`}
             title="Pengaturan Orang Tua"
           >
             <Settings className="w-4 h-4" />
@@ -522,7 +525,7 @@ export default function App() {
           {/* Admin Dashboard Button */}
           <button
             onClick={() => setShowAdminPinPrompt(true)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition-transform hover:scale-[1.02] shrink-0 border ${isNight ? 'bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-600' : 'bg-white/70 hover:bg-white text-[var(--muted-ink)] border-[#eadbc1]'}`}
+            className={`${selectedStory ? 'hidden md:flex' : 'hidden sm:flex'} items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition-transform hover:scale-[1.02] shrink-0 border ${isNight ? 'bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-600' : 'bg-white/70 hover:bg-white text-[var(--muted-ink)] border-[#eadbc1]'}`}
             title="Buka Panel Kontrol Admin Internal"
           >
             <ShieldCheck className="w-4 h-4 text-[var(--magic-blue)]" />
@@ -532,7 +535,7 @@ export default function App() {
           {/* Stats Modal Toggle Button */}
           <button
             onClick={() => setShowStatsModal(true)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 border hover:scale-[1.02] ${isNight
+            className={`${selectedStory ? 'hidden md:flex' : 'hidden sm:flex'} items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 border hover:scale-[1.02] ${isNight
               ? 'bg-blue-950/70 hover:bg-blue-900 text-blue-100 border-blue-800'
               : 'bg-white/80 hover:bg-white text-[var(--ink)] border-[#eadbc1]'
               }`}
@@ -545,7 +548,7 @@ export default function App() {
           {/* Day / Night Theme Toggle Button */}
           <button
             onClick={handleToggleTheme}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 border hover:scale-[1.02] ${isNight
+            className={`flex items-center justify-center gap-2 w-10 sm:w-auto px-0 sm:px-3 py-2 sm:py-1.5 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 border hover:scale-[1.02] shrink-0 ${isNight
               ? 'bg-blue-950/70 hover:bg-blue-900 text-[#e7d08a] border-blue-800'
               : 'bg-[#2e1f16] hover:bg-[#4a3324] text-[#fff7e6] border-[#2e1f16]'
               }`}
@@ -554,12 +557,12 @@ export default function App() {
             {isNight ? (
               <>
                 <Moon className="w-4 h-4 fill-[#e7d08a] text-[#e7d08a]" />
-                <span className="hidden xs:inline">Malam</span>
+                <span className="hidden sm:inline">Malam</span>
               </>
             ) : (
               <>
                 <Sun className="w-4 h-4 text-[#e7a93b]" />
-                <span className="hidden xs:inline">Siang</span>
+                <span className="hidden sm:inline">Siang</span>
               </>
             )}
           </button>
@@ -567,7 +570,7 @@ export default function App() {
           {selectedStory && (
             <button
               onClick={handleBackToLibrary}
-              className={`px-3.5 py-1.5 rounded-xl font-bold text-xs sm:text-sm transition-colors shadow-sm ${isNight
+              className={`hidden sm:inline-flex px-3.5 py-1.5 rounded-xl font-bold text-xs sm:text-sm transition-colors shadow-sm ${isNight
                 ? 'bg-slate-800 hover:bg-slate-700 text-slate-200'
                 : 'bg-amber-800 hover:bg-amber-700 text-amber-100'
                 }`}
@@ -586,7 +589,7 @@ export default function App() {
       )}
 
       {/* Main Content Area */}
-      <main className="flex-1 w-full flex flex-col items-center justify-center py-4">
+      <main className={`flex-1 w-full flex flex-col items-center ${selectedStory ? 'justify-start py-2 sm:py-3' : 'justify-center py-4'}`}>
         {!selectedStory ? (
           /* Shelf / Story Selector View */
           <StorySelector
@@ -659,7 +662,7 @@ export default function App() {
                 }}
               />
               {/* Mobile bottom spacer — prevents content hiding behind the fixed bar */}
-              <div className="lg:hidden h-28 w-full shrink-0" />
+              <div className="lg:hidden h-24 w-full shrink-0" />
             </div>
 
             {/* Sidebar (desktop) + Bottom bar (mobile) */}
@@ -697,6 +700,7 @@ export default function App() {
       </main>
 
       {/* Footer */}
+      {!selectedStory && (
       <footer
         className={`w-full text-xs py-3 px-4 text-center border-t z-30 transition-colors duration-500 flex flex-col items-center gap-1 ${isNight
           ? 'bg-slate-950/90 text-indigo-300 border-indigo-900/60'
@@ -710,6 +714,7 @@ export default function App() {
           <button onClick={() => setShowChangelogModal(true)} className="underline hover:text-amber-500 transition-colors">Changelog</button>
         </div>
       </footer>
+      )}
 
       {/* Thumbnail Drawer Modal */}
       {isThumbnailsOpen && selectedStory && (
@@ -718,6 +723,7 @@ export default function App() {
           currentPageIndex={currentPageIndex}
           onSelectPage={handlePageChange}
           onClose={() => setIsThumbnailsOpen(false)}
+          isNight={isNight}
         />
       )}
 

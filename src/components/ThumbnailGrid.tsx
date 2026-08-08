@@ -1,13 +1,14 @@
 import React from 'react';
 import { Story } from '../types';
 import { StoryIllustration } from './Illustrations';
-import { X, Sparkles, BookOpen } from 'lucide-react';
+import { X, BookOpen } from 'lucide-react';
 
 interface ThumbnailGridProps {
   story: Story;
   currentPageIndex: number;
   onSelectPage: (index: number) => void;
   onClose: () => void;
+  isNight?: boolean;
 }
 
 export const ThumbnailGrid: React.FC<ThumbnailGridProps> = ({
@@ -17,61 +18,64 @@ export const ThumbnailGrid: React.FC<ThumbnailGridProps> = ({
   onClose,
 }) => {
   return (
-    <div className="fixed inset-0 z-50 bg-amber-950/80 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in">
-      <div className="bg-amber-900 border-2 border-amber-600 rounded-3xl w-full max-w-4xl max-h-[85vh] flex flex-col overflow-hidden shadow-2xl">
-        {/* Modal Header */}
-        <div className="p-4 sm:p-6 bg-amber-950/60 border-b border-amber-800 flex items-center justify-between text-amber-100">
-          <div className="flex items-center gap-3">
-            <BookOpen className="w-6 h-6 text-amber-400" />
-            <div>
-              <h3 className="text-lg font-bold text-amber-200">Daftar Halaman Cerita</h3>
-              <p className="text-xs text-amber-400/80">{story.title}</p>
+    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fade-in">
+      <div className="reader-modal w-full sm:max-w-4xl max-h-[88dvh] sm:max-h-[85vh] rounded-t-[1.35rem] sm:rounded-[1.35rem] flex flex-col overflow-hidden">
+        <div className="p-4 sm:p-5 border-b reader-divider flex items-start justify-between gap-3">
+          <div className="flex items-start gap-3 min-w-0">
+            <div className="p-2.5 rounded-xl bg-[var(--story-green)] text-white shrink-0">
+              <BookOpen className="w-5 h-5" />
+            </div>
+            <div className="min-w-0">
+              <h3 className="text-base sm:text-lg font-black font-sans mb-0">Daftar halaman</h3>
+              <p className="text-xs text-[var(--muted-ink)] dark:text-slate-300 truncate">{story.title}</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-full bg-amber-800 hover:bg-amber-700 text-amber-200 transition-colors"
+            className="p-2 rounded-xl btn-secondary shrink-0"
+            aria-label="Tutup daftar halaman"
           >
-            <X className="w-6 h-6" />
+            <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Thumbnail Grid */}
-        <div className="p-4 sm:p-6 overflow-y-auto grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+        <div className="p-3 sm:p-5 overflow-y-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
           {story.pages.map((page, idx) => {
             const isCurrent = idx === currentPageIndex;
             return (
-              <div
+              <button
                 key={page.pageNumber}
                 onClick={() => {
                   onSelectPage(idx);
                   onClose();
                 }}
-                className={`group relative rounded-2xl overflow-hidden cursor-pointer border-2 transition-all duration-200 transform hover:scale-105 shadow-md flex flex-col ${
+                className={`group relative rounded-2xl overflow-hidden text-left transition-all duration-200 flex min-h-[118px] sm:min-h-0 ${
                   isCurrent
-                    ? 'border-amber-400 ring-4 ring-amber-400/50 scale-105'
-                    : 'border-amber-700/50 hover:border-amber-400'
+                    ? 'ring-2 ring-[var(--story-green)] bg-[var(--story-green)]/10'
+                    : 'reader-soft-panel hover:border-[var(--magic-blue)]'
                 }`}
-                style={{
-                  background: `linear-gradient(135deg, ${page.colors.bgGradFrom}, ${page.colors.bgGradTo})`,
-                }}
               >
-                {/* Number Badge */}
-                <div className="absolute top-2 left-2 z-10 px-2 py-0.5 rounded-full bg-amber-950/80 text-amber-200 text-xs font-bold border border-amber-700/50">
-                  Hal {page.pageNumber}
-                </div>
-
-                {/* Thumbnail Illustration */}
-                <div className="w-full aspect-[4/3] relative overflow-hidden">
+                <div className="relative w-28 sm:w-full sm:aspect-[4/3] shrink-0 overflow-hidden">
                   <StoryIllustration type={page.illustrationType} />
+                  <div className="absolute top-2 left-2 rounded-lg bg-black/70 px-2 py-0.5 text-[10px] font-bold text-white">
+                    Hal {page.pageNumber}
+                  </div>
                 </div>
 
-                {/* Page Title / Text Preview */}
-                <div className="p-2.5 bg-amber-950/90 text-amber-100 text-xs">
-                  <h4 className="font-bold text-amber-300 truncate">{page.title || `Halaman ${page.pageNumber}`}</h4>
-                  <p className="text-[10px] text-amber-200/80 line-clamp-2 mt-0.5">{page.text}</p>
+                <div className="flex-1 sm:absolute sm:bottom-0 sm:left-0 sm:right-0 p-3 bg-white/88 sm:bg-[#101923]/88 dark:bg-[#101923]/90 text-[var(--ink)] sm:text-white dark:text-slate-100">
+                  <h4 className="font-extrabold text-xs sm:text-sm truncate">
+                    {page.title || `Halaman ${page.pageNumber}`}
+                  </h4>
+                  <p className="text-[11px] sm:text-[10px] text-[var(--muted-ink)] sm:text-blue-100/85 dark:text-slate-300 line-clamp-3 sm:line-clamp-2 mt-1">
+                    {page.text}
+                  </p>
+                  {isCurrent && (
+                    <span className="mt-2 inline-flex rounded-md bg-[var(--story-green)] px-2 py-0.5 text-[10px] font-black text-white">
+                      Sedang dibaca
+                    </span>
+                  )}
                 </div>
-              </div>
+              </button>
             );
           })}
         </div>
