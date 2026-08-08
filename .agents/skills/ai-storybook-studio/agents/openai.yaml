@@ -1,0 +1,4 @@
+interface:
+  display_name: "AI Storybook Studio"
+  short_description: "Generate BacaYuk storybooks with visuals"
+  default_prompt: "Use $ai-storybook-studio to design an AI-generated BacaYuk storybook with pages, visuals, glossary, and quiz."

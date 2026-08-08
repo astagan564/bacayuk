@@ -282,6 +282,63 @@
     color: rgba(190, 207, 226, 0.55);
   }
 
+  .reader-page-label {
+    color: var(--text-muted);
+  }
+
+  .reader-story-box {
+    border: 1px solid rgba(234, 219, 193, 0.75);
+    background: color-mix(in srgb, var(--bg-card) 78%, transparent);
+    color: var(--text-primary);
+  }
+
+  .dark .reader-story-box {
+    border-color: rgba(86, 120, 164, 0.45);
+    background: color-mix(in srgb, var(--bg-surface) 84%, transparent);
+  }
+
+  .reader-story-title {
+    color: var(--text-primary);
+  }
+
+  .reader-story-copy {
+    color: var(--text-secondary);
+  }
+
+  .reader-inline-code {
+    background: color-mix(in srgb, var(--bg-surface) 84%, transparent);
+    color: var(--text-primary);
+  }
+
+  .reader-vocab-chip,
+  .reader-glossary-chip {
+    background: color-mix(in srgb, var(--bg-surface) 82%, transparent);
+    color: var(--text-primary);
+    border-color: color-mix(in srgb, var(--text-muted) 48%, transparent);
+  }
+
+  .reader-vocab-chip:hover,
+  .reader-glossary-chip:hover {
+    background: color-mix(in srgb, var(--bg-surface) 94%, transparent);
+  }
+
+  .reader-language-card {
+    border: 1px solid color-mix(in srgb, var(--text-muted) 22%, transparent);
+    background: color-mix(in srgb, var(--bg-card) 70%, transparent);
+  }
+
+  .dark .reader-language-card {
+    background: color-mix(in srgb, var(--bg-surface) 74%, transparent);
+  }
+
+  .reader-language-label {
+    color: var(--text-muted);
+  }
+
+  .reader-empty-note {
+    color: var(--text-muted);
+  }
+
   .btn-primary {
     border-radius: 0.9rem;
     background: var(--story-green);

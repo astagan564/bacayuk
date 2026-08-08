@@ -45,6 +45,25 @@ interface AdminDashboardProps {
   isNight?: boolean;
 }
 
+interface QuickCreateForm {
+  title: string;
+  targetAge: string;
+  primaryLanguage: 'id' | 'en';
+  manuscript: string;
+}
+
+interface PageDraft {
+  title: string;
+  text: string;
+}
+
+const DEFAULT_QUICK_CREATE_FORM: QuickCreateForm = {
+  title: '',
+  targetAge: '4-8 Tahun',
+  primaryLanguage: 'id',
+  manuscript: '',
+};
+
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   stories,
   onUpdateStories,
@@ -104,6 +123,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [isNewStory, setIsNewStory] = useState(false);
   const [storyFormErrors, setStoryFormErrors] = useState<string[]>([]);
   const [previewPageIndex, setPreviewPageIndex] = useState(0);
+  const [showQuickCreate, setShowQuickCreate] = useState(false);
+  const [quickCreateForm, setQuickCreateForm] = useState<QuickCreateForm>(DEFAULT_QUICK_CREATE_FORM);
+  const [quickCreateErrors, setQuickCreateErrors] = useState<string[]>([]);
 
   // New Coupon Form State
   const [newCouponCode, setNewCouponCode] = useState('');
@@ -132,6 +154,249 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       borderAccent: 'border-emerald-300',
     },
   });
+
+  const createStoryId = (title: string): string => {
+    const slug = title
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .trim()
+      .replace(/\s+/g, '-')
+      .slice(0, 42);
+    return `${slug || 'buku-baru'}-${Date.now()}`;
+  };
+
+  const sentenceCaseTitle = (sentence: string, fallback: string): string => {
+    const cleaned = sentence
+      .replace(/^#{1,6}\s+/gm, '')
+      .replace(/^\s*[-*+]\s+/gm, '')
+      .replace(/[*_`>#]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+    if (!cleaned) return fallback;
+    const words = cleaned.split(' ').slice(0, 5).join(' ');
+    return words.charAt(0).toUpperCase() + words.slice(1).replace(/[.!?,;:]$/, '');
+  };
+
+  const splitTextIntoSentences = (text: string): string[] => {
+    return text
+      .replace(/\r\n/g, '\n')
+      .split('\n')
+      .flatMap((line) => {
+        const trimmed = line.trim();
+        if (/^[-*+]\s+/.test(trimmed) || /^\d+[.)]\s+/.test(trimmed) || /^>\s+/.test(trimmed)) {
+          return [trimmed];
+        }
+        return trimmed.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [trimmed];
+      })
+      .map((sentence) => sentence.replace(/[ \t]+/g, ' ').trim())
+      .filter(Boolean);
+  };
+
+  const chunkSentences = (sentences: string[], targetPageCount: number): string[] => {
+    const pages: string[] = [];
+    const sentencesPerPage = Math.max(1, Math.ceil(sentences.length / targetPageCount));
+
+    for (let i = 0; i < sentences.length; i += sentencesPerPage) {
+      pages.push(sentences.slice(i, i + sentencesPerPage).join(' '));
+    }
+
+    return pages;
+  };
+
+  const splitManuscriptIntoPageDrafts = (manuscript: string): PageDraft[] => {
+    const markdownSections: PageDraft[] = [];
+    let currentTitle = '';
+    let currentLines: string[] = [];
+
+    manuscript.split(/\r?\n/).forEach((line) => {
+      const headingMatch = line.match(/^\s{0,3}#{1,3}\s+(.+?)\s*#*\s*$/);
+      if (headingMatch) {
+        if (currentTitle || currentLines.some((item) => item.trim())) {
+          const text = currentLines.join('\n').trim();
+          if (text) {
+            markdownSections.push({
+              title: currentTitle || sentenceCaseTitle(text, `Halaman ${markdownSections.length + 1}`),
+              text,
+            });
+          }
+        }
+        currentTitle = headingMatch[1].trim();
+        currentLines = [];
+        return;
+      }
+
+      currentLines.push(line);
+    });
+
+    if (currentTitle || currentLines.some((item) => item.trim())) {
+      const text = currentLines.join('\n').trim();
+      if (text) {
+        markdownSections.push({
+          title: currentTitle || sentenceCaseTitle(text, `Halaman ${markdownSections.length + 1}`),
+          text,
+        });
+      }
+    }
+
+    if (markdownSections.length > 0) {
+      const totalSentences = markdownSections.reduce((sum, section) => {
+        return sum + splitTextIntoSentences(section.text).length;
+      }, 0);
+      const targetPageCount = Math.min(12, Math.max(8, Math.ceil(totalSentences / 2)));
+      const averageSentencesPerPage = Math.max(1, Math.ceil(totalSentences / targetPageCount));
+
+      const pageDrafts = markdownSections.flatMap((section) => {
+        const sectionSentences = splitTextIntoSentences(section.text);
+        const sectionPageCount = Math.max(1, Math.ceil(sectionSentences.length / averageSentencesPerPage));
+        return chunkSentences(sectionSentences, sectionPageCount).map((text, index) => ({
+          title: index === 0 ? section.title : `${section.title} ${index + 1}`,
+          text,
+        }));
+      });
+
+      return pageDrafts.slice(0, 12);
+    }
+
+    const paragraphs = manuscript
+      .split(/\n{2,}/)
+      .map((paragraph) => paragraph.replace(/\s+/g, ' ').trim())
+      .filter(Boolean);
+
+    const cleanSentences = paragraphs.length > 1
+      ? paragraphs.flatMap(splitTextIntoSentences)
+      : splitTextIntoSentences(manuscript);
+    const targetPageCount = Math.min(12, Math.max(8, Math.ceil(cleanSentences.length / 2)));
+    const pages = chunkSentences(cleanSentences, targetPageCount);
+
+    return pages.slice(0, 12).map((text, index) => ({
+      title: sentenceCaseTitle(text, `Halaman ${index + 1}`),
+      text,
+    }));
+  };
+
+  const inferIllustrationType = (text: string): StoryPage['illustrationType'] => {
+    const lower = text.toLowerCase();
+    if (/laut|pantai|ombak|ikan|perahu|sungai|danau|hujan/.test(lower)) return 'sea';
+    if (/bintang|bulan|langit|planet|roket|angkasa|awan/.test(lower)) return 'space';
+    if (/naga|ajaib|sihir|peri|cahaya|kristal/.test(lower)) return 'dragon';
+    if (/istana|raja|ratu|putri|pangeran|menara/.test(lower)) return 'castle';
+    if (/kebun|bunga|taman|kupu|lebah/.test(lower)) return 'garden';
+    return 'forest';
+  };
+
+  const extractGlossaryCandidates = (manuscript: string) => {
+    const terms = [
+      { id: 'forest', wordEn: 'Forest', translationId: 'Hutan', phonetic: 'for-est', emoji: '🌲', match: /hutan/i },
+      { id: 'river', wordEn: 'River', translationId: 'Sungai', phonetic: 'ri-ver', emoji: '💧', match: /sungai/i },
+      { id: 'friend', wordEn: 'Friend', translationId: 'Sahabat', phonetic: 'frend', emoji: '🤝', match: /sahabat|teman/i },
+      { id: 'rabbit', wordEn: 'Rabbit', translationId: 'Kelinci', phonetic: 'rab-bit', emoji: '🐰', match: /kelinci/i },
+      { id: 'butterfly', wordEn: 'Butterfly', translationId: 'Kupu-kupu', phonetic: 'but-ter-fly', emoji: '🦋', match: /kupu-kupu|kupu/i },
+      { id: 'star', wordEn: 'Star', translationId: 'Bintang', phonetic: 'star', emoji: '⭐', match: /bintang/i },
+      { id: 'tree', wordEn: 'Tree', translationId: 'Pohon', phonetic: 'tree', emoji: '🌳', match: /pohon/i },
+      { id: 'flower', wordEn: 'Flower', translationId: 'Bunga', phonetic: 'flow-er', emoji: '🌼', match: /bunga/i },
+      { id: 'dragon', wordEn: 'Dragon', translationId: 'Naga', phonetic: 'dra-gon', emoji: '🐉', match: /naga/i },
+      { id: 'castle', wordEn: 'Castle', translationId: 'Istana', phonetic: 'cas-tle', emoji: '🏰', match: /istana/i },
+      { id: 'sea', wordEn: 'Sea', translationId: 'Laut', phonetic: 'see', emoji: '🌊', match: /laut/i },
+      { id: 'light', wordEn: 'Light', translationId: 'Cahaya', phonetic: 'light', emoji: '✨', match: /cahaya/i },
+    ];
+
+    return terms
+      .filter((term) => term.match.test(manuscript))
+      .slice(0, 12)
+      .map(({ match, ...term }) => term);
+  };
+
+  const buildDraftStoryFromQuickCreate = (form: QuickCreateForm): Story => {
+    const pageDrafts = splitManuscriptIntoPageDrafts(form.manuscript);
+    const pages: StoryPage[] = pageDrafts.map((draft, index) => {
+      const basePage = createBlankPage(index + 1);
+      const illustrationType = inferIllustrationType(`${draft.title} ${draft.text}`);
+      const generatedElements: InteractiveElement[] = index === 0
+        ? [{
+            id: `elem_${Date.now()}_${index}`,
+            type: 'character',
+            label: 'Tokoh utama',
+            x: 50,
+            y: 62,
+            animation: 'bounce',
+            soundType: 'chime',
+            dialogue: 'Halo, ayo baca halaman ini.',
+            emoji: '✨',
+          }]
+        : [];
+
+      return {
+        ...basePage,
+        title: draft.title,
+        text: draft.text,
+        textEn: '',
+        illustrationType,
+        illustrationPrompt: `${illustrationType} scene for "${draft.title}"`,
+        interactiveElements: generatedElements,
+        quizQuestion: index === pageDrafts.length - 1
+          ? {
+              question: 'Apa pesan baik dari cerita ini?',
+              options: ['Berani mencoba', 'Menyerah', 'Tidak peduli', 'Marah-marah'],
+              answerIndex: 0,
+              explanation: 'Cerita ini mengajak anak mencoba hal baik dengan berani dan lembut.',
+            }
+          : undefined,
+      };
+    });
+
+    return {
+      id: createStoryId(form.title),
+      title: form.title.trim(),
+      author: 'BacaYuk Studio',
+      category: 'Petualangan',
+      coverImage: 'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=600',
+      coverBg: 'from-amber-400 to-orange-500',
+      themeColor: 'amber',
+      accentColor: 'orange',
+      moralMessage: 'Setiap perjalanan menjadi lebih indah saat dijalani dengan berani dan hati baik.',
+      targetAge: form.targetAge,
+      description: pages[0]?.text.slice(0, 150) || 'Draft buku cerita baru dari naskah yang ditempel.',
+      status: 'draft',
+      accessStatus: 'free_member',
+      downloadEnabled: true,
+      ebookPrice: settings.defaultEbookPrice,
+      watermarkEnabled: true,
+      pages,
+      glossary: extractGlossaryCandidates(form.manuscript),
+    };
+  };
+
+  const handleQuickCreateDraft = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const errors: string[] = [];
+    if (!quickCreateForm.title.trim()) errors.push('Judul buku wajib diisi.');
+    if (!quickCreateForm.targetAge.trim()) errors.push('Kelompok umur wajib diisi.');
+    if (quickCreateForm.manuscript.trim().length < 120) {
+      errors.push('Naskah cerita terlalu pendek untuk dipecah menjadi draft buku.');
+    }
+
+    if (errors.length > 0) {
+      setQuickCreateErrors(errors);
+      return;
+    }
+
+    const draftStory = buildDraftStoryFromQuickCreate({
+      ...quickCreateForm,
+      title: quickCreateForm.title.trim(),
+      targetAge: quickCreateForm.targetAge.trim(),
+      manuscript: quickCreateForm.manuscript.trim(),
+    });
+
+    setEditingStory(draftStory);
+    setIsNewStory(true);
+    setStoryFormErrors([]);
+    setPreviewPageIndex(0);
+    setShowQuickCreate(false);
+    setQuickCreateForm(DEFAULT_QUICK_CREATE_FORM);
+    setQuickCreateErrors([]);
+    showToast(`Draft "${draftStory.title}" siap direview.`);
+  };
 
   const normalizeStoryForSave = (story: Story): Story => ({
     ...story,
@@ -380,49 +645,62 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 </p>
               </div>
 
-              <button
-                onClick={() => {
-                  setEditingStory({
-                    id: `story_${Date.now()}`,
-                    title: 'Buku Cerita Baru',
-                    author: 'Penulis Cilik',
-                    category: 'Petualangan',
-                    coverImage: 'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=600',
-                    coverBg: 'from-amber-400 to-orange-500',
-                    themeColor: 'amber',
-                    accentColor: 'orange',
-                    moralMessage: 'Belajar dan bersabar membawa keberhasilan!',
-                    targetAge: '4-8 Tahun',
-                    description: 'Kisah seru yang penuh pesan kebaikan untuk anak.',
-                    status: 'draft',
-                    accessStatus: 'free_member',
-                    downloadEnabled: true,
-                    ebookPrice: 15000,
-                    watermarkEnabled: true,
-                    pages: [
-                      {
-                        pageNumber: 1,
-                        text: 'Di sebuah desa yang indah, hiduplah seekor anak hewan yang rajin...',
-                        illustrationType: 'forest',
-                        colors: {
-                          bgGradFrom: 'from-emerald-100',
-                          bgGradTo: 'to-amber-100',
-                          textBg: 'bg-white/80',
-                          accentColor: 'emerald',
-                          borderAccent: 'border-emerald-300',
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  onClick={() => {
+                    setQuickCreateForm(DEFAULT_QUICK_CREATE_FORM);
+                    setQuickCreateErrors([]);
+                    setShowQuickCreate(true);
+                  }}
+                  className="btn-primary py-2.5 px-4 text-xs flex items-center gap-1.5 shrink-0"
+                >
+                  <Sparkles className="w-4 h-4" />
+                  <span>Buat Draft Buku</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setEditingStory({
+                      id: `story_${Date.now()}`,
+                      title: 'Buku Cerita Baru',
+                      author: 'Penulis Cilik',
+                      category: 'Petualangan',
+                      coverImage: 'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=600',
+                      coverBg: 'from-amber-400 to-orange-500',
+                      themeColor: 'amber',
+                      accentColor: 'orange',
+                      moralMessage: 'Belajar dan bersabar membawa keberhasilan!',
+                      targetAge: '4-8 Tahun',
+                      description: 'Kisah seru yang penuh pesan kebaikan untuk anak.',
+                      status: 'draft',
+                      accessStatus: 'free_member',
+                      downloadEnabled: true,
+                      ebookPrice: 15000,
+                      watermarkEnabled: true,
+                      pages: [
+                        {
+                          pageNumber: 1,
+                          text: 'Di sebuah desa yang indah, hiduplah seekor anak hewan yang rajin...',
+                          illustrationType: 'forest',
+                          colors: {
+                            bgGradFrom: 'from-emerald-100',
+                            bgGradTo: 'to-amber-100',
+                            textBg: 'bg-white/80',
+                            accentColor: 'emerald',
+                            borderAccent: 'border-emerald-300',
+                          },
                         },
-                      },
-                    ],
-                  });
-                  setIsNewStory(true);
-                  setStoryFormErrors([]);
-                  setPreviewPageIndex(0);
-                }}
-                className="btn-primary py-2.5 px-4 text-xs flex items-center gap-1.5 shrink-0"
-              >
-                <Plus className="w-4 h-4" />
-                <span>Tambah Buku Cerita</span>
-              </button>
+                      ],
+                    });
+                    setIsNewStory(true);
+                    setStoryFormErrors([]);
+                    setPreviewPageIndex(0);
+                  }}
+                  className="py-2.5 px-4 rounded-xl text-xs flex items-center gap-1.5 shrink-0 bg-white/70 hover:bg-white dark:bg-slate-800 dark:hover:bg-slate-700 text-[var(--muted-ink)] dark:text-slate-200 border border-[#eadbc1] dark:border-slate-700 font-bold transition-all"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Tambah Manual</span>
+                </button>
+              </div>
             </div>
 
             {/* Story Grid */}
@@ -1168,6 +1446,119 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           </div>
         )}
 
+        {/* Quick Create modal */}
+        {showQuickCreate && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in overflow-y-auto">
+            <div className="reader-modal w-full max-w-3xl rounded-[1.35rem] p-5 sm:p-6 relative my-auto flex flex-col gap-5 max-h-[90vh] overflow-y-auto">
+              <div className="flex items-start sm:items-center justify-between gap-3 pb-3 border-b reader-divider">
+                <div>
+                  <div className="mb-1 inline-flex items-center gap-1.5 text-[10px] font-black text-[var(--story-green)] dark:text-emerald-300">
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span>Quick Create</span>
+                  </div>
+                  <h3 className="text-lg font-black">Buat draft buku dari naskah</h3>
+                  <p className="mt-1 max-w-2xl text-xs leading-5 text-[var(--muted-ink)] dark:text-slate-300">
+                    Tempel cerita lengkap, lalu BacaYuk menyiapkan halaman, scene ilustrasi, terjemahan awal, glosarium kandidat, dan kuis akhir untuk direview.
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowQuickCreate(false)}
+                  className="p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
+                  type="button"
+                  aria-label="Tutup quick create"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <form onSubmit={handleQuickCreateDraft} className="flex flex-col gap-4 text-xs font-semibold">
+                {quickCreateErrors.length > 0 && (
+                  <div className="rounded-2xl border border-rose-300 bg-rose-50 p-3 text-rose-800 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-200">
+                    <div className="flex items-center gap-2 font-black mb-2">
+                      <AlertCircle className="w-4 h-4" />
+                      <span>Perlu dilengkapi dulu</span>
+                    </div>
+                    <ul className="list-disc pl-5 space-y-1 font-semibold">
+                      {quickCreateErrors.map((error) => (
+                        <li key={error}>{error}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 sm:grid-cols-[1fr_12rem_12rem] gap-3">
+                  <div>
+                    <label className="block font-bold mb-1">Judul</label>
+                    <input
+                      type="text"
+                      value={quickCreateForm.title}
+                      onChange={(e) => setQuickCreateForm({ ...quickCreateForm, title: e.target.value })}
+                      className="reader-field w-full px-3 py-2 rounded-xl font-bold"
+                      placeholder="Kiko dan Hutan Kristal"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold mb-1">Kelompok umur</label>
+                    <input
+                      type="text"
+                      value={quickCreateForm.targetAge}
+                      onChange={(e) => setQuickCreateForm({ ...quickCreateForm, targetAge: e.target.value })}
+                      className="reader-field w-full px-3 py-2 rounded-xl"
+                      placeholder="4-8 Tahun"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold mb-1">Bahasa utama</label>
+                    <select
+                      value={quickCreateForm.primaryLanguage}
+                      onChange={(e) => setQuickCreateForm({ ...quickCreateForm, primaryLanguage: e.target.value as QuickCreateForm['primaryLanguage'] })}
+                      className="reader-field w-full px-3 py-2 rounded-xl"
+                    >
+                      <option value="id">Indonesia</option>
+                      <option value="en">English</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block font-bold mb-1">Naskah cerita</label>
+                  <textarea
+                    rows={12}
+                    value={quickCreateForm.manuscript}
+                    onChange={(e) => setQuickCreateForm({ ...quickCreateForm, manuscript: e.target.value })}
+                    className="reader-field w-full px-3 py-3 rounded-xl leading-6"
+                    placeholder="Tempel cerita lengkap di sini. Gunakan paragraf atau kalimat biasa, nanti sistem akan memecahnya menjadi halaman buku."
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
+                  {[
+                    '8-12 halaman',
+                    'Judul per halaman',
+                    'Scene ilustrasi',
+                    'Glosarium & kuis',
+                  ].map((item) => (
+                    <div key={item} className="reader-soft-panel rounded-xl p-3 flex items-center gap-2 text-[11px] font-black">
+                      <Check className="w-4 h-4 text-[var(--story-green)] shrink-0" />
+                      <span>{item}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t reader-divider">
+                  <p className="text-[11px] leading-5 text-[var(--muted-ink)] dark:text-slate-300">
+                    Draft tetap berstatus belum terbit. Setelah dibuat, kamu akan masuk ke editor untuk review dan koreksi.
+                  </p>
+                  <button type="submit" className="btn-primary py-3 px-5 text-xs flex items-center justify-center gap-1.5 shrink-0">
+                    <Sparkles className="w-4 h-4" />
+                    <span>Buat Draft Buku</span>
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
         {/* Story editor sub-modal */}
         {editingStory && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in overflow-y-auto">
@@ -1200,6 +1591,147 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     </ul>
                   </div>
                 )}
+
+                {editingStory.pages.length > 0 && (() => {
+                  const pageIndex = Math.min(previewPageIndex, editingStory.pages.length - 1);
+                  const page = editingStory.pages[pageIndex];
+                  const updatePage = (nextPage: StoryPage) => {
+                    const newPages = [...editingStory.pages];
+                    newPages[pageIndex] = nextPage;
+                    setEditingStory({ ...editingStory, pages: newPages });
+                  };
+
+                  return (
+                    <section className="reader-soft-panel rounded-2xl overflow-hidden border border-[#eadbc1] dark:border-blue-900/60">
+                      <div className="grid grid-cols-1 lg:grid-cols-[11rem_1fr_14rem] min-h-[26rem]">
+                        <aside className="border-b lg:border-b-0 lg:border-r border-[#eadbc1] dark:border-blue-900/60 bg-white/45 dark:bg-slate-950/30 p-3">
+                          <div className="flex items-center justify-between gap-2 mb-3">
+                            <span className="font-black text-[11px] text-[var(--muted-ink)] dark:text-blue-200">
+                              Halaman
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const nextPage = createBlankPage(editingStory.pages.length + 1);
+                                setEditingStory({ ...editingStory, pages: [...editingStory.pages, nextPage] });
+                                setPreviewPageIndex(editingStory.pages.length);
+                              }}
+                              className="px-2 py-1 rounded-lg bg-[var(--story-green)] text-white font-black text-[10px]"
+                            >
+                              + Halaman
+                            </button>
+                          </div>
+                          <div className="flex lg:flex-col gap-2 overflow-x-auto lg:overflow-x-visible">
+                            {editingStory.pages.map((pageItem, idx) => (
+                              <button
+                                key={`${pageItem.pageNumber}-${idx}`}
+                                type="button"
+                                onClick={() => setPreviewPageIndex(idx)}
+                                className={`min-w-32 lg:min-w-0 text-left rounded-xl p-2 transition-all ${
+                                  pageIndex === idx
+                                    ? 'bg-[var(--story-green)] text-white shadow-sm'
+                                    : 'bg-white/70 dark:bg-slate-900/70 hover:bg-white dark:hover:bg-slate-900 text-[var(--ink)] dark:text-slate-100'
+                                }`}
+                              >
+                                <span className="block text-[10px] font-black opacity-75">
+                                  {idx === 0 ? 'Cover' : `Halaman ${idx + 1}`}
+                                </span>
+                                <span className="mt-1 block text-[11px] font-black line-clamp-2">
+                                  {pageItem.title || sentenceCaseTitle(pageItem.text, `Halaman ${idx + 1}`)}
+                                </span>
+                              </button>
+                            ))}
+                          </div>
+                        </aside>
+
+                        <div className="p-4 sm:p-5 bg-[#fffaf0]/70 dark:bg-slate-950/50">
+                          <div className="min-h-[23rem] rounded-2xl border border-[#eadbc1] dark:border-blue-900/60 bg-gradient-to-br from-emerald-100 to-amber-100 dark:from-slate-900 dark:to-slate-800 p-4 sm:p-6 flex flex-col justify-between gap-4">
+                            <div>
+                              <input
+                                value={page.title || ''}
+                                onChange={(e) => updatePage({ ...page, title: e.target.value })}
+                                className="w-full bg-transparent text-xl sm:text-2xl font-black outline-none placeholder:text-slate-500/70"
+                                placeholder={`Judul halaman ${pageIndex + 1}`}
+                              />
+                              <textarea
+                                value={page.text}
+                                onChange={(e) => updatePage({ ...page, text: e.target.value })}
+                                rows={7}
+                                className="mt-4 w-full resize-none rounded-2xl bg-white/70 dark:bg-slate-950/70 p-4 text-sm leading-7 font-bold text-slate-800 dark:text-slate-100 outline-none border border-white/70 dark:border-blue-900/50"
+                                placeholder="Teks cerita halaman ini"
+                              />
+                            </div>
+                            <div className="rounded-2xl bg-white/65 dark:bg-slate-950/70 p-4 border border-white/70 dark:border-blue-900/50">
+                              <div className="mb-2 flex items-center justify-between gap-2">
+                                <span className="text-[10px] font-black text-[var(--story-green)] dark:text-emerald-300">
+                                  Illustration canvas
+                                </span>
+                                <span className="text-[10px] font-black text-[var(--muted-ink)] dark:text-blue-200">
+                                  {page.illustrationType}
+                                </span>
+                              </div>
+                              <p className="text-xs leading-5 text-[var(--muted-ink)] dark:text-slate-300">
+                                {page.illustrationPrompt || `Scene ${page.illustrationType} untuk halaman ini.`}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        <aside className="border-t lg:border-t-0 lg:border-l border-[#eadbc1] dark:border-blue-900/60 bg-white/45 dark:bg-slate-950/30 p-3 flex flex-col gap-3">
+                          <div>
+                            <label className="block text-[10px] font-black mb-1 text-[var(--muted-ink)] dark:text-blue-200">
+                              Illustration
+                            </label>
+                            <select
+                              value={page.illustrationType}
+                              onChange={(e) => updatePage({ ...page, illustrationType: e.target.value as StoryPage['illustrationType'] })}
+                              className="reader-field w-full p-2 text-[11px] rounded-lg"
+                            >
+                              <option value="forest">Forest</option>
+                              <option value="dragon">Dragon / magic</option>
+                              <option value="space">Space</option>
+                              <option value="sea">Sea</option>
+                              <option value="castle">Castle</option>
+                              <option value="garden">Garden</option>
+                              <option value="custom">Custom</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-[10px] font-black mb-1 text-[var(--muted-ink)] dark:text-blue-200">
+                              Translation
+                            </label>
+                            <textarea
+                              value={page.textEn || ''}
+                              onChange={(e) => updatePage({ ...page, textEn: e.target.value })}
+                              rows={5}
+                              className="reader-field w-full p-2 text-[11px] rounded-lg leading-5"
+                              placeholder="Draft English translation"
+                            />
+                          </div>
+                          <div className="reader-soft-panel rounded-xl p-3 flex flex-col gap-2 text-[11px]">
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="font-black">Enhancements</span>
+                              <span className="font-black text-[var(--story-green)] dark:text-emerald-300">
+                                Review
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between gap-2">
+                              <span>Interaksi</span>
+                              <span>{page.interactiveElements?.length || 0}</span>
+                            </div>
+                            <div className="flex items-center justify-between gap-2">
+                              <span>Kuis</span>
+                              <span>{page.quizQuestion ? 'Ada' : '-'}</span>
+                            </div>
+                          </div>
+                          <p className="text-[11px] leading-5 text-[var(--muted-ink)] dark:text-slate-300">
+                            Pengaturan detail tetap tersedia di bagian Advanced di bawah.
+                          </p>
+                        </aside>
+                      </div>
+                    </section>
+                  );
+                })()}
 
                 <div>
                   <label className="block font-bold mb-1">Judul Buku Cerita</label>

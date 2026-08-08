@@ -10,7 +10,6 @@ interface InteractiveStoryTextProps {
   glossary?: GlossaryItem[];
   onSelectVocab?: (vocab: VocabDefinition) => void;
   onSelectGlossary?: (glossaryItem: GlossaryItem) => void;
-  isNight?: boolean;
 }
 
 export const InteractiveStoryText: React.FC<InteractiveStoryTextProps> = ({
@@ -20,12 +19,51 @@ export const InteractiveStoryText: React.FC<InteractiveStoryTextProps> = ({
   glossary = [],
   onSelectVocab,
   onSelectGlossary,
-  isNight = false,
 }) => {
-  const activeEnText = textEn || text;
+  const activeEnText = textEn?.trim() || '';
+  const normalizeMarkdownInput = (content: string): string => {
+    return content
+      .replace(/(^|\s)([-*+])\s+(?=\*\*[^*]+:\*\*)/g, '\n$2 ')
+      .replace(/(^|\s)(\d+[.)])\s+(?=\*\*[^*]+:\*\*)/g, '\n$2 ');
+  };
+
+  const renderInlineMarkdown = (content: string, isEnglish: boolean): React.ReactNode => {
+    const chunks = content.split(/(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`)/g).filter((chunk) => chunk.length > 0);
+
+    return chunks.map((chunk, index) => {
+      if (chunk.startsWith('**') && chunk.endsWith('**')) {
+        return (
+          <strong key={index} className="font-black">
+            {renderTextWithGlossary(chunk.slice(2, -2), isEnglish)}
+          </strong>
+        );
+      }
+
+      if (chunk.startsWith('*') && chunk.endsWith('*')) {
+        return (
+          <em key={index} className="italic">
+            {renderTextWithGlossary(chunk.slice(1, -1), isEnglish)}
+          </em>
+        );
+      }
+
+      if (chunk.startsWith('`') && chunk.endsWith('`')) {
+        return (
+          <code
+            key={index}
+            className="reader-inline-code rounded px-1 py-0.5 text-[0.9em] font-black"
+          >
+            {chunk.slice(1, -1)}
+          </code>
+        );
+      }
+
+      return <React.Fragment key={index}>{renderTextWithGlossary(chunk, isEnglish)}</React.Fragment>;
+    });
+  };
 
   // Helper to render text with glossary highlights
-  const renderTextWithGlossary = (content: string, isEnglish: boolean) => {
+  const renderTextWithGlossary = (content: string, isEnglish: boolean): React.ReactNode => {
     if (!content) return null;
 
     // Check story-specific glossary terms
@@ -59,11 +97,7 @@ export const InteractiveStoryText: React.FC<InteractiveStoryTextProps> = ({
                   e.stopPropagation();
                   onSelectGlossary(matchGlossary);
                 }}
-                className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 mx-0.5 rounded-md font-black cursor-pointer transition-all border-b-2 border-dashed shadow-xs hover:scale-105 active:scale-95 group ${
-                  isNight
-                    ? 'bg-purple-500/30 text-purple-200 border-purple-400 hover:bg-purple-500/40'
-                    : 'bg-indigo-100 text-indigo-900 border-indigo-500 hover:bg-indigo-200'
-                }`}
+                className="reader-glossary-chip inline-flex items-center gap-0.5 px-1.5 py-0.5 mx-0.5 rounded-md font-black cursor-pointer transition-all border-b-2 border-dashed shadow-xs hover:scale-105 active:scale-95 group"
                 title={`Kamus Sentuh (Tap-to-Translate): "${matchGlossary.wordEn}" = ${matchGlossary.translationId}`}
               >
                 <span>{part}</span>
@@ -82,11 +116,7 @@ export const InteractiveStoryText: React.FC<InteractiveStoryTextProps> = ({
                   e.stopPropagation();
                   onSelectVocab(matchVocab);
                 }}
-                className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 mx-0.5 rounded-md font-extrabold cursor-pointer transition-all border-b-2 border-dashed shadow-xs hover:scale-105 active:scale-95 group ${
-                  isNight
-                    ? 'bg-amber-400/20 text-yellow-300 border-yellow-400 hover:bg-amber-400/30'
-                    : 'bg-yellow-300/40 text-amber-950 border-amber-300 hover:bg-yellow-300/60'
-                }`}
+                className="reader-vocab-chip inline-flex items-center gap-0.5 px-1.5 py-0.5 mx-0.5 rounded-md font-extrabold cursor-pointer transition-all border-b-2 border-dashed shadow-xs hover:scale-105 active:scale-95 group"
                 title={`Klik untuk melihat arti "${matchVocab.word}"`}
               >
                 <span>{part}</span>
@@ -103,14 +133,119 @@ export const InteractiveStoryText: React.FC<InteractiveStoryTextProps> = ({
     );
   };
 
+  const renderMarkdownBlocks = (content: string, isEnglish: boolean) => {
+    if (!content) return null;
+
+    const lines = normalizeMarkdownInput(content).replace(/\r\n/g, '\n').split('\n');
+    const blocks: React.ReactNode[] = [];
+    let paragraph: string[] = [];
+    let listItems: string[] = [];
+    let orderedListItems: string[] = [];
+
+    const flushParagraph = () => {
+      if (paragraph.length === 0) return;
+      const textBlock = paragraph.join(' ').trim();
+      if (textBlock) {
+        blocks.push(
+          <p key={`p-${blocks.length}`} className="mb-2 last:mb-0">
+            {renderInlineMarkdown(textBlock, isEnglish)}
+          </p>
+        );
+      }
+      paragraph = [];
+    };
+
+    const flushList = () => {
+      if (listItems.length > 0) {
+        blocks.push(
+          <ul key={`ul-${blocks.length}`} className="mb-2 ml-4 list-disc space-y-1">
+            {listItems.map((item, index) => (
+              <li key={index}>{renderInlineMarkdown(item, isEnglish)}</li>
+            ))}
+          </ul>
+        );
+        listItems = [];
+      }
+
+      if (orderedListItems.length > 0) {
+        blocks.push(
+          <ol key={`ol-${blocks.length}`} className="mb-2 ml-4 list-decimal space-y-1">
+            {orderedListItems.map((item, index) => (
+              <li key={index}>{renderInlineMarkdown(item, isEnglish)}</li>
+            ))}
+          </ol>
+        );
+        orderedListItems = [];
+      }
+    };
+
+    lines.forEach((line) => {
+      const trimmed = line.trim();
+
+      if (!trimmed) {
+        flushParagraph();
+        flushList();
+        return;
+      }
+
+      const heading = trimmed.match(/^(#{1,3})\s+(.+?)\s*#*$/);
+      if (heading) {
+        flushParagraph();
+        flushList();
+        const level = heading[1].length;
+        const className = level === 1
+          ? 'mb-2 text-base sm:text-lg font-black'
+          : level === 2
+          ? 'mb-2 text-sm sm:text-base font-black'
+          : 'mb-1 text-xs sm:text-sm font-black';
+        blocks.push(
+          <h4 key={`h-${blocks.length}`} className={className}>
+            {renderInlineMarkdown(heading[2], isEnglish)}
+          </h4>
+        );
+        return;
+      }
+
+      const bullet = trimmed.match(/^[-*+]\s+(.+)$/);
+      if (bullet) {
+        flushParagraph();
+        orderedListItems = [];
+        listItems.push(bullet[1]);
+        return;
+      }
+
+      const ordered = trimmed.match(/^\d+[.)]\s+(.+)$/);
+      if (ordered) {
+        flushParagraph();
+        listItems = [];
+        orderedListItems.push(ordered[1]);
+        return;
+      }
+
+      flushList();
+      paragraph.push(trimmed);
+    });
+
+    flushParagraph();
+    flushList();
+
+    return <>{blocks}</>;
+  };
+
   if (languageMode === 'en') {
     return (
       <div className="flex flex-col gap-1">
-        <div className="inline-flex items-center gap-1 text-[10px] font-black uppercase text-indigo-600 dark:text-indigo-400">
+        <div className="reader-language-label inline-flex items-center gap-1 text-[10px] font-black uppercase">
           <Languages className="w-3 h-3" />
           <span>English Version</span>
         </div>
-        <div>{renderTextWithGlossary(activeEnText, true)}</div>
+        {activeEnText ? (
+          <div>{renderMarkdownBlocks(activeEnText, true)}</div>
+        ) : (
+          <div className="reader-empty-note text-xs font-bold">
+            Draft English translation belum tersedia.
+          </div>
+        )}
       </div>
     );
   }
@@ -119,28 +254,29 @@ export const InteractiveStoryText: React.FC<InteractiveStoryTextProps> = ({
     return (
       <div className="flex flex-col gap-2 sm:gap-3">
         {/* Indonesian Version */}
-        <div className="p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-amber-500/10 border border-amber-500/20">
-          <div className="inline-flex items-center gap-1 text-[10px] font-black uppercase text-amber-800 dark:text-amber-300 mb-1">
+        <div className="reader-language-card p-2.5 sm:p-3 rounded-xl sm:rounded-2xl">
+          <div className="reader-language-label inline-flex items-center gap-1 text-[10px] font-black uppercase mb-1">
             <span>🇮🇩 Bahasa Indonesia</span>
           </div>
           <div className="text-xs sm:text-base leading-relaxed font-bold">
-            {renderTextWithGlossary(text, false)}
+            {renderMarkdownBlocks(text, false)}
           </div>
         </div>
 
-        {/* English Version */}
-        <div className="p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-indigo-500/10 border border-indigo-500/20">
-          <div className="inline-flex items-center gap-1 text-[10px] font-black uppercase text-indigo-700 dark:text-indigo-300 mb-1">
-            <span>🇬🇧 English Version (Tap words to translate)</span>
+        {activeEnText && (
+          <div className="reader-language-card p-2.5 sm:p-3 rounded-xl sm:rounded-2xl">
+            <div className="reader-language-label inline-flex items-center gap-1 text-[10px] font-black uppercase mb-1">
+              <span>🇬🇧 English Version (Tap words to translate)</span>
+            </div>
+            <div className="reader-story-copy text-xs sm:text-base leading-relaxed font-bold">
+              {renderMarkdownBlocks(activeEnText, true)}
+            </div>
           </div>
-          <div className="text-xs sm:text-base leading-relaxed font-bold text-indigo-950 dark:text-indigo-100">
-            {renderTextWithGlossary(activeEnText, true)}
-          </div>
-        </div>
+        )}
       </div>
     );
   }
 
   // Default 'id' Bahasa Indonesia
-  return renderTextWithGlossary(text, false);
+  return renderMarkdownBlocks(text, false);
 };

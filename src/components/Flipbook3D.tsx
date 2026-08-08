@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Story, StoryPage, ReadingSettings, InteractiveElement, GlossaryItem } from '../types';
 import { StoryIllustration } from './Illustrations';
 import { playPageFlipSound, playInteractionSound } from '../utils/soundEngine';
@@ -9,6 +9,7 @@ import { VocabTooltipModal } from './VocabTooltipModal';
 import { VocabularyQuizModal } from './VocabularyQuizModal';
 import { VocabDefinition } from '../data/vocabulary';
 import { voiceRecordingsStore } from '../utils/voiceRecordings';
+import { createFallbackVocabularyQuiz } from '../utils/quizOptions';
 
 interface FlipbookProps {
   story: Story;
@@ -21,6 +22,41 @@ interface FlipbookProps {
   onToggleBookmark?: () => void;
   onOpenVoiceRecorder?: (pageNum: number, pageText: string) => void;
 }
+
+const GRADIENT_COLOR_MAP: Record<string, string> = {
+  'from-emerald-100': '#d1fae5',
+  'to-emerald-100': '#d1fae5',
+  'from-amber-100': '#fef3c7',
+  'to-amber-100': '#fef3c7',
+  'from-blue-100': '#dbeafe',
+  'to-blue-100': '#dbeafe',
+  'from-indigo-100': '#e0e7ff',
+  'to-indigo-100': '#e0e7ff',
+  'from-purple-100': '#f3e8ff',
+  'to-purple-100': '#f3e8ff',
+  'from-pink-100': '#fce7f3',
+  'to-pink-100': '#fce7f3',
+  'from-rose-100': '#ffe4e6',
+  'to-rose-100': '#ffe4e6',
+  'from-orange-100': '#ffedd5',
+  'to-orange-100': '#ffedd5',
+  'from-yellow-100': '#fef9c3',
+  'to-yellow-100': '#fef9c3',
+  'from-cyan-100': '#cffafe',
+  'to-cyan-100': '#cffafe',
+  'from-sky-100': '#e0f2fe',
+  'to-sky-100': '#e0f2fe',
+  'from-teal-100': '#ccfbf1',
+  'to-teal-100': '#ccfbf1',
+};
+
+const resolveStoryColor = (colorToken?: string, fallback = '#fef3c7') => {
+  if (!colorToken) return fallback;
+  if (colorToken.startsWith('#') || colorToken.startsWith('rgb') || colorToken.startsWith('hsl')) {
+    return colorToken;
+  }
+  return GRADIENT_COLOR_MAP[colorToken] || fallback;
+};
 
 export const Flipbook3D: React.FC<FlipbookProps> = ({
   story,
@@ -52,6 +88,9 @@ export const Flipbook3D: React.FC<FlipbookProps> = ({
   const totalPages = story.pages.length;
   const isDoubleView = settings.displayView === 'double';
   const isNight = settings.themeMode === 'night';
+  const fallbackVocabularyQuiz = useMemo(() => {
+    return createFallbackVocabularyQuiz(story.title, story.glossary || []);
+  }, [story.glossary, story.title]);
 
   // Calculate max allowed index to include back cover
   const maxAllowedIndex = isDoubleView && totalPages % 2 !== 0 ? totalPages - 1 : totalPages;
@@ -373,7 +412,7 @@ export const Flipbook3D: React.FC<FlipbookProps> = ({
             transformOrigin: isDoubleView ? 'right center' : turningDirection === 'next' ? 'left center' : 'right center',
             background: isNight
               ? 'linear-gradient(135deg, #1e1b2e 0%, #0f172a 100%)'
-              : `linear-gradient(135deg, ${leftPageObj?.colors?.bgGradFrom || '#ffffff'}, ${leftPageObj?.colors?.bgGradTo || '#fef3c7'})`,
+              : `linear-gradient(135deg, ${resolveStoryColor(leftPageObj?.colors?.bgGradFrom, '#ffffff')}, ${resolveStoryColor(leftPageObj?.colors?.bgGradTo, '#fef3c7')})`,
           }}
         >
           {leftPageObj ? (
@@ -381,11 +420,9 @@ export const Flipbook3D: React.FC<FlipbookProps> = ({
           {/* Page Top Header */}
           <div className="flex flex-wrap items-center justify-between gap-2 z-10 mb-2">
             <span
-              className={`text-xs font-bold uppercase tracking-wider flex items-center gap-1 ${
-                isNight ? 'text-indigo-300' : 'text-amber-900/60'
-              }`}
+              className="reader-page-label text-xs font-bold uppercase tracking-wider flex items-center gap-1"
             >
-              <Sparkles className={`w-3.5 h-3.5 ${isNight ? 'text-indigo-400' : 'text-amber-600'}`} /> Halaman {leftPageObj?.pageNumber}
+              <Sparkles className="w-3.5 h-3.5" /> Halaman {leftPageObj?.pageNumber}
             </span>
 
             <div className="flex items-center gap-1.5">
@@ -487,18 +524,14 @@ export const Flipbook3D: React.FC<FlipbookProps> = ({
 
           {/* Story Text Box */}
           <div
-            className={`mt-2 p-3 sm:p-4 rounded-xl backdrop-blur-md shadow-sm border ${
-              isNight
-                ? 'bg-slate-900/90 border-indigo-500/30 text-indigo-100'
-                : `${leftPageObj?.colors.textBg} border-amber-900/10 text-white`
-            } font-medium ${fontClasses[settings.fontSize]} overflow-y-auto min-h-[80px] sm:min-h-0 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-black/20 [&::-webkit-scrollbar-thumb]:rounded-full`}
+            className={`reader-story-box mt-2 p-3 sm:p-4 rounded-xl backdrop-blur-md shadow-sm font-medium ${fontClasses[settings.fontSize]} overflow-y-auto min-h-[80px] sm:min-h-0 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-black/20 [&::-webkit-scrollbar-thumb]:rounded-full`}
           >
             {leftPageObj?.title && (
-              <h3 className={`font-bold mb-1 text-sm sm:text-base ${isNight ? 'text-indigo-200' : 'text-amber-200'}`}>
+              <h3 className="reader-story-title font-bold mb-1 text-sm sm:text-base">
                 {leftPageObj.title}
               </h3>
             )}
-            <p className={isNight ? 'text-slate-200 leading-relaxed' : 'text-amber-50 leading-relaxed'}>
+            <p className="reader-story-copy leading-relaxed">
               <InteractiveStoryText
                 text={leftPageObj?.text || ''}
                 textEn={leftPageObj?.textEn}
@@ -506,7 +539,6 @@ export const Flipbook3D: React.FC<FlipbookProps> = ({
                 glossary={story.glossary || []}
                 onSelectVocab={setSelectedVocab}
                 onSelectGlossary={setSelectedGlossary}
-                isNight={isNight}
               />
             </p>
           </div>
@@ -539,7 +571,7 @@ export const Flipbook3D: React.FC<FlipbookProps> = ({
               transformOrigin: 'left center',
               background: isNight
                 ? 'linear-gradient(135deg, #0f172a 0%, #1e1b2e 100%)'
-                : `linear-gradient(135deg, ${rightPageObj?.colors?.bgGradFrom || '#fef3c7'}, ${rightPageObj?.colors?.bgGradTo || '#ffffff'})`,
+                : `linear-gradient(135deg, ${resolveStoryColor(rightPageObj?.colors?.bgGradFrom, '#fef3c7')}, ${resolveStoryColor(rightPageObj?.colors?.bgGradTo, '#ffffff')})`,
             }}
           >
             {rightPageObj ? (
@@ -547,11 +579,9 @@ export const Flipbook3D: React.FC<FlipbookProps> = ({
                 {/* Right Page Header */}
                 <div className="flex flex-wrap items-center justify-between gap-2 z-10 mb-2">
                   <span
-                    className={`text-xs font-bold uppercase tracking-wider flex items-center gap-1 ${
-                      isNight ? 'text-indigo-300' : 'text-amber-900/60'
-                    }`}
+                    className="reader-page-label text-xs font-bold uppercase tracking-wider flex items-center gap-1"
                   >
-                    <Sparkles className={`w-3.5 h-3.5 ${isNight ? 'text-indigo-400' : 'text-amber-600'}`} /> Halaman {rightPageObj.pageNumber}
+                    <Sparkles className="w-3.5 h-3.5" /> Halaman {rightPageObj.pageNumber}
                   </span>
                   <div className="flex items-center gap-1.5">
                     {rightPageObj.quizQuestion && onOpenQuiz && (
@@ -647,18 +677,14 @@ export const Flipbook3D: React.FC<FlipbookProps> = ({
 
                 {/* Story Text Box Right */}
                 <div
-                  className={`mt-2 p-3 sm:p-4 rounded-xl backdrop-blur-md shadow-sm border ${
-                    isNight
-                      ? 'bg-slate-900/90 border-indigo-500/30 text-indigo-100'
-                      : `${rightPageObj.colors.textBg} border-amber-900/10 text-white`
-                  } font-medium ${fontClasses[settings.fontSize]} overflow-y-auto min-h-[80px] sm:min-h-0 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-black/20 [&::-webkit-scrollbar-thumb]:rounded-full`}
+                  className={`reader-story-box mt-2 p-3 sm:p-4 rounded-xl backdrop-blur-md shadow-sm font-medium ${fontClasses[settings.fontSize]} overflow-y-auto min-h-[80px] sm:min-h-0 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-black/20 [&::-webkit-scrollbar-thumb]:rounded-full`}
                 >
                   {rightPageObj.title && (
-                    <h3 className={`font-bold mb-1 text-sm sm:text-base ${isNight ? 'text-indigo-200' : 'text-amber-200'}`}>
+                    <h3 className="reader-story-title font-bold mb-1 text-sm sm:text-base">
                       {rightPageObj.title}
                     </h3>
                   )}
-                  <p className={isNight ? 'text-slate-200 leading-relaxed' : 'text-amber-50 leading-relaxed'}>
+                  <p className="reader-story-copy leading-relaxed">
                     <InteractiveStoryText
                       text={rightPageObj.text || ''}
                       textEn={rightPageObj.textEn}
@@ -666,7 +692,6 @@ export const Flipbook3D: React.FC<FlipbookProps> = ({
                       glossary={story.glossary || []}
                       onSelectVocab={setSelectedVocab}
                       onSelectGlossary={setSelectedGlossary}
-                      isNight={isNight}
                     />
                   </p>
                 </div>
@@ -758,25 +783,7 @@ export const Flipbook3D: React.FC<FlipbookProps> = ({
       {/* Vocabulary Quiz Modal */}
       {showVocabQuizModal && (story.vocabularyQuiz || story.glossary) && (
         <VocabularyQuizModal
-          quiz={
-            story.vocabularyQuiz || {
-              storyId: story.id,
-              title: `Kuis Kosakata: ${story.title}`,
-              questions: (story.glossary || []).map((g) => ({
-                id: g.id,
-                wordEn: g.wordEn,
-                correctTranslationId: g.translationId,
-                optionsId: [
-                  g.translationId,
-                  'Kelinci',
-                  'Hutan',
-                  'Sahabat',
-                ].sort(() => Math.random() - 0.5),
-                phonetic: g.phonetic,
-                emoji: g.emoji,
-              })),
-            }
-          }
+          quiz={story.vocabularyQuiz || fallbackVocabularyQuiz}
           onClose={() => setShowVocabQuizModal(false)}
           isNight={isNight}
         />
