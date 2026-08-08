@@ -388,41 +388,41 @@ export default function App() {
   return (
     <div
       className={`min-h-screen flex flex-col justify-between font-sans transition-colors duration-500 ${isNight
-        ? 'bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900 text-slate-100 selection:bg-indigo-600'
-        : 'bg-gradient-to-br from-amber-100 via-amber-50 to-orange-100 text-amber-950 selection:bg-amber-300'
+        ? 'night-paper text-slate-100 selection:bg-blue-700'
+        : 'app-paper text-[var(--ink)] selection:bg-[#e7a93b]/40'
         }`}
     >
       {/* Top Main Navigation Bar */}
       <header
-        className={`w-full px-4 py-3 shadow-lg border-b-2 flex items-center justify-between z-40 transition-colors duration-500 ${isNight
-          ? 'bg-slate-900/95 text-slate-100 border-indigo-900/80 shadow-indigo-950/50'
-          : 'bg-amber-950 text-amber-100 border-amber-800/80 shadow-amber-950/20'
+        className={`w-full px-4 py-3 border-b flex items-center justify-between z-40 transition-colors duration-500 backdrop-blur-xl ${isNight
+          ? 'bg-[#101923]/92 text-slate-100 border-blue-900/50'
+          : 'bg-[#fffaf0]/92 text-[var(--ink)] border-[#eadbc1]'
           }`}
       >
         <div
           onClick={handleBackToLibrary}
-          className="flex items-center gap-2.5 cursor-pointer hover:opacity-90 transition-opacity"
+            className="flex items-center gap-2.5 cursor-pointer transition-opacity hover:opacity-85"
         >
           <div
-            className={`p-2 rounded-2xl shadow-md ${isNight
-              ? 'bg-gradient-to-tr from-indigo-600 to-purple-500 text-white'
-              : 'bg-gradient-to-tr from-amber-500 to-amber-400 text-amber-950'
+            className={`p-2 rounded-xl shadow-sm ${isNight
+              ? 'bg-[#233754] text-[#dbeafe]'
+              : 'bg-[#2f8f6b] text-white'
               }`}
           >
             <BookOpen className="w-6 h-6" />
           </div>
           <div className="flex flex-col justify-center -space-y-0.5">
             <h1
-              className={`text-base sm:text-lg font-black tracking-tight ${isNight ? 'text-indigo-200' : 'text-amber-200'
+              className={`text-base sm:text-lg font-extrabold tracking-normal ${isNight ? 'text-blue-100' : 'text-[var(--ink)]'
                 }`}
             >
-              Baca yuk
+              BacaYuk
             </h1>
             <p
-              className={`text-[10px] font-medium hidden sm:block ${isNight ? 'text-indigo-400' : 'text-amber-400/80'
+              className={`text-[10px] font-semibold hidden sm:block ${isNight ? 'text-blue-300' : 'text-[var(--muted-ink)]'
                 }`}
             >
-              Flipbook Bergambar & Suara Narasi
+              Perpustakaan cerita keluarga
             </p>
           </div>
         </div>
@@ -430,8 +430,8 @@ export default function App() {
         <div className="flex items-center gap-2">
           {/* Parent Auth Profile Status */}
           {currentUser ? (
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/20 border border-amber-400/50 text-amber-200 text-xs font-bold">
-              <User className="w-4 h-4 text-amber-300 shrink-0" />
+            <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold ${isNight ? 'bg-blue-950/40 border-blue-800 text-blue-100' : 'bg-white/80 border-[#eadbc1] text-[var(--ink)]'}`}>
+              <User className="w-4 h-4 text-[var(--story-green)] shrink-0" />
               <span className="hidden md:inline truncate max-w-[120px]">{currentUser.name}</span>
               <button
                 onClick={() => {
@@ -439,7 +439,7 @@ export default function App() {
                   setCurrentUser(null);
                   showToast('👋 Berhasil keluar dari Akun Orang Tua');
                 }}
-                className="p-1 hover:bg-black/20 rounded-lg text-amber-300 transition-colors ml-0.5"
+                className="p-1 hover:bg-black/10 rounded-lg text-inherit transition-colors ml-0.5"
                 title="Keluar Akun Orang Tua"
               >
                 <LogOut className="w-3.5 h-3.5" />
@@ -448,11 +448,11 @@ export default function App() {
           ) : (
             <button
               onClick={() => setShowLoginModal(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-amber-950 text-xs font-black shadow-md transition-transform hover:scale-105 shrink-0"
+              className="btn-primary flex items-center gap-1.5 px-3 py-1.5 text-xs shrink-0"
               title="Daftar/Masuk Akun Gratis Orang Tua"
             >
               <User className="w-4 h-4" />
-              <span>Masuk Orang Tua</span>
+              <span>Masuk orang tua</span>
             </button>
           )}
 
@@ -488,9 +488,9 @@ export default function App() {
                   </div>
                   <div className={`p-3 sm:p-4 text-xs sm:text-sm space-y-2 ${isNight ? 'text-slate-300' : 'text-slate-600'}`}>
                     <ul className="list-disc pl-4 space-y-1">
-                      <li><strong>Panel Admin</strong> untuk memodifikasi pengaturan global.</li>
-                      <li><strong>Pengaturan Orang Tua</strong> khusus untuk durasi membaca & pertanyaan kustom.</li>
-                      <li><strong>Baca Tanpa Internet</strong> (Download PDF/EPUB).</li>
+                      <li><strong>Kelola buku</strong> untuk mengatur koleksi dan harga.</li>
+                      <li><strong>Pengaturan orang tua</strong> untuk durasi membaca dan istirahat.</li>
+                      <li><strong>Baca tanpa internet</strong> lewat PDF atau EPUB.</li>
                     </ul>
                   </div>
                   <div className={`p-3 border-t ${isNight ? 'border-slate-700 bg-slate-800/50' : 'border-slate-100 bg-slate-50'}`}>
@@ -499,9 +499,9 @@ export default function App() {
                         setShowWhatsNewDropdown(false);
                         setShowChangelogModal(true);
                       }}
-                      className="w-full py-2 px-4 bg-indigo-500 hover:bg-indigo-600 text-white font-bold rounded-xl text-xs sm:text-sm transition-colors"
+                      className="w-full py-2 px-4 btn-secondary text-xs sm:text-sm"
                     >
-                      Lihat Selengkapnya
+                      Lihat detail
                     </button>
                   </div>
                 </div>
@@ -512,7 +512,7 @@ export default function App() {
           {/* User Settings Button */}
           <button
             onClick={() => setCurrentView('userSettings')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-extrabold shadow-md transition-transform hover:scale-105 shrink-0 border ${isNight ? 'bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-600' : 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300'}`}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition-transform hover:scale-[1.02] shrink-0 border ${isNight ? 'bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-600' : 'bg-white/80 hover:bg-white text-[var(--ink)] border-[#eadbc1]'}`}
             title="Pengaturan Orang Tua"
           >
             <Settings className="w-4 h-4" />
@@ -522,44 +522,44 @@ export default function App() {
           {/* Admin Dashboard Button */}
           <button
             onClick={() => setShowAdminPinPrompt(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs sm:text-sm font-black shadow-md transition-transform hover:scale-105 shrink-0"
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition-transform hover:scale-[1.02] shrink-0 border ${isNight ? 'bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-600' : 'bg-white/70 hover:bg-white text-[var(--muted-ink)] border-[#eadbc1]'}`}
             title="Buka Panel Kontrol Admin Internal"
           >
-            <ShieldCheck className="w-4 h-4 text-purple-200" />
-            <span className="hidden sm:inline">Panel Admin</span>
+            <ShieldCheck className="w-4 h-4 text-[var(--magic-blue)]" />
+            <span className="hidden sm:inline">Admin</span>
           </button>
 
           {/* Stats Modal Toggle Button */}
           <button
             onClick={() => setShowStatsModal(true)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-extrabold transition-all duration-300 shadow-md ${isNight
-              ? 'bg-indigo-900/90 hover:bg-indigo-800 text-indigo-200 border border-indigo-600/80 hover:scale-105'
-              : 'bg-amber-800 hover:bg-amber-700 text-amber-100 border border-amber-600/60 hover:scale-105'
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 border hover:scale-[1.02] ${isNight
+              ? 'bg-blue-950/70 hover:bg-blue-900 text-blue-100 border-blue-800'
+              : 'bg-white/80 hover:bg-white text-[var(--ink)] border-[#eadbc1]'
               }`}
             title="Lihat Statistik Membaca Anak"
           >
-            <BarChart3 className="w-4 h-4 text-amber-300" />
+            <BarChart3 className="w-4 h-4 text-[var(--magic-blue)]" />
             <span className="hidden sm:inline">Statistik</span>
           </button>
 
           {/* Day / Night Theme Toggle Button */}
           <button
             onClick={handleToggleTheme}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-extrabold transition-all duration-300 shadow-md ${isNight
-              ? 'bg-indigo-900/90 hover:bg-indigo-800 text-yellow-300 border border-indigo-600/80 hover:scale-105'
-              : 'bg-amber-800 hover:bg-amber-700 text-amber-100 border border-amber-600/60 hover:scale-105'
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 border hover:scale-[1.02] ${isNight
+              ? 'bg-blue-950/70 hover:bg-blue-900 text-[#e7d08a] border-blue-800'
+              : 'bg-[#2e1f16] hover:bg-[#4a3324] text-[#fff7e6] border-[#2e1f16]'
               }`}
             title={isNight ? 'Beralih ke Mode Siang' : 'Beralih ke Mode Malam'}
           >
             {isNight ? (
               <>
-                <Moon className="w-4 h-4 fill-yellow-300 text-yellow-300 animate-pulse" />
-                <span className="hidden xs:inline">Mode Malam</span>
+                <Moon className="w-4 h-4 fill-[#e7d08a] text-[#e7d08a]" />
+                <span className="hidden xs:inline">Malam</span>
               </>
             ) : (
               <>
-                <Sun className="w-4 h-4 text-amber-300" />
-                <span className="hidden xs:inline">Mode Siang</span>
+                <Sun className="w-4 h-4 text-[#e7a93b]" />
+                <span className="hidden xs:inline">Siang</span>
               </>
             )}
           </button>
@@ -580,7 +580,7 @@ export default function App() {
 
       {/* Toast Notification Banner */}
       {toastMessage && (
-        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 bg-amber-950/95 text-amber-100 border-2 border-amber-400 px-5 py-2.5 rounded-2xl shadow-2xl backdrop-blur-md flex items-center gap-2 font-bold text-xs sm:text-sm animate-fade-in">
+        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 bg-[#2e1f16]/95 text-[#fff7e6] border border-[#e7a93b]/50 px-5 py-2.5 rounded-xl shadow-xl backdrop-blur-md flex items-center gap-2 font-semibold text-xs sm:text-sm animate-fade-in">
           <span>{toastMessage}</span>
         </div>
       )}
@@ -608,7 +608,7 @@ export default function App() {
               const isVipUser = userAuthStore.isVip();
               if (isVipUser) {
                 if ((user.aiStoriesUsed || 0) >= 10) {
-                  setToastMessage('⭐ Kuota Buat Cerita AI Anda bulan ini sudah habis (Maks 10 Buku/Bulan).');
+                  setToastMessage('Kuota buat cerita bulan ini sudah habis.');
                   setTimeout(() => setToastMessage(null), 5000);
                   return;
                 }
@@ -770,16 +770,16 @@ export default function App() {
       {/* Admin PIN Prompt Modal */}
       {showAdminPinPrompt && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
-          <div className={`w-full max-w-sm rounded-3xl p-6 shadow-2xl border-4 flex flex-col gap-4 ${isNight ? 'bg-slate-900 border-indigo-500 text-slate-100' : 'bg-white border-purple-400 text-slate-800'}`}>
-            <h3 className="text-lg font-black text-center flex items-center justify-center gap-2">
-              <ShieldCheck className="w-5 h-5 text-purple-500" />
+          <div className={`w-full max-w-sm rounded-2xl p-6 shadow-2xl border flex flex-col gap-4 ${isNight ? 'bg-[#111b29] border-blue-900 text-slate-100' : 'bg-[#fffaf0] border-[#eadbc1] text-[var(--ink)]'}`}>
+            <h3 className="text-lg font-extrabold font-sans mb-0 text-center flex items-center justify-center gap-2">
+              <ShieldCheck className="w-5 h-5 text-[var(--magic-blue)]" />
               Otentikasi Admin
             </h3>
             <p className="text-xs text-center opacity-80">Masukkan PIN rahasia untuk mengakses Panel Kontrol.</p>
             <input 
               type="password" 
               autoFocus
-              className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 text-center font-black tracking-[0.5em] text-lg focus:outline-none focus:border-purple-500 text-slate-900"
+              className="w-full px-4 py-3 rounded-xl border border-[#eadbc1] text-center font-extrabold tracking-[0.5em] text-lg focus:outline-none text-slate-900"
               placeholder="••••"
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
@@ -793,7 +793,7 @@ export default function App() {
                   const input = document.querySelector('input[type="password"]') as HTMLInputElement;
                   verifyAdminPinAndOpen(input?.value || '');
                 }} 
-                className="flex-1 py-3 rounded-xl font-black text-xs bg-purple-600 text-white hover:bg-purple-500 shadow-md"
+                className="btn-primary flex-1 py-3 text-xs"
               >
                 Masuk
               </button>

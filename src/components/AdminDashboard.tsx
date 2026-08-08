@@ -127,7 +127,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const handleSaveSettings = (e: React.FormEvent) => {
     e.preventDefault();
     adminStore.saveSettings(settings);
-    showToast('⚙️ Pengaturan sistem & kesehatan anak berhasil diperbarui!');
+    showToast('Pengaturan berhasil disimpan.');
   };
 
   // Handle editing/saving story in CMS
@@ -138,10 +138,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     let updatedList: Story[];
     if (isNewStory) {
       updatedList = [editingStory, ...stories];
-      showToast(`📚 Buku baru "${editingStory.title}" berhasil ditambahkan!`);
+      showToast(`Buku "${editingStory.title}" ditambahkan.`);
     } else {
       updatedList = stories.map((s) => (s.id === editingStory.id ? editingStory : s));
-      showToast(`📝 Perubahan pada "${editingStory.title}" berhasil disimpan!`);
+      showToast(`Perubahan "${editingStory.title}" disimpan.`);
     }
 
     onUpdateStories(updatedList);
@@ -167,7 +167,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     adminStore.saveCoupons(updated);
     setNewCouponCode('');
     setShowCouponForm(false);
-    showToast(`🏷️ Kupon diskon ${code} berhasil dibuat!`);
+    showToast(`Kupon ${code} dibuat.`);
   };
 
   // Toggle Coupon Active Status
@@ -182,7 +182,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     const updated = coupons.filter((c) => c.code !== code);
     setCoupons(updated);
     adminStore.saveCoupons(updated);
-    showToast(`🗑️ Kupon ${code} dihapus.`);
+    showToast(`Kupon ${code} dihapus.`);
   };
 
   // Change Transaction Status
@@ -190,7 +190,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     adminStore.updateTransactionStatus(id, newStatus);
     const updated = adminStore.getTransactions();
     setTransactions(updated);
-    showToast(`💳 Status transaksi #${id} diubah menjadi ${newStatus.toUpperCase()}`);
+    showToast(`Status transaksi #${id} menjadi ${newStatus}.`);
   };
 
   // Export Users CSV
@@ -209,7 +209,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
-    showToast('📥 Berhasil mengekspor database email & WhatsApp orang tua ke CSV!');
+    showToast('Data orang tua diekspor ke CSV.');
   };
 
   // Calculate Financial Stats
@@ -219,46 +219,46 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
   return (
     <div className={`min-h-screen w-full flex overflow-hidden animate-fade-in ${
-      isNight ? 'bg-slate-950 text-slate-100' : 'bg-amber-50 text-amber-950'
+      isNight ? 'night-paper text-slate-100' : 'app-paper text-[var(--ink)]'
     }`}>
       
       {/* Toast Feedback */}
       {toast && (
-        <div className="fixed top-6 right-6 z-50 p-4 rounded-2xl bg-emerald-600 text-white font-black text-xs shadow-2xl animate-bounce flex items-center gap-2 border-2 border-emerald-300">
+        <div className="fixed top-6 right-6 z-50 p-3 rounded-xl bg-[var(--story-green)] text-white font-semibold text-xs shadow-xl animate-fade-in flex items-center gap-2 border border-white/20">
           <CheckCircle2 className="w-5 h-5" />
           <span>{toast}</span>
         </div>
       )}
 
       {/* Sidebar Menu */}
-      <aside className={`w-20 sm:w-72 shrink-0 border-r-2 flex flex-col h-screen ${
-        isNight ? 'bg-slate-900 border-indigo-900/80' : 'bg-white border-amber-200'
+      <aside className={`w-20 sm:w-72 shrink-0 border-r flex flex-col h-screen ${
+        isNight ? 'bg-[#101923]/95 border-blue-900/60' : 'bg-[#fffaf0]/95 border-[#eadbc1]'
       }`}>
-        <div className="p-4 sm:p-6 border-b-2 border-transparent">
+        <div className="p-4 sm:p-6 border-b border-transparent">
           <div className="flex flex-col gap-2 items-center sm:items-start">
-            <div className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-wider text-amber-700 dark:text-indigo-300">
-              <ShieldCheck className="w-4 h-4 text-amber-600 shrink-0" />
-              <span className="hidden sm:inline">Panel Kontrol</span>
+            <div className="inline-flex items-center gap-2 text-[10px] font-bold text-[var(--muted-ink)] dark:text-blue-200">
+              <ShieldCheck className="w-4 h-4 text-[var(--magic-blue)] shrink-0" />
+              <span className="hidden sm:inline">Ruang pengelola</span>
             </div>
-            <h2 className="hidden sm:block text-xl font-black tracking-tight leading-tight">Administrator</h2>
+            <h2 className="hidden sm:block text-xl leading-tight mb-0">BacaYuk</h2>
           </div>
         </div>
 
         <nav className="flex-1 p-2 sm:p-4 flex flex-col gap-2 overflow-y-auto">
           {[
-            { id: 'cms', icon: BookOpen, label: 'CMS Buku Cerita' },
+            { id: 'cms', icon: BookOpen, label: 'Kelola buku' },
             { id: 'users', icon: Users, label: `Pengguna (${userList.length})` },
-            { id: 'finance', icon: CreditCard, label: 'Keuangan & Kupon' },
-            { id: 'settings', icon: Settings, label: 'Pengaturan Sistem' },
-            { id: 'analytics', icon: TrendingUp, label: 'Analisis Retensi' }
+            { id: 'finance', icon: CreditCard, label: 'Pembayaran' },
+            { id: 'settings', icon: Settings, label: 'Pengaturan' },
+            { id: 'analytics', icon: TrendingUp, label: 'Retensi baca' }
           ].map((item) => (
             <button
               key={item.id}
               onClick={() => setActiveTab(item.id as any)}
-              className={`w-full py-3 px-3 sm:px-4 rounded-2xl font-black text-sm transition-all flex items-center justify-center sm:justify-start gap-3 ${
+              className={`w-full py-3 px-3 sm:px-4 rounded-xl font-bold text-sm transition-all flex items-center justify-center sm:justify-start gap-3 ${
                 activeTab === item.id
-                  ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-amber-950 shadow-md'
-                  : 'text-slate-600 dark:text-slate-400 hover:bg-black/5 dark:hover:bg-white/5'
+                  ? 'bg-[var(--ink)] text-[#fff7e6] shadow-sm dark:bg-blue-100 dark:text-[#101923]'
+                  : 'text-[var(--muted-ink)] dark:text-slate-400 hover:bg-black/5 dark:hover:bg-white/5'
               }`}
               title={item.label}
             >
@@ -271,7 +271,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         <div className="p-2 sm:p-4 border-t-2 border-transparent mt-auto">
           <button
             onClick={onBackToHome}
-            className="w-full py-3 px-3 sm:px-4 rounded-2xl font-black text-sm transition-all flex items-center justify-center sm:justify-start gap-2 bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200"
+            className="w-full py-3 px-3 sm:px-4 rounded-xl font-bold text-sm transition-all flex items-center justify-center sm:justify-start gap-2 bg-white/70 hover:bg-white dark:bg-slate-800 dark:hover:bg-slate-700 text-[var(--muted-ink)] dark:text-slate-200 border border-[#eadbc1] dark:border-slate-700"
             title="Tutup & Kembali"
           >
             <X className="w-5 h-5 shrink-0" />
@@ -281,17 +281,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 h-screen overflow-y-auto p-6 sm:p-10 relative">
+      <main className="flex-1 h-screen overflow-y-auto p-5 sm:p-8 relative">
         <div className="max-w-6xl mx-auto flex flex-col gap-6 pb-20">
 
-        {/* TAB 1: CONTENT MANAGEMENT SYSTEM (CMS) */}
+        {/* TAB 1: Book management */}
         {activeTab === 'cms' && (
           <div className="flex flex-col gap-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
-                <h3 className="text-lg font-black">Katalog Buku Cerita ({stories.length})</h3>
-                <p className="text-xs text-slate-600 dark:text-slate-400 font-medium">
-                  Atur status akses ("Gratis Tanpa Login", "Gratis Setelah Login", "Berbayar"), batasi unduhan offline, dan terapkan watermark.
+                <h3 className="text-xl mb-1">Kelola buku ({stories.length})</h3>
+                <p className="text-xs text-[var(--muted-ink)] dark:text-slate-400 font-medium">
+                  Atur akses baca, unduhan offline, harga, dan stempel lisensi.
                 </p>
               </div>
 
@@ -330,14 +330,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   });
                   setIsNewStory(true);
                 }}
-                className="py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs shadow-md transition-transform hover:scale-105 flex items-center gap-1.5 shrink-0"
+                className="btn-primary py-2.5 px-4 text-xs flex items-center gap-1.5 shrink-0"
               >
                 <Plus className="w-4 h-4" />
                 <span>Tambah Buku Cerita</span>
               </button>
             </div>
 
-            {/* Story Grid CMS */}
+            {/* Story Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {stories.map((story, idx) => {
                 const status = story.accessStatus || (idx === 0 ? 'free_guest' : 'free_member');
@@ -347,45 +347,45 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 return (
                   <div
                     key={story.id}
-                    className="p-4 rounded-2xl border-2 bg-white dark:bg-slate-800 border-amber-200 dark:border-indigo-800 flex items-start gap-4 shadow-sm hover:shadow-md transition-all"
+                    className="p-4 rounded-xl border bg-white/80 dark:bg-slate-800/80 border-[#eadbc1] dark:border-blue-900/60 flex items-start gap-4 shadow-sm hover:shadow-md transition-all"
                   >
                     <img
                       src={story.coverImage}
                       alt={story.title}
-                      className="w-20 h-28 object-cover rounded-xl shadow-md shrink-0 border border-amber-300"
+                      className="w-20 h-28 object-cover rounded-lg shadow-sm shrink-0 border border-[#eadbc1]"
                     />
 
                     <div className="flex-1 flex flex-col justify-between gap-2">
                       <div>
                         <div className="flex flex-wrap items-center gap-1.5 mb-1">
                           {status === 'free_guest' && (
-                            <span className="px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 text-[10px] font-black border border-emerald-400">
-                              🔓 Gratis Tanpa Login (1 Buku)
+                            <span className="px-2 py-0.5 rounded-md bg-[var(--story-green)]/15 text-[var(--story-green)] text-[10px] font-bold border border-[var(--story-green)]/30">
+                              Gratis tanpa login
                             </span>
                           )}
                           {status === 'free_member' && (
-                            <span className="px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-800 dark:text-amber-300 text-[10px] font-black border border-amber-400">
-                              🔑 Gratis Setelah Login
+                            <span className="px-2 py-0.5 rounded-md bg-[var(--warm-gold)]/20 text-[#8a5e12] dark:text-amber-300 text-[10px] font-bold border border-[var(--warm-gold)]/35">
+                              Gratis setelah login
                             </span>
                           )}
                           {status === 'paid' && (
-                            <span className="px-2 py-0.5 rounded-md bg-purple-500/20 text-purple-800 dark:text-purple-300 text-[10px] font-black border border-purple-400">
-                              💎 Berbayar Online & Offline
+                            <span className="px-2 py-0.5 rounded-md bg-[var(--magic-blue)]/15 text-[var(--magic-blue)] dark:text-blue-300 text-[10px] font-bold border border-[var(--magic-blue)]/30">
+                              Berbayar
                             </span>
                           )}
 
                           {downloadOk ? (
-                            <span className="px-2 py-0.5 rounded-md bg-blue-500/20 text-blue-800 dark:text-blue-300 text-[10px] font-black">
-                              📥 Unduh Rp {price.toLocaleString('id-ID')}
+                            <span className="px-2 py-0.5 rounded-md bg-white/70 text-[var(--muted-ink)] dark:bg-slate-900 dark:text-blue-200 text-[10px] font-bold">
+                              Unduh Rp {price.toLocaleString('id-ID')}
                             </span>
                           ) : (
-                            <span className="px-2 py-0.5 rounded-md bg-rose-500/20 text-rose-800 dark:text-rose-300 text-[10px] font-black">
-                              🚫 Unduh Dikunci
+                            <span className="px-2 py-0.5 rounded-md bg-[var(--rose)]/15 text-[var(--rose)] text-[10px] font-bold">
+                              Unduh dikunci
                             </span>
                           )}
                         </div>
 
-                        <h4 className="font-black text-sm text-slate-900 dark:text-slate-100 line-clamp-1">
+                        <h4 className="font-extrabold text-sm text-slate-900 dark:text-slate-100 line-clamp-1">
                           {story.title}
                         </h4>
                         <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-2">
@@ -395,7 +395,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
                       <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-700 text-xs">
                         <span className="text-[11px] font-bold text-amber-700 dark:text-amber-300">
-                          {story.pages.length} Halaman Cerita
+                          {story.pages.length} halaman
                         </span>
 
                         <div className="flex items-center gap-1.5">
@@ -404,11 +404,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                               setEditingStory({ ...story, accessStatus: status, downloadEnabled: downloadOk, ebookPrice: price });
                               setIsNewStory(false);
                             }}
-                            className="p-1.5 rounded-lg bg-amber-500/20 text-amber-800 dark:text-amber-200 hover:bg-amber-500/30 font-bold transition-colors flex items-center gap-1"
+                            className="p-1.5 rounded-lg bg-[var(--magic-blue)]/10 text-[var(--magic-blue)] dark:text-blue-200 hover:bg-[var(--magic-blue)]/18 font-bold transition-colors flex items-center gap-1"
                             title="Edit Buku Cerita"
                           >
                             <Edit className="w-3.5 h-3.5" />
-                            <span>Edit CMS</span>
+                            <span>Edit</span>
                           </button>
                         </div>
                       </div>
@@ -425,15 +425,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           <div className="flex flex-col gap-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
-                <h3 className="text-lg font-black">Daftar Orang Tua Terdaftar ({userList.length})</h3>
-                <p className="text-xs text-slate-600 dark:text-slate-400 font-medium">
-                  Pantau data akun orang tua yang telah mendaftar via Google Sign-In, WhatsApp, atau Form Email.
+                <h3 className="text-xl mb-1">Orang tua terdaftar ({userList.length})</h3>
+                <p className="text-xs text-[var(--muted-ink)] dark:text-slate-400 font-medium">
+                  Pantau akun orang tua, kontak, dan aktivitas membaca keluarga.
                 </p>
               </div>
 
               <button
                 onClick={handleExportUsersCSV}
-                className="py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs shadow-md transition-transform hover:scale-105 flex items-center gap-2 shrink-0"
+                className="btn-primary py-2.5 px-4 text-xs flex items-center gap-2 shrink-0"
               >
                 <FileSpreadsheet className="w-4 h-4" />
                 <span>Ekspor CSV (Mailchimp/Kirim.Email)</span>
@@ -456,7 +456,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             <div className="rounded-2xl border border-amber-200 dark:border-indigo-800 overflow-hidden bg-white dark:bg-slate-800 shadow-sm">
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
-                  <thead className="bg-amber-100/60 dark:bg-slate-700/80 text-amber-950 dark:text-amber-100 font-black uppercase text-[10px]">
+                  <thead className="bg-[#fff7e6] dark:bg-slate-700/80 text-[var(--muted-ink)] dark:text-blue-100 font-bold text-[10px]">
                     <tr>
                       <th className="p-3">Nama Orang Tua</th>
                       <th className="p-3">Email</th>
@@ -495,7 +495,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
             {/* Reading Logs Section */}
             <div className="flex flex-col gap-3 pt-4 border-t border-amber-200/50">
-              <h3 className="text-base font-black flex items-center gap-2">
+              <h3 className="text-base font-extrabold font-sans mb-1 flex items-center gap-2">
                 <BookOpen className="w-4 h-4 text-amber-600" />
                 <span>Riwayat Aktivitas Membaca (Real-Time Reading Logs)</span>
               </h3>
@@ -518,9 +518,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     <div className="flex items-center justify-between text-[11px] pt-1">
                       <span className="text-slate-500">Halaman {log.lastPageRead} dari {log.totalPages}</span>
                       {log.isCompleted ? (
-                        <span className="text-emerald-600 font-black">✔ Selesai Dibaca</span>
+                        <span className="text-[var(--story-green)] font-bold">Selesai</span>
                       ) : (
-                        <span className="text-amber-600 font-bold">⏳ Sedang Dibaca</span>
+                        <span className="text-[#8a5e12] font-bold">Sedang dibaca</span>
                       )}
                     </div>
                   </div>
@@ -535,68 +535,68 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           <div className="flex flex-col gap-6">
             {/* Financial Summary Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="p-4 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-md flex flex-col justify-between gap-2">
-                <div className="flex items-center justify-between text-emerald-100 text-xs font-bold">
-                  <span>Total Pendapatan E-Book</span>
-                  <DollarSign className="w-5 h-5 text-emerald-200" />
+              <div className="book-panel p-4 rounded-xl flex flex-col justify-between gap-2">
+                <div className="flex items-center justify-between text-[var(--muted-ink)] dark:text-blue-200 text-xs font-bold">
+                  <span>Total pendapatan</span>
+                  <DollarSign className="w-5 h-5 text-[var(--story-green)]" />
                 </div>
-                <div className="text-2xl sm:text-3xl font-black">
+                <div className="text-2xl sm:text-3xl font-extrabold tabular-nums">
                   Rp {totalRevenue.toLocaleString('id-ID')}
                 </div>
-                <div className="text-[11px] text-emerald-100 font-medium">
-                  Dari {successTrxs.length} transaksi e-book berhasil
+                <div className="text-[11px] text-[var(--muted-ink)] dark:text-blue-200 font-medium">
+                  Dari {successTrxs.length} transaksi berhasil
                 </div>
               </div>
 
-              <div className="p-4 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-500 text-amber-950 shadow-md flex flex-col justify-between gap-2">
-                <div className="flex items-center justify-between text-amber-900 text-xs font-black">
-                  <span>Transaksi Menunggu (Pending)</span>
-                  <Clock className="w-5 h-5 text-amber-900" />
+              <div className="book-panel p-4 rounded-xl flex flex-col justify-between gap-2">
+                <div className="flex items-center justify-between text-[var(--muted-ink)] dark:text-blue-200 text-xs font-bold">
+                  <span>Menunggu pembayaran</span>
+                  <Clock className="w-5 h-5 text-[var(--warm-gold)]" />
                 </div>
-                <div className="text-2xl sm:text-3xl font-black">
-                  {pendingTrxs.length} Transaksi
+                <div className="text-2xl sm:text-3xl font-extrabold tabular-nums">
+                  {pendingTrxs.length} transaksi
                 </div>
-                <div className="text-[11px] text-amber-900 font-bold">
-                  Menunggu pembayaran QRIS / Bank VA
+                <div className="text-[11px] text-[var(--muted-ink)] dark:text-blue-200 font-medium">
+                  Belum selesai dibayar
                 </div>
               </div>
 
-              <div className="p-4 rounded-2xl bg-gradient-to-br from-indigo-600 to-purple-600 text-white shadow-md flex flex-col justify-between gap-2">
-                <div className="flex items-center justify-between text-indigo-100 text-xs font-bold">
-                  <span>Tingkat Konversi Pembelian</span>
-                  <TrendingUp className="w-5 h-5 text-indigo-200" />
+              <div className="book-panel p-4 rounded-xl flex flex-col justify-between gap-2">
+                <div className="flex items-center justify-between text-[var(--muted-ink)] dark:text-blue-200 text-xs font-bold">
+                  <span>Konversi pesanan</span>
+                  <TrendingUp className="w-5 h-5 text-[var(--magic-blue)]" />
                 </div>
-                <div className="text-2xl sm:text-3xl font-black">
+                <div className="text-2xl sm:text-3xl font-extrabold tabular-nums">
                   {transactions.length > 0
                     ? Math.round((successTrxs.length / transactions.length) * 100)
                     : 0}
                   %
                 </div>
-                <div className="text-[11px] text-indigo-100 font-medium">
+                <div className="text-[11px] text-[var(--muted-ink)] dark:text-blue-200 font-medium">
                   {successTrxs.length} dari {transactions.length} total pesanan
                 </div>
               </div>
             </div>
 
             {/* Coupons Section */}
-            <div className="p-4 rounded-2xl border-2 border-amber-300 dark:border-indigo-800 bg-white dark:bg-slate-800 flex flex-col gap-4">
+            <div className="p-4 rounded-xl border border-[#eadbc1] dark:border-blue-900/60 bg-white/80 dark:bg-slate-800/80 flex flex-col gap-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
-                  <h3 className="text-base font-black flex items-center gap-2">
-                    <Tag className="w-4 h-4 text-amber-600" />
-                    <span>Pengatur Kupon Diskon Pemesanan</span>
+                  <h3 className="text-base font-extrabold font-sans mb-1 flex items-center gap-2">
+                    <Tag className="w-4 h-4 text-[var(--warm-gold)]" />
+                    <span>Kupon diskon</span>
                   </h3>
                   <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                    Buat kode promo khusus untuk menarik minat orang tua mengunduh versi offline.
+                    Buat kode promo untuk pembelian buku dan langganan.
                   </p>
                 </div>
 
                 <button
                   onClick={() => setShowCouponForm(!showCouponForm)}
-                  className="py-1.5 px-3 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs flex items-center gap-1 shadow-sm shrink-0"
+                  className="btn-secondary py-1.5 px-3 text-xs flex items-center gap-1 shrink-0"
                 >
                   <Plus className="w-3.5 h-3.5" />
-                  <span>{showCouponForm ? 'Batal' : 'Buat Kupon Baru'}</span>
+                  <span>{showCouponForm ? 'Batal' : 'Buat kupon'}</span>
                 </button>
               </div>
 
@@ -604,10 +604,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               {showCouponForm && (
                 <form
                   onSubmit={handleCreateCoupon}
-                  className="p-3 rounded-xl bg-amber-100/50 dark:bg-slate-700/50 border border-amber-300 flex flex-col sm:flex-row items-end gap-3 animate-fade-in text-xs"
+                  className="p-3 rounded-xl bg-[#fff7e6] dark:bg-slate-700/50 border border-[#eadbc1] dark:border-blue-900/60 flex flex-col sm:flex-row items-end gap-3 animate-fade-in text-xs"
                 >
                   <div className="flex-1 w-full">
-                    <label className="font-bold block mb-1">Kode Kupon</label>
+                    <label className="font-bold block mb-1">Kode kupon</label>
                     <input
                       type="text"
                       value={newCouponCode}
@@ -643,7 +643,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
                   <button
                     type="submit"
-                    className="w-full sm:w-auto py-2 px-4 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs shadow-md"
+                    className="w-full sm:w-auto py-2 px-4 rounded-lg bg-[var(--story-green)] hover:bg-[#27795b] text-white font-bold text-xs shadow-sm"
                   >
                     Simpan Kupon
                   </button>
@@ -696,7 +696,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
             {/* Transactions Log Table */}
             <div className="flex flex-col gap-3">
-              <h3 className="text-base font-black flex items-center gap-2">
+              <h3 className="text-base font-extrabold font-sans mb-1 flex items-center gap-2">
                 <CreditCard className="w-4 h-4 text-amber-600" />
                 <span>Riwayat Transaksi Penagihan (Midtrans Log)</span>
               </h3>
@@ -704,7 +704,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               <div className="rounded-2xl border border-amber-200 dark:border-indigo-800 overflow-hidden bg-white dark:bg-slate-800 shadow-sm">
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs">
-                    <thead className="bg-amber-100/60 dark:bg-slate-700/80 text-amber-950 dark:text-amber-100 font-black uppercase text-[10px]">
+                    <thead className="bg-[#fff7e6] dark:bg-slate-700/80 text-[var(--muted-ink)] dark:text-blue-100 font-bold text-[10px]">
                       <tr>
                         <th className="p-3">ID Transaksi</th>
                         <th className="p-3">Pembeli</th>
@@ -730,17 +730,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                           </td>
                           <td className="p-3">
                             {t.status === 'success' && (
-                              <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 font-black text-[10px]">
-                                ✔ SUCCESS
+                              <span className="px-2 py-0.5 rounded-md bg-[var(--story-green)]/15 text-[var(--story-green)] font-bold text-[10px]">
+                                Berhasil
                               </span>
                             )}
                             {t.status === 'pending' && (
-                              <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-800 dark:text-amber-300 font-black text-[10px]">
-                                ⏳ PENDING
+                              <span className="px-2 py-0.5 rounded-md bg-[var(--warm-gold)]/20 text-[#8a5e12] dark:text-amber-300 font-bold text-[10px]">
+                                Menunggu
                               </span>
                             )}
                             {t.status === 'expired' && (
-                              <span className="px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-800 dark:text-rose-300 font-black text-[10px]">
+                              <span className="px-2 py-0.5 rounded-md bg-[var(--rose)]/15 text-[var(--rose)] font-bold text-[10px]">
                                 ❌ EXPIRED
                               </span>
                             )}
@@ -858,7 +858,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 </div>
 
                 {/* Anti-Right Click & Copy Protection Toggle */}
-                <div className="flex flex-col justify-center col-span-1 md:col-span-2 p-3 rounded-xl bg-amber-50 dark:bg-slate-900 border border-amber-300 dark:border-indigo-800">
+                <div className="reader-soft-panel flex flex-col justify-center col-span-1 md:col-span-2 p-3 rounded-xl">
                   <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
                     🔒 Fitur Anti-Right Click & Copy Protection (Perlindungan Konten E-Book)
                   </label>
@@ -878,7 +878,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 </div>
 
                 {/* Promo Banner Settings */}
-                <div className="col-span-1 md:col-span-2 p-4 rounded-xl bg-purple-50 dark:bg-slate-900 border border-purple-200 dark:border-indigo-800 flex flex-col gap-3">
+                <div className="reader-soft-panel col-span-1 md:col-span-2 p-4 rounded-xl flex flex-col gap-3">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <label className="font-black text-purple-900 dark:text-purple-200 flex items-center gap-2">
                       <Megaphone className="w-4 h-4 text-purple-600 shrink-0" />
@@ -913,7 +913,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 </div>
 
                 {/* Cron Job Cleanup Tool */}
-                <div className="col-span-1 md:col-span-2 p-4 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-indigo-800 flex flex-col gap-2">
+                <div className="reader-soft-panel col-span-1 md:col-span-2 p-4 rounded-xl flex flex-col gap-2">
                   <div className="flex items-center justify-between flex-wrap gap-2">
                     <div>
                       <h4 className="font-black text-xs uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
@@ -1055,17 +1055,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           </div>
         )}
 
-        {/* CMS STORY EDITOR SUB-MODAL */}
+        {/* Story editor sub-modal */}
         {editingStory && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in overflow-y-auto">
             <div
-              className={`w-full max-w-2xl rounded-3xl p-6 shadow-2xl border-4 relative my-auto flex flex-col gap-5 max-h-[90vh] overflow-y-auto ${
-                isNight ? 'bg-slate-900 text-slate-100 border-indigo-500' : 'bg-amber-50 text-amber-950 border-amber-300'
-              }`}
+              className="reader-modal w-full max-w-2xl rounded-[1.35rem] p-6 relative my-auto flex flex-col gap-5 max-h-[90vh] overflow-y-auto"
             >
-              <div className="flex items-start sm:items-center justify-between gap-3 pb-3 border-b border-amber-200/50">
+              <div className="flex items-start sm:items-center justify-between gap-3 pb-3 border-b reader-divider">
                 <h3 className="text-lg font-black">
-                  {isNewStory ? '✨ Tambah Buku Cerita Baru' : `📝 Edit Buku: "${editingStory.title}"`}
+                  {isNewStory ? 'Tambah buku cerita' : `Edit buku: "${editingStory.title}"`}
                 </h3>
                 <button
                   onClick={() => setEditingStory(null)}
@@ -1082,7 +1080,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     type="text"
                     value={editingStory.title}
                     onChange={(e) => setEditingStory({ ...editingStory, title: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl border border-amber-300 bg-white dark:bg-slate-800 font-bold"
+                    className="reader-field w-full px-3 py-2 rounded-xl font-bold"
                     required
                   />
                 </div>
@@ -1094,7 +1092,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       type="text"
                       value={editingStory.category}
                       onChange={(e) => setEditingStory({ ...editingStory, category: e.target.value })}
-                      className="w-full px-3 py-2 rounded-xl border border-amber-300 bg-white dark:bg-slate-800"
+                      className="reader-field w-full px-3 py-2 rounded-xl"
                       required
                     />
                   </div>
@@ -1104,7 +1102,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       type="text"
                       value={editingStory.targetAge}
                       onChange={(e) => setEditingStory({ ...editingStory, targetAge: e.target.value })}
-                      className="w-full px-3 py-2 rounded-xl border border-amber-300 bg-white dark:bg-slate-800"
+                      className="reader-field w-full px-3 py-2 rounded-xl"
                       required
                     />
                   </div>
@@ -1116,7 +1114,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     type="text"
                     value={editingStory.coverImage}
                     onChange={(e) => setEditingStory({ ...editingStory, coverImage: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl border border-amber-300 bg-white dark:bg-slate-800"
+                    className="reader-field w-full px-3 py-2 rounded-xl"
                     required
                   />
                 </div>
@@ -1127,15 +1125,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     rows={2}
                     value={editingStory.moralMessage}
                     onChange={(e) => setEditingStory({ ...editingStory, moralMessage: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl border border-amber-300 bg-white dark:bg-slate-800"
+                    className="reader-field w-full px-3 py-2 rounded-xl"
                     required
                   />
                 </div>
 
                 {/* STATUS AKSES BUKU */}
-                <div className="p-3 rounded-2xl bg-amber-100/60 dark:bg-slate-800 border border-amber-300 dark:border-indigo-800 flex flex-col gap-2">
-                  <label className="font-black text-xs text-amber-900 dark:text-amber-200">
-                    Pengatur Status Akses Pembacaan Online
+                <div className="reader-soft-panel p-3 rounded-2xl flex flex-col gap-2">
+                  <label className="font-black text-xs text-[var(--muted-ink)] dark:text-blue-200">
+                    Akses membaca online
                   </label>
                   <div className="flex flex-col gap-1.5">
                     <label className="flex items-center gap-2 cursor-pointer">
@@ -1146,7 +1144,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                         checked={editingStory.accessStatus === 'free_guest'}
                         onChange={() => setEditingStory({ ...editingStory, accessStatus: 'free_guest' })}
                       />
-                      <span>🔓 Gratis Tanpa Login (Dapat dibaca pengunjung baru tanpa akun - Maks 1 Buku)</span>
+                      <span>Gratis tanpa login untuk buku pertama</span>
                     </label>
 
                     <label className="flex items-center gap-2 cursor-pointer">
@@ -1157,7 +1155,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                         checked={editingStory.accessStatus === 'free_member' || !editingStory.accessStatus}
                         onChange={() => setEditingStory({ ...editingStory, accessStatus: 'free_member' })}
                       />
-                      <span>🔑 Gratis Setelah Login (Hanya untuk orang tua yang sudah mendaftarkan akun)</span>
+                      <span>Gratis setelah orang tua login</span>
                     </label>
 
                     <label className="flex items-center gap-2 cursor-pointer">
@@ -1168,16 +1166,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                         checked={editingStory.accessStatus === 'paid'}
                         onChange={() => setEditingStory({ ...editingStory, accessStatus: 'paid' })}
                       />
-                      <span>💎 Berbayar (Wajib beli akses e-book)</span>
+                      <span>Berbayar</span>
                     </label>
                   </div>
                 </div>
 
                 {/* PENGUNCI FITUR UNDUHAN & HARGA */}
-                <div className="p-3 rounded-2xl bg-amber-100/60 dark:bg-slate-800 border border-amber-300 dark:border-indigo-800 flex flex-col gap-2">
+                <div className="reader-soft-panel p-3 rounded-2xl flex flex-col gap-2">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                    <label className="font-black text-xs text-amber-900 dark:text-amber-200">
-                      Fitur Unduhan Offline (PDF & EPUB)
+                    <label className="font-bold text-xs text-[var(--muted-ink)] dark:text-blue-200">
+                      Unduhan offline
                     </label>
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input
@@ -1200,7 +1198,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                           onChange={(e) =>
                             setEditingStory({ ...editingStory, ebookPrice: Number(e.target.value) })
                           }
-                          className="w-full px-3 py-1.5 rounded-xl border border-amber-300 bg-white dark:bg-slate-900 font-bold"
+                          className="reader-field w-full px-3 py-1.5 rounded-xl font-bold"
                         />
                       </div>
 
@@ -1213,7 +1211,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                               setEditingStory({ ...editingStory, watermarkEnabled: e.target.checked })
                             }
                           />
-                          <span className="text-[11px] font-bold">Watermark Otomatis</span>
+                          <span className="text-[11px] font-bold">Stempel otomatis</span>
                         </label>
                       </div>
                     </div>
@@ -1221,11 +1219,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 </div>
 
                 {/* --- 1. MANAJEMEN HALAMAN BILINGUAL (TEKS GANDA INDONESIA ⇄ INGGRIS) --- */}
-                <div className="p-3.5 rounded-2xl bg-indigo-50 dark:bg-slate-800 border-2 border-indigo-200 dark:border-indigo-800 flex flex-col gap-3">
+                <div className="reader-soft-panel p-3.5 rounded-2xl flex flex-col gap-3">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <span className="font-black text-xs uppercase text-indigo-900 dark:text-indigo-200 flex items-center gap-1.5">
                       <Languages className="w-4 h-4 text-indigo-600 shrink-0" />
-                      <span>Input Teks Ganda (Bilingual Page Texts)</span>
+                      <span>Teks dua bahasa</span>
                     </span>
                     <span className="text-[10px] bg-indigo-200 text-indigo-900 font-bold px-2 py-0.5 rounded-full">
                       {editingStory.pages.length} Halaman
@@ -1236,7 +1234,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     {editingStory.pages.map((pg, idx) => (
                       <div
                         key={pg.id || idx}
-                        className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-indigo-200 dark:border-indigo-700/60 flex flex-col gap-2"
+                        className="reader-soft-panel p-3 rounded-xl flex flex-col gap-2"
                       >
                         <span className="font-extrabold text-xs text-indigo-800 dark:text-indigo-300">
                           Halaman {pg.pageNumber}
@@ -1255,7 +1253,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                 newPages[idx] = { ...newPages[idx], text: e.target.value };
                                 setEditingStory({ ...editingStory, pages: newPages });
                               }}
-                              className="w-full p-2 text-[11px] rounded-lg border border-amber-300 dark:border-indigo-800 bg-amber-50/50 dark:bg-slate-850"
+                              className="reader-field w-full p-2 text-[11px] rounded-lg"
                             />
                           </div>
 
@@ -1272,7 +1270,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                 newPages[idx] = { ...newPages[idx], textEn: e.target.value };
                                 setEditingStory({ ...editingStory, pages: newPages });
                               }}
-                              className="w-full p-2 text-[11px] rounded-lg border border-indigo-300 dark:border-indigo-700 bg-indigo-50/50 dark:bg-slate-850"
+                              className="reader-field w-full p-2 text-[11px] rounded-lg"
                             />
                           </div>
                         </div>
@@ -1286,7 +1284,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <span className="font-black text-xs uppercase text-purple-900 dark:text-purple-200 flex items-center gap-1.5">
                       <BookOpen className="w-4 h-4 text-purple-600 shrink-0" />
-                      <span>Manajemen Glosarium (Kamus Sentuh Tap-to-Translate)</span>
+                      <span>Glosarium sentuh</span>
                     </span>
                     <button
                       type="button"
@@ -1379,18 +1377,18 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 <div className="p-3.5 rounded-2xl bg-amber-50 dark:bg-slate-800 border-2 border-amber-200 dark:border-amber-800 flex flex-col gap-2">
                   <span className="font-black text-xs uppercase text-amber-900 dark:text-amber-200 flex items-center gap-1.5">
                     <Megaphone className="w-4 h-4 text-amber-600" />
-                    <span>Pustaka Suara Narator Asli (Audio Library)</span>
+                    <span>Pustaka suara narator</span>
                   </span>
                   <p className="text-[11px] text-amber-800/80 dark:text-indigo-200">
-                    Sistem audio otomatis dikelola secara dynamic via Speech Synthesis native browser dan rekam suara kustom per halaman oleh orang tua/narator.
+                    Audio otomatis memakai suara perangkat. Orang tua juga dapat merekam narasi per halaman.
                   </p>
                 </div>
 
                 <button
                   type="submit"
-                  className="w-full py-3 px-5 rounded-2xl bg-gradient-to-r from-amber-600 to-orange-500 text-white font-black text-xs shadow-lg transition-transform hover:scale-[1.02] mt-2"
+                  className="btn-primary w-full py-3 px-5 text-xs mt-2"
                 >
-                  Simpan Perubahan Buku
+                  Simpan buku
                 </button>
               </form>
             </div>

@@ -11,11 +11,11 @@ export const ChangelogModal: React.FC<ChangelogModalProps> = ({ onClose, isNight
   const renderMarkdown = (text: string) => {
     return text.split('\n').map((line, index) => {
       if (line.startsWith('## ')) {
-        return <h3 key={index} className={`text-lg font-black mt-6 mb-3 pb-1 border-b ${isNight ? 'text-indigo-200 border-indigo-800/50' : 'text-amber-900 border-amber-200'}`}>{line.substring(3)}</h3>;
+        return <h3 key={index} className={`text-lg font-black mt-6 mb-3 pb-1 border-b ${isNight ? 'text-blue-200 border-blue-900/50' : 'text-[var(--ink)] border-[#eadbc1]'}`}>{line.substring(3)}</h3>;
       }
       
       if (line.startsWith('### ')) {
-        return <h4 key={index} className={`font-bold mt-4 mb-2 ${isNight ? 'text-indigo-300' : 'text-amber-700'}`}>{line.substring(4)}</h4>;
+        return <h4 key={index} className={`font-bold mt-4 mb-2 ${isNight ? 'text-blue-200' : 'text-[var(--magic-blue)]'}`}>{line.substring(4)}</h4>;
       }
       
       if (line.startsWith('# ')) {
@@ -61,28 +61,22 @@ export const ChangelogModal: React.FC<ChangelogModalProps> = ({ onClose, isNight
         onClick={onClose}
       />
       <div 
-        className={`relative w-full max-w-2xl max-h-[85vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden border-4 ${
-          isNight 
-            ? 'bg-slate-900 border-indigo-900 shadow-indigo-900/50' 
-            : 'bg-amber-50 border-amber-200 shadow-amber-900/20'
-        }`}
+        className="reader-modal relative w-full max-w-2xl max-h-[85vh] rounded-[1.35rem] flex flex-col overflow-hidden"
       >
         {/* Header */}
-        <div className={`px-6 py-4 border-b flex items-center justify-between ${
-          isNight ? 'bg-slate-800 border-indigo-800' : 'bg-amber-100 border-amber-200'
-        }`}>
+        <div className="px-6 py-4 border-b reader-divider flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className={`p-2 rounded-xl ${isNight ? 'bg-indigo-900 text-indigo-300' : 'bg-amber-200 text-amber-700'}`}>
+            <div className="p-2 rounded-xl bg-[var(--story-green)] text-white">
               <FileText className="w-5 h-5" />
             </div>
-            <h2 className={`text-lg font-black ${isNight ? 'text-slate-200' : 'text-amber-950'}`}>
+            <h2 className="text-lg font-black text-[var(--ink)] dark:text-slate-100">
               Riwayat Pembaruan (Changelog)
             </h2>
           </div>
           <button
             onClick={onClose}
             className={`p-2 rounded-full transition-colors ${
-              isNight ? 'hover:bg-slate-700 text-slate-400' : 'hover:bg-amber-200 text-amber-900'
+              isNight ? 'hover:bg-white/10 text-slate-300' : 'hover:bg-black/5 text-[var(--ink)]'
             }`}
           >
             <X className="w-5 h-5" />
@@ -91,9 +85,9 @@ export const ChangelogModal: React.FC<ChangelogModalProps> = ({ onClose, isNight
 
         {/* Content */}
         <div className={`flex-1 overflow-y-auto p-6 ${
-          isNight ? 'text-slate-300' : 'text-amber-900'
+          isNight ? 'text-slate-300' : 'text-[var(--ink)]'
         } [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:transparent [&::-webkit-scrollbar-thumb]:rounded-full ${
-          isNight ? '[&::-webkit-scrollbar-thumb]:bg-indigo-800' : '[&::-webkit-scrollbar-thumb]:bg-amber-300'
+          isNight ? '[&::-webkit-scrollbar-thumb]:bg-blue-900' : '[&::-webkit-scrollbar-thumb]:bg-[#d8c29f]'
         }`}>
           {renderMarkdown(changelogRaw)}
         </div>

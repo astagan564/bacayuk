@@ -25,7 +25,6 @@ export const ParentLoginModal: React.FC<ParentLoginModalProps> = ({
   onClose,
   onLoginSuccess,
   attemptedStoryTitle,
-  isNight = false,
 }) => {
   const [tab, setTab] = useState<'google' | 'whatsapp' | 'email'>('google');
   const [parentName, setParentName] = useState('');
@@ -114,24 +113,17 @@ export const ParentLoginModal: React.FC<ParentLoginModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
       <div
-        className={`w-full max-w-lg rounded-3xl p-6 sm:p-8 shadow-2xl border-4 relative overflow-hidden flex flex-col gap-6 ${
-          isNight
-            ? 'bg-slate-900 text-slate-100 border-indigo-500/80'
-            : 'bg-amber-50 text-amber-950 border-amber-300'
-        }`}
+        className="reader-modal w-full max-w-lg rounded-[1.35rem] p-6 sm:p-8 relative overflow-hidden flex flex-col gap-6"
       >
-        {/* Decorative Glow */}
-        <div className="absolute -top-16 -right-16 w-56 h-56 bg-amber-400/25 rounded-full blur-3xl pointer-events-none" />
-
         {/* Modal Header */}
-        <div className="flex items-start justify-between pb-3 border-b border-amber-200/50">
+        <div className="flex items-start justify-between pb-3 border-b reader-divider">
           <div className="flex items-center gap-3">
-            <div className="p-3 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-500 text-amber-950 font-black shadow-md shrink-0">
+            <div className="p-3 rounded-2xl bg-[var(--story-green)] text-white font-black shadow-md shrink-0">
               <Lock className="w-6 h-6" />
             </div>
             <div>
-              <div className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-wider text-amber-800 dark:text-indigo-300">
-                <Gift className="w-3.5 h-3.5 text-amber-600" />
+              <div className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-wider text-[var(--muted-ink)] dark:text-blue-200">
+                <Gift className="w-3.5 h-3.5 text-[var(--story-green)]" />
                 <span>Akses Akun Gratis Pembaca</span>
               </div>
               <h2 className="text-xl sm:text-2xl font-black tracking-tight">Daftar Akun Gratis Orang Tua</h2>
@@ -151,19 +143,19 @@ export const ParentLoginModal: React.FC<ParentLoginModalProps> = ({
         </div>
 
         {/* Locked Message Callout */}
-        <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-100 to-orange-100 dark:from-slate-800 dark:to-slate-900 border border-amber-300 dark:border-indigo-700/80 flex flex-col gap-1.5 text-xs shadow-sm">
-          <div className="flex items-center gap-2 text-amber-900 dark:text-amber-200 font-black text-sm">
-            <Sparkles className="w-4 h-4 text-amber-600" />
+        <div className="reader-soft-panel p-4 rounded-2xl flex flex-col gap-1.5 text-xs">
+          <div className="flex items-center gap-2 text-[var(--ink)] dark:text-slate-100 font-black text-sm">
+            <Sparkles className="w-4 h-4 text-[var(--warm-gold)]" />
             <span>Suka dengan cerita kami?</span>
           </div>
           <p className="text-slate-700 dark:text-slate-300 font-medium leading-relaxed">
             {attemptedStoryTitle ? (
               <>
-                Anda telah menyelesaikan 1 cerita gratis! Buat akun gratis untuk membuka akses baca online tak terbatas untuk cerita{' '}
-                <strong>"{attemptedStoryTitle}"</strong> dan semua buku lainnya!
+                Anda telah menyelesaikan 1 cerita gratis. Buat akun gratis untuk membuka akses baca online tak terbatas untuk cerita{' '}
+                <strong>"{attemptedStoryTitle}"</strong> dan semua buku lainnya.
               </>
             ) : (
-              'Yuk, buat akun gratis untuk membaca semua koleksi buku cerita anak interaktif di website kami!'
+              'Buat akun gratis untuk membaca semua koleksi buku cerita anak interaktif di website kami.'
             )}
           </p>
         </div>
@@ -195,7 +187,7 @@ export const ParentLoginModal: React.FC<ParentLoginModalProps> = ({
             onClick={() => handleTabChange('google')}
             className={`flex-1 py-2 px-3 rounded-xl font-extrabold text-xs transition-all flex items-center justify-center gap-1.5 ${
               tab === 'google'
-                ? 'bg-white dark:bg-slate-800 shadow-md text-amber-950 dark:text-amber-200'
+                ? 'bg-white dark:bg-slate-800 shadow-md text-[var(--ink)] dark:text-blue-200'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
             }`}
           >
@@ -238,7 +230,7 @@ export const ParentLoginModal: React.FC<ParentLoginModalProps> = ({
             onClick={() => handleTabChange('email')}
             className={`flex-1 py-2 px-3 rounded-xl font-extrabold text-xs transition-all flex items-center justify-center gap-1.5 ${
               tab === 'email'
-                ? 'bg-amber-600 text-white shadow-md'
+                ? 'bg-[var(--magic-blue)] text-white shadow-md'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
             }`}
           >
@@ -264,7 +256,7 @@ export const ParentLoginModal: React.FC<ParentLoginModalProps> = ({
               type="button"
               onClick={handleGoogleSignIn}
               disabled={isSubmitting}
-              className="w-full py-3.5 px-5 rounded-2xl bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 hover:border-amber-400 text-slate-800 dark:text-slate-100 font-black text-xs shadow-lg transition-transform hover:scale-105 flex items-center justify-center gap-2.5 disabled:opacity-50"
+              className="reader-field w-full py-3.5 px-5 rounded-2xl hover:border-[var(--magic-blue)] font-black text-xs shadow-sm transition-transform hover:scale-[1.02] flex items-center justify-center gap-2.5 disabled:opacity-50"
             >
               {isSubmitting ? (
                 <>
@@ -312,7 +304,7 @@ export const ParentLoginModal: React.FC<ParentLoginModalProps> = ({
                   value={phoneInput}
                   onChange={(e) => setPhoneInput(e.target.value)}
                   placeholder="0812 3456 7890"
-                  className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-amber-300 dark:border-indigo-700 bg-white dark:bg-slate-800 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="reader-field w-full pl-10 pr-3.5 py-2.5 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 />
               </div>
             </div>
@@ -326,7 +318,7 @@ export const ParentLoginModal: React.FC<ParentLoginModalProps> = ({
                 value={parentName}
                 onChange={(e) => setParentName(e.target.value)}
                 placeholder="Contoh: Bunda Ani"
-                className="w-full px-3.5 py-2.5 rounded-xl border border-amber-300 dark:border-indigo-700 bg-white dark:bg-slate-800 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="reader-field w-full px-3.5 py-2.5 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
               />
             </div>
 
@@ -362,7 +354,7 @@ export const ParentLoginModal: React.FC<ParentLoginModalProps> = ({
                 value={parentName}
                 onChange={(e) => setParentName(e.target.value)}
                 placeholder="Contoh: Budi Santoso"
-                className="w-full px-3.5 py-2.5 rounded-xl border border-amber-300 dark:border-indigo-700 bg-white dark:bg-slate-800 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500"
+                className="reader-field w-full px-3.5 py-2.5 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[var(--magic-blue)]"
               />
             </div>
 
@@ -375,14 +367,14 @@ export const ParentLoginModal: React.FC<ParentLoginModalProps> = ({
                 value={emailInput}
                 onChange={(e) => setEmailInput(e.target.value)}
                 placeholder="orangtua@gmail.com"
-                className="w-full px-3.5 py-2.5 rounded-xl border border-amber-300 dark:border-indigo-700 bg-white dark:bg-slate-800 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500"
+                className="reader-field w-full px-3.5 py-2.5 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[var(--magic-blue)]"
               />
             </div>
 
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full py-3.5 px-5 rounded-2xl bg-gradient-to-r from-amber-600 to-orange-500 hover:from-amber-500 hover:to-orange-400 text-white font-black text-xs shadow-lg transition-transform hover:scale-105 flex items-center justify-center gap-2 disabled:opacity-50 mt-1"
+              className="btn-primary w-full py-3.5 px-5 text-xs flex items-center justify-center gap-2 disabled:opacity-50 mt-1"
             >
               {isSubmitting ? (
                 <>
@@ -400,8 +392,8 @@ export const ParentLoginModal: React.FC<ParentLoginModalProps> = ({
         )}
 
         {/* Security Privacy Guarantee */}
-        <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-[11px] text-amber-900 dark:text-indigo-200 flex items-center gap-2">
-          <ShieldCheck className="w-4 h-4 text-amber-600 shrink-0" />
+        <div className="reader-soft-panel p-3 rounded-xl text-[11px] text-[var(--muted-ink)] dark:text-blue-200 flex items-center gap-2">
+          <ShieldCheck className="w-4 h-4 text-[var(--story-green)] shrink-0" />
           <span>
             Data email/nomor kontak Anda 100% aman dan hanya digunakan untuk mengirimkan kabar rilis cerita baru & tips parenting bersama anak.
           </span>

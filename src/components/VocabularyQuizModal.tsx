@@ -13,7 +13,6 @@ interface VocabularyQuizModalProps {
 export const VocabularyQuizModal: React.FC<VocabularyQuizModalProps> = ({
   quiz,
   onClose,
-  isNight = false,
 }) => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
@@ -72,23 +71,16 @@ export const VocabularyQuizModal: React.FC<VocabularyQuizModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in">
       <div
-        className={`w-full max-w-lg rounded-3xl overflow-hidden shadow-2xl border-4 relative flex flex-col ${
-          isNight
-            ? 'bg-slate-900 border-indigo-500/80 text-slate-100'
-            : 'bg-amber-50 border-amber-300 text-amber-950'
-        }`}
+        className="reader-modal w-full max-w-lg rounded-[1.35rem] overflow-hidden relative flex flex-col"
       >
-        {/* Glow */}
-        <div className="absolute -top-10 -right-10 w-40 h-40 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none" />
-
         {/* Modal Header */}
-        <div className="p-4 sm:p-5 bg-gradient-to-r from-indigo-700 to-purple-700 text-white flex items-center justify-between">
+        <div className="p-4 sm:p-5 bg-[var(--magic-blue)] text-white flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="p-2 rounded-2xl bg-white/20 backdrop-blur-xs text-white">
               <Languages className="w-6 h-6" />
             </div>
             <div>
-              <div className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-wider text-amber-300">
+              <div className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-wider text-blue-100">
                 <Sparkles className="w-3 h-3" />
                 <span>Kuis Kosakata Bahasa Inggris</span>
               </div>
@@ -109,26 +101,26 @@ export const VocabularyQuizModal: React.FC<VocabularyQuizModalProps> = ({
         {!isFinished ? (
           <div className="p-6 flex flex-col gap-5">
             {/* Progress indicator */}
-            <div className="flex items-center justify-between text-xs font-black text-slate-800 dark:text-indigo-200">
+            <div className="flex items-center justify-between text-xs font-black text-[var(--muted-ink)] dark:text-blue-200">
               <span>
                 Soal {currentQuestionIndex + 1} dari {quiz.questions.length}
               </span>
-              <span className="px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-800 dark:text-indigo-300">
+              <span className="px-2.5 py-0.5 rounded-lg bg-[var(--magic-blue)]/15 text-[var(--magic-blue)] dark:text-blue-200">
                 Skor: {score}
               </span>
             </div>
 
             {/* Question Card */}
-            <div className="p-5 rounded-2xl bg-white dark:bg-slate-800 border-2 border-indigo-200 dark:border-indigo-800 shadow-sm flex flex-col items-center text-center gap-2">
+            <div className="reader-soft-panel p-5 rounded-2xl flex flex-col items-center text-center gap-2">
               <span className="text-4xl animate-bounce">{question.emoji || '🇬🇧'}</span>
               
               <div className="flex items-center justify-center gap-2">
-                <h4 className="text-2xl sm:text-3xl font-black text-indigo-950 dark:text-indigo-100">
+                <h4 className="text-2xl sm:text-3xl font-black text-[var(--ink)] dark:text-slate-100">
                   "{question.wordEn}"
                 </h4>
                 <button
                   onClick={handleSpeakWord}
-                  className="p-2 rounded-full bg-indigo-100 hover:bg-indigo-200 dark:bg-indigo-900/60 dark:hover:bg-indigo-800 text-indigo-700 dark:text-indigo-200 transition-transform active:scale-90"
+                  className="p-2 rounded-full bg-[var(--magic-blue)]/12 hover:bg-[var(--magic-blue)]/20 dark:bg-blue-950/70 dark:hover:bg-blue-900 text-[var(--magic-blue)] dark:text-blue-200 transition-transform active:scale-90"
                   title="Dengarkan pengucapan kata"
                 >
                   <Volume2 className="w-5 h-5" />
@@ -141,7 +133,7 @@ export const VocabularyQuizModal: React.FC<VocabularyQuizModalProps> = ({
                 </span>
               )}
 
-              <p className="text-xs font-extrabold text-indigo-700 dark:text-indigo-300 mt-2">
+              <p className="text-xs font-extrabold text-[var(--muted-ink)] dark:text-slate-300 mt-2">
                 Apa arti kata Bahasa Inggris di atas dalam Bahasa Indonesia?
               </p>
             </div>
@@ -149,14 +141,14 @@ export const VocabularyQuizModal: React.FC<VocabularyQuizModalProps> = ({
             {/* Answer Options */}
             <div className="grid grid-cols-2 gap-3">
               {question.optionsId.map((opt, idx) => {
-                let btnStyle = 'bg-white dark:bg-slate-800 border-indigo-200 dark:border-indigo-800 hover:border-indigo-400 text-slate-800 dark:text-slate-100';
+                let btnStyle = 'reader-field hover:border-[var(--magic-blue)] text-slate-800 dark:text-slate-100';
                 if (isAnswered) {
                   if (opt === question.correctTranslationId) {
                     btnStyle = 'bg-emerald-600 border-emerald-400 text-white font-black ring-2 ring-emerald-300';
                   } else if (opt === selectedOption) {
                     btnStyle = 'bg-rose-600 border-rose-400 text-white font-bold';
                   } else {
-                    btnStyle = 'bg-slate-100 dark:bg-slate-850 opacity-50 border-transparent';
+                    btnStyle = 'bg-slate-100 dark:bg-slate-800 opacity-50 border-transparent';
                   }
                 }
 
@@ -183,7 +175,7 @@ export const VocabularyQuizModal: React.FC<VocabularyQuizModalProps> = ({
             {isAnswered && (
               <button
                 onClick={handleNextQuestion}
-                className="w-full py-3.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-black rounded-2xl text-xs sm:text-sm shadow-lg transition-transform hover:scale-[1.02] flex items-center justify-center gap-2"
+                className="btn-primary w-full py-3.5 text-xs sm:text-sm flex items-center justify-center gap-2"
               >
                 <span>
                   {currentQuestionIndex + 1 < quiz.questions.length ? 'Soal Berikutnya ➔' : 'Lihat Hasil Kuis 🎉'}
@@ -199,7 +191,7 @@ export const VocabularyQuizModal: React.FC<VocabularyQuizModalProps> = ({
             </div>
 
             <div>
-              <h3 className="text-2xl font-black text-indigo-950 dark:text-indigo-100">
+              <h3 className="text-2xl font-black text-[var(--ink)] dark:text-slate-100">
                 Kuis Kosakata Selesai!
               </h3>
               <p className="text-xs text-slate-800 dark:text-slate-300 mt-1">
@@ -207,11 +199,11 @@ export const VocabularyQuizModal: React.FC<VocabularyQuizModalProps> = ({
               </p>
             </div>
 
-            <div className="p-4 w-full rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex flex-col gap-1 items-center">
-              <span className="text-xs uppercase font-extrabold text-indigo-800 dark:text-indigo-300">
+            <div className="reader-soft-panel p-4 w-full rounded-2xl flex flex-col gap-1 items-center">
+              <span className="text-xs uppercase font-extrabold text-[var(--muted-ink)] dark:text-blue-200">
                 Skor Akhir Kamu
               </span>
-              <span className="text-4xl font-black text-indigo-900 dark:text-indigo-100">
+              <span className="text-4xl font-black text-[var(--ink)] dark:text-slate-100">
                 {score} / {quiz.questions.length}
               </span>
             </div>
@@ -219,7 +211,7 @@ export const VocabularyQuizModal: React.FC<VocabularyQuizModalProps> = ({
             <div className="w-full flex items-center gap-3">
               <button
                 onClick={handleRestart}
-                className="flex-1 py-3 px-4 rounded-2xl bg-indigo-100 hover:bg-indigo-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-indigo-900 dark:text-indigo-200 font-extrabold text-xs flex items-center justify-center gap-2"
+                className="btn-secondary flex-1 py-3 px-4 text-xs flex items-center justify-center gap-2"
               >
                 <RotateCcw className="w-4 h-4" />
                 <span>Coba Lagi</span>
@@ -227,7 +219,7 @@ export const VocabularyQuizModal: React.FC<VocabularyQuizModalProps> = ({
 
               <button
                 onClick={onClose}
-                className="flex-1 py-3 px-4 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-black text-xs shadow-md"
+                className="btn-primary flex-1 py-3 px-4 text-xs"
               >
                 Selesai
               </button>

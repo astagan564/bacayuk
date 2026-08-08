@@ -153,27 +153,24 @@ export const OfflineDownloadModal: React.FC<OfflineDownloadModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
       <div
-        className={`w-full max-w-lg rounded-3xl p-6 sm:p-8 shadow-2xl border-4 relative overflow-hidden flex flex-col gap-5 ${
+        className={`w-full max-w-lg rounded-2xl p-6 shadow-2xl border relative overflow-hidden flex flex-col gap-5 ${
           isNight
-            ? 'bg-slate-900 text-slate-100 border-indigo-500/80'
-            : 'bg-amber-50 text-amber-950 border-amber-300'
+            ? 'bg-[#111b29] text-slate-100 border-blue-900/70'
+            : 'bg-[#fffaf0] text-[var(--ink)] border-[#eadbc1]'
         }`}
       >
-        {/* Glow */}
-        <div className="absolute -top-12 -right-12 w-48 h-48 bg-emerald-400/20 rounded-full blur-3xl pointer-events-none" />
-
         {/* Header */}
         <div className="flex items-center justify-between pb-3 border-b border-amber-200/50">
           <div className="flex items-center gap-2.5">
-            <div className="p-2.5 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-500 text-white font-black shadow-md">
+            <div className="p-2.5 rounded-xl bg-[var(--story-green)] text-white shadow-sm">
               <Download className="w-6 h-6" />
             </div>
             <div>
               <div className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
                 <CheckCircle2 className="w-3.5 h-3.5" />
-                <span>Lisensi Unduhan Offline Aktif</span>
+                <span>Lisensi unduhan aktif</span>
               </div>
-              <h2 className="text-xl sm:text-2xl font-black tracking-tight">Unduh Versi Offline</h2>
+              <h2 className="text-xl sm:text-2xl mb-0 tracking-normal">Unduh versi offline</h2>
             </div>
           </div>
 
@@ -187,7 +184,7 @@ export const OfflineDownloadModal: React.FC<OfflineDownloadModalProps> = ({
         </div>
 
         {/* Story Info Banner */}
-        <div className="p-3.5 rounded-2xl bg-white/80 dark:bg-slate-800/80 border border-amber-200 dark:border-indigo-800/80 shadow-sm flex items-center gap-3">
+        <div className="p-3.5 rounded-xl bg-white/80 dark:bg-slate-800/80 border border-[#eadbc1] dark:border-blue-900/60 shadow-sm flex items-center gap-3">
           <div
             className={`w-10 h-10 rounded-xl bg-gradient-to-br ${story.coverBg} flex items-center justify-center text-white shrink-0 shadow-md`}
           >
@@ -201,11 +198,11 @@ export const OfflineDownloadModal: React.FC<OfflineDownloadModalProps> = ({
           </div>
         </div>
 
-        {/* Dynamic Security & Expiration Info Box */}
-        <div className="p-3.5 rounded-2xl bg-gradient-to-r from-amber-100/80 to-orange-100/80 dark:from-slate-800 dark:to-slate-850 border border-amber-300 dark:border-indigo-700/80 text-xs flex flex-col gap-2">
+        {/* Security & Expiration Info Box */}
+        <div className="p-3.5 rounded-xl bg-[#fff7e6] dark:bg-slate-800 border border-[#eadbc1] dark:border-blue-900/60 text-xs flex flex-col gap-2">
           <div className="flex items-center justify-between font-extrabold text-amber-900 dark:text-indigo-200">
             <span className="flex items-center gap-1">
-              <Clock className="w-3.5 h-3.5 text-amber-600" /> Masa Berlaku Link Dynamic:
+              <Clock className="w-3.5 h-3.5 text-[var(--warm-gold)]" /> Masa berlaku link:
             </span>
             <span className={expired ? 'text-rose-600' : 'text-emerald-600'}>
               {expired ? 'Kedaluwarsa (24 Jam)' : 'Aktif'}
@@ -236,7 +233,7 @@ export const OfflineDownloadModal: React.FC<OfflineDownloadModalProps> = ({
               className="mt-1 py-2 px-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-amber-950 font-extrabold text-xs shadow-sm flex items-center justify-center gap-1.5 transition-transform hover:scale-[1.02]"
             >
               <RefreshCw className="w-3.5 h-3.5" />
-              <span>Perbarui Masa Berlaku Dynamic Link (Gratis)</span>
+              <span>Perbarui masa berlaku link</span>
             </button>
           )}
 
@@ -257,19 +254,19 @@ export const OfflineDownloadModal: React.FC<OfflineDownloadModalProps> = ({
 
         {/* Format Choices */}
         <div className="flex flex-col gap-3">
-          <span className="text-xs font-black uppercase text-amber-900 dark:text-indigo-200">
-            Pilih Format Berkas Offline
+          <span className="text-xs font-bold text-[var(--muted-ink)] dark:text-blue-200">
+            Pilih format file
           </span>
 
           {/* Option 1: PDF Printable (Primary Recommendation) */}
-          <div className="p-4 rounded-2xl bg-white dark:bg-slate-800 border-2 border-amber-300 dark:border-indigo-700 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div className="p-4 rounded-xl bg-white dark:bg-slate-800 border border-[#eadbc1] dark:border-blue-900/60 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div className="flex items-start gap-3">
               <div className="p-2.5 rounded-xl bg-red-100 text-red-600 font-bold shrink-0">
                 <Printer className="w-6 h-6" />
               </div>
               <div>
-                <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 text-[10px] font-extrabold">
-                  ⭐ Rekomendasi Cetak Di Rumah
+                <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[var(--warm-gold)]/15 text-[#8a5e12] text-[10px] font-bold">
+                  Rekomendasi cetak
                 </div>
                 <h4 className="font-extrabold text-sm text-slate-900 dark:text-slate-100 mt-0.5">
                   Format PDF (Printable Book)
@@ -283,7 +280,7 @@ export const OfflineDownloadModal: React.FC<OfflineDownloadModalProps> = ({
             <button
               onClick={handleDownloadPdf}
               disabled={isGeneratingPdf || expired || downloadLimitReached}
-              className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white font-black text-xs shadow-md transition-transform hover:scale-105 flex items-center justify-center gap-1.5 shrink-0 disabled:opacity-50"
+              className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-[var(--rose)] hover:bg-[#c54c59] text-white font-bold text-xs shadow-sm transition-transform hover:scale-[1.02] flex items-center justify-center gap-1.5 shrink-0 disabled:opacity-50"
             >
               {isGeneratingPdf ? (
                 <>
@@ -300,14 +297,14 @@ export const OfflineDownloadModal: React.FC<OfflineDownloadModalProps> = ({
           </div>
 
           {/* Option 2: EPUB (For Tablet / iPad / Apple Books) */}
-          <div className="p-4 rounded-2xl bg-white dark:bg-slate-800 border-2 border-amber-300 dark:border-indigo-700 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div className="p-4 rounded-xl bg-white dark:bg-slate-800 border border-[#eadbc1] dark:border-blue-900/60 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div className="flex items-start gap-3">
               <div className="p-2.5 rounded-xl bg-blue-100 text-blue-600 font-bold shrink-0">
                 <Tablet className="w-6 h-6" />
               </div>
               <div>
-                <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-100 text-blue-800 text-[10px] font-extrabold">
-                  📱 Untuk Tablet & iPad
+                <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[var(--magic-blue)]/15 text-[var(--magic-blue)] text-[10px] font-bold">
+                  Untuk tablet
                 </div>
                 <h4 className="font-extrabold text-sm text-slate-900 dark:text-slate-100 mt-0.5">
                   Format EPUB (E-Book)
@@ -321,7 +318,7 @@ export const OfflineDownloadModal: React.FC<OfflineDownloadModalProps> = ({
             <button
               onClick={handleDownloadEpub}
               disabled={isGeneratingEpub || expired || downloadLimitReached}
-              className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-xs shadow-md transition-transform hover:scale-105 flex items-center justify-center gap-1.5 shrink-0 disabled:opacity-50"
+              className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-[var(--magic-blue)] hover:bg-[#3f5f8f] text-white font-bold text-xs shadow-sm transition-transform hover:scale-[1.02] flex items-center justify-center gap-1.5 shrink-0 disabled:opacity-50"
             >
               {isGeneratingEpub ? (
                 <>

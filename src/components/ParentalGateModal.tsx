@@ -11,7 +11,6 @@ interface ParentalGateModalProps {
 export const ParentalGateModal: React.FC<ParentalGateModalProps> = ({
   onSuccess,
   onCancel,
-  isNight = false,
 }) => {
   const [num1, setNum1] = useState(12);
   const [num2, setNum2] = useState(7);
@@ -63,9 +62,7 @@ export const ParentalGateModal: React.FC<ParentalGateModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
       <div
-        className={`w-full max-w-md rounded-3xl p-6 sm:p-8 shadow-2xl border-4 relative flex flex-col gap-5 ${
-          isNight ? 'bg-slate-900 text-slate-100 border-indigo-500' : 'bg-amber-50 text-amber-950 border-amber-300'
-        }`}
+        className="reader-modal w-full max-w-md rounded-[1.35rem] p-6 sm:p-8 relative flex flex-col gap-5"
       >
         <button
           onClick={onCancel}
@@ -76,12 +73,12 @@ export const ParentalGateModal: React.FC<ParentalGateModalProps> = ({
         </button>
 
         <div className="flex items-center gap-3">
-          <div className="p-3 rounded-2xl bg-amber-500 text-amber-950 font-black shadow-lg">
+          <div className="p-3 rounded-2xl bg-[var(--story-green)] text-white font-black shadow-lg">
             <Lock className="w-6 h-6" />
           </div>
           <div>
-            <span className="text-[10px] font-black uppercase tracking-wider text-amber-700 dark:text-amber-300 flex items-center gap-1">
-              <ShieldCheck className="w-3.5 h-3.5 text-amber-600" />
+            <span className="text-[10px] font-black uppercase tracking-wider text-[var(--muted-ink)] dark:text-blue-200 flex items-center gap-1">
+              <ShieldCheck className="w-3.5 h-3.5 text-[var(--story-green)]" />
               <span>Gerbang Keamanan Orang Tua (Parental Gate)</span>
             </span>
             <h3 className="text-xl font-black">Area Khusus Orang Tua</h3>
@@ -93,8 +90,8 @@ export const ParentalGateModal: React.FC<ParentalGateModalProps> = ({
         </p>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <div className="p-4 rounded-2xl bg-white dark:bg-slate-800 border-2 border-amber-300 dark:border-indigo-800 text-center flex flex-col items-center gap-2 shadow-inner">
-            <div className="text-xs font-black text-amber-800 dark:text-amber-300 uppercase tracking-wide flex items-center gap-1">
+          <div className="reader-soft-panel p-4 rounded-2xl text-center flex flex-col items-center gap-2">
+            <div className="text-xs font-black text-[var(--muted-ink)] dark:text-blue-200 uppercase tracking-wide flex items-center gap-1">
               <HelpCircle className="w-4 h-4" />
               <span>{settings?.securityQuestionType === 'custom' ? 'Jawab pertanyaan berikut:' : 'Berapa hasil penjumlahan berikut?'}</span>
             </div>
@@ -111,7 +108,7 @@ export const ParentalGateModal: React.FC<ParentalGateModalProps> = ({
                 setErrorMsg(null);
               }}
               placeholder="Ketik jawaban di sini..."
-              className="w-full max-w-[250px] text-center px-4 py-2.5 rounded-xl border-2 border-amber-400 dark:border-indigo-600 bg-amber-50/50 dark:bg-slate-900 font-black text-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+              className="reader-field w-full max-w-[250px] text-center px-4 py-2.5 rounded-xl font-black text-lg focus:outline-none focus:ring-2 focus:ring-[var(--magic-blue)]"
               autoFocus
               required
             />
@@ -128,13 +125,13 @@ export const ParentalGateModal: React.FC<ParentalGateModalProps> = ({
             <button
               type="button"
               onClick={onCancel}
-              className="flex-1 py-3 px-4 rounded-xl border border-slate-300 text-xs font-black hover:bg-black/5"
+              className="btn-secondary flex-1 py-3 px-4 text-xs"
             >
               Kembali
             </button>
             <button
               type="submit"
-              className="flex-[1.5] py-3 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-amber-950 font-black text-xs shadow-md transition-transform hover:scale-[1.02] flex items-center justify-center gap-1.5"
+              className="btn-primary flex-[1.5] py-3 px-4 text-xs flex items-center justify-center gap-1.5"
             >
               <CheckCircle2 className="w-4 h-4" />
               <span>Selesai & Lanjutkan</span>
