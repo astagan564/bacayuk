@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Admin editor styling**: Updated story editor inputs and nested panels to use the same reader field and soft-panel styles as the public reading flows.
 - **Mobile-first reader layout**: Optimized reading mode for phones and tablets with single-page default, tighter book spacing, clearer page controls, larger touch targets, and a cleaner mobile tools sheet.
 - **Header responsiveness**: Reduced crowded mobile header actions, kept the theme toggle visible, and made the BacaYuk brand area truncate cleanly instead of overlapping account controls.
+- **Admin book CMS**: Expanded internal book management with Supabase-backed persistence, draft/published status, validation, cover preview, page add/duplicate/delete controls, interactive element editing, and per-page mini quiz editing.
+- **Checkout story lookup**: Payment creation now resolves book title and price from the Supabase story table before falling back to bundled stories.
 
 ### Fixed
 - **Dark mode mismatch**: Fixed light cards and low-contrast text appearing inside dark mode by aligning reusable CSS selectors with the app's `.dark` class strategy.
@@ -20,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Modal readability**: Improved text, divider, field, and button contrast across parent login, parental gate, vocabulary, reading stats, voice recorder, rest reminder, completion, and changelog modals.
 - **Reading footer overflow**: Hid the marketing footer while a story is open so mobile reading pages no longer appear to stretch into a long footer after scrolling.
 - **Homepage logo collision**: Fixed the front-page header where the logo text could be clipped behind parent login/logout and utility buttons on narrow screens.
+- **Admin story persistence**: Fixed added or edited books disappearing after refresh by introducing a story store with local fallback and server-side Supabase sync.
 
 ## [0.0.1] - 2026-08-08
 

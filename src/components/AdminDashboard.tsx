@@ -1,5 +1,5 @@
 ﻿import React, { useState, useEffect } from 'react';
-import { Story, StoryPage } from '../types';
+import { InteractiveElement, Story, StoryPage } from '../types';
 import {
   adminStore,
   AdminSettings,
@@ -40,7 +40,7 @@ import {
 
 interface AdminDashboardProps {
   stories: Story[];
-  onUpdateStories: (updatedStories: Story[]) => void;
+  onUpdateStories: (updatedStories: Story[]) => void | Promise<void>;
   onBackToHome: () => void;
   isNight?: boolean;
 }
@@ -102,6 +102,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   // Story Uploader / Editor Modal State
   const [editingStory, setEditingStory] = useState<Story | null>(null);
   const [isNewStory, setIsNewStory] = useState(false);
+  const [storyFormErrors, setStoryFormErrors] = useState<string[]>([]);
+  const [previewPageIndex, setPreviewPageIndex] = useState(0);
 
   // New Coupon Form State
   const [newCouponCode, setNewCouponCode] = useState('');
@@ -114,6 +116,69 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const showToast = (msg: string) => {
     setToast(msg);
     setTimeout(() => setToast(null), 3000);
+  };
+
+  const createBlankPage = (pageNumber: number): StoryPage => ({
+    pageNumber,
+    title: `Halaman ${pageNumber}`,
+    text: '',
+    textEn: '',
+    illustrationType: 'forest',
+    colors: {
+      bgGradFrom: 'from-emerald-100',
+      bgGradTo: 'to-amber-100',
+      textBg: 'bg-white/80',
+      accentColor: 'emerald',
+      borderAccent: 'border-emerald-300',
+    },
+  });
+
+  const normalizeStoryForSave = (story: Story): Story => ({
+    ...story,
+    id: story.id.trim(),
+    title: story.title.trim(),
+    author: story.author.trim(),
+    category: story.category.trim(),
+    targetAge: story.targetAge.trim(),
+    description: story.description.trim(),
+    moralMessage: story.moralMessage.trim(),
+    coverImage: story.coverImage.trim(),
+    status: story.status || 'draft',
+    pages: story.pages.map((page, index) => ({
+      ...page,
+      pageNumber: index + 1,
+      title: page.title?.trim() || `Halaman ${index + 1}`,
+      text: page.text.trim(),
+      textEn: page.textEn?.trim(),
+      illustrationType: page.illustrationType || 'forest',
+      colors: page.colors || createBlankPage(index + 1).colors,
+    })),
+    glossary: (story.glossary || []).filter((item) => item.wordEn.trim() && item.translationId.trim()),
+  });
+
+  const validateStory = (story: Story): string[] => {
+    const errors: string[] = [];
+    const normalized = normalizeStoryForSave(story);
+
+    if (!normalized.title) errors.push('Judul buku wajib diisi.');
+    if (!normalized.id.trim()) errors.push('ID buku wajib diisi.');
+    if (!normalized.author) errors.push('Nama penulis wajib diisi.');
+    if (!normalized.category) errors.push('Kategori wajib diisi.');
+    if (!normalized.description) errors.push('Deskripsi singkat wajib diisi.');
+    if (!normalized.coverImage) errors.push('URL cover wajib diisi.');
+    if (normalized.downloadEnabled !== false && (normalized.ebookPrice || 0) < 0) {
+      errors.push('Harga e-book tidak boleh negatif.');
+    }
+    if (normalized.pages.length === 0) errors.push('Buku minimal harus punya 1 halaman.');
+
+    normalized.pages.forEach((page, index) => {
+      if (!page.text) errors.push(`Teks Bahasa Indonesia halaman ${index + 1} masih kosong.`);
+      if (page.illustrationType === 'custom' && !page.illustrationPrompt?.trim() && !page.customSvgPath?.trim()) {
+        errors.push(`Halaman ${index + 1} bertipe custom perlu prompt ilustrasi atau path SVG.`);
+      }
+    });
+
+    return errors;
   };
 
   // Finance Filter
@@ -131,21 +196,41 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   };
 
   // Handle editing/saving story in CMS
-  const handleSaveStoryCMS = (e: React.FormEvent) => {
+  const handleSaveStoryCMS = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingStory) return;
 
-    let updatedList: Story[];
-    if (isNewStory) {
-      updatedList = [editingStory, ...stories];
-      showToast(`Buku "${editingStory.title}" ditambahkan.`);
-    } else {
-      updatedList = stories.map((s) => (s.id === editingStory.id ? editingStory : s));
-      showToast(`Perubahan "${editingStory.title}" disimpan.`);
+    const errors = validateStory(editingStory);
+    if (isNewStory && stories.some((story) => story.id === editingStory.id.trim())) {
+      errors.push('ID buku sudah dipakai buku lain.');
+    }
+    if (errors.length > 0) {
+      setStoryFormErrors(errors);
+      showToast('Periksa kembali data buku.');
+      return;
     }
 
-    onUpdateStories(updatedList);
-    setEditingStory(null);
+    const normalizedStory = normalizeStoryForSave(editingStory);
+    let updatedList: Story[];
+    let successMessage: string;
+    if (isNewStory) {
+      updatedList = [normalizedStory, ...stories];
+      successMessage = `Buku "${normalizedStory.title}" ditambahkan.`;
+    } else {
+      updatedList = stories.map((s) => (s.id === normalizedStory.id ? normalizedStory : s));
+      successMessage = `Perubahan "${normalizedStory.title}" disimpan.`;
+    }
+
+    try {
+      await onUpdateStories(updatedList);
+      showToast(successMessage);
+      setStoryFormErrors([]);
+      setEditingStory(null);
+    } catch {
+      showToast('Tersimpan lokal, tetapi belum tersinkron ke Supabase. Periksa service role key/server.');
+      setStoryFormErrors([]);
+      setEditingStory(null);
+    }
   };
 
   // Handle Adding New Coupon
@@ -309,6 +394,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     moralMessage: 'Belajar dan bersabar membawa keberhasilan!',
                     targetAge: '4-8 Tahun',
                     description: 'Kisah seru yang penuh pesan kebaikan untuk anak.',
+                    status: 'draft',
                     accessStatus: 'free_member',
                     downloadEnabled: true,
                     ebookPrice: 15000,
@@ -329,6 +415,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     ],
                   });
                   setIsNewStory(true);
+                  setStoryFormErrors([]);
+                  setPreviewPageIndex(0);
                 }}
                 className="btn-primary py-2.5 px-4 text-xs flex items-center gap-1.5 shrink-0"
               >
@@ -373,6 +461,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                               Berbayar
                             </span>
                           )}
+                          <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold border ${
+                            story.status === 'draft'
+                              ? 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-900 dark:text-slate-300 dark:border-slate-700'
+                              : 'bg-emerald-500/15 text-emerald-700 border-emerald-500/30 dark:text-emerald-300'
+                          }`}>
+                            {story.status === 'draft' ? 'Draft' : 'Published'}
+                          </span>
 
                           {downloadOk ? (
                             <span className="px-2 py-0.5 rounded-md bg-white/70 text-[var(--muted-ink)] dark:bg-slate-900 dark:text-blue-200 text-[10px] font-bold">
@@ -403,12 +498,30 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                             onClick={() => {
                               setEditingStory({ ...story, accessStatus: status, downloadEnabled: downloadOk, ebookPrice: price });
                               setIsNewStory(false);
+                              setStoryFormErrors([]);
+                              setPreviewPageIndex(0);
                             }}
                             className="p-1.5 rounded-lg bg-[var(--magic-blue)]/10 text-[var(--magic-blue)] dark:text-blue-200 hover:bg-[var(--magic-blue)]/18 font-bold transition-colors flex items-center gap-1"
                             title="Edit Buku Cerita"
                           >
                             <Edit className="w-3.5 h-3.5" />
                             <span>Edit</span>
+                          </button>
+                          <button
+                            onClick={async () => {
+                              if (!window.confirm(`Hapus buku "${story.title}" dari katalog?`)) return;
+                              try {
+                                await onUpdateStories(stories.filter((item) => item.id !== story.id));
+                                showToast(`Buku "${story.title}" dihapus.`);
+                              } catch {
+                                showToast('Buku dihapus dari data lokal, tetapi sinkron Supabase belum berhasil.');
+                              }
+                            }}
+                            className="p-1.5 rounded-lg bg-rose-500/10 text-rose-600 dark:text-rose-300 hover:bg-rose-500/18 font-bold transition-colors flex items-center gap-1"
+                            title="Hapus Buku Cerita"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                            <span>Hapus</span>
                           </button>
                         </div>
                       </div>
@@ -1059,7 +1172,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         {editingStory && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in overflow-y-auto">
             <div
-              className="reader-modal w-full max-w-2xl rounded-[1.35rem] p-6 relative my-auto flex flex-col gap-5 max-h-[90vh] overflow-y-auto"
+              className="reader-modal w-full max-w-5xl rounded-[1.35rem] p-5 sm:p-6 relative my-auto flex flex-col gap-5 max-h-[90vh] overflow-y-auto"
             >
               <div className="flex items-start sm:items-center justify-between gap-3 pb-3 border-b reader-divider">
                 <h3 className="text-lg font-black">
@@ -1074,6 +1187,20 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               </div>
 
               <form onSubmit={handleSaveStoryCMS} className="flex flex-col gap-4 text-xs font-semibold">
+                {storyFormErrors.length > 0 && (
+                  <div className="rounded-2xl border border-rose-300 bg-rose-50 p-3 text-rose-800 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-200">
+                    <div className="flex items-center gap-2 font-black mb-2">
+                      <AlertCircle className="w-4 h-4" />
+                      <span>Perlu diperbaiki sebelum disimpan</span>
+                    </div>
+                    <ul className="list-disc pl-5 space-y-1 font-semibold">
+                      {storyFormErrors.map((error) => (
+                        <li key={error}>{error}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
                 <div>
                   <label className="block font-bold mb-1">Judul Buku Cerita</label>
                   <input
@@ -1083,6 +1210,41 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     className="reader-field w-full px-3 py-2 rounded-xl font-bold"
                     required
                   />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block font-bold mb-1">Penulis</label>
+                    <input
+                      type="text"
+                      value={editingStory.author}
+                      onChange={(e) => setEditingStory({ ...editingStory, author: e.target.value })}
+                      className="reader-field w-full px-3 py-2 rounded-xl"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold mb-1">Status Publikasi</label>
+                    <select
+                      value={editingStory.status || 'draft'}
+                      onChange={(e) => setEditingStory({ ...editingStory, status: e.target.value as Story['status'] })}
+                      className="reader-field w-full px-3 py-2 rounded-xl"
+                    >
+                      <option value="draft">Draft - belum tampil di katalog</option>
+                      <option value="published">Published - tampil di katalog</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block font-bold mb-1">ID Buku</label>
+                    <input
+                      type="text"
+                      value={editingStory.id}
+                      onChange={(e) => setEditingStory({ ...editingStory, id: e.target.value.trim() })}
+                      className="reader-field w-full px-3 py-2 rounded-xl"
+                      disabled={!isNewStory}
+                      required
+                    />
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
@@ -1114,6 +1276,30 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     type="text"
                     value={editingStory.coverImage}
                     onChange={(e) => setEditingStory({ ...editingStory, coverImage: e.target.value })}
+                    className="reader-field w-full px-3 py-2 rounded-xl"
+                    required
+                  />
+                  <div className="mt-2 flex items-center gap-3 rounded-2xl reader-soft-panel p-3">
+                    <img
+                      src={editingStory.coverImage}
+                      alt={editingStory.title}
+                      className="h-28 w-20 rounded-xl object-cover border border-[#eadbc1] dark:border-blue-900 bg-white"
+                    />
+                    <div className="min-w-0">
+                      <p className="font-black text-sm truncate">{editingStory.title || 'Judul buku'}</p>
+                      <p className="mt-1 text-[11px] text-[var(--muted-ink)] dark:text-slate-300 line-clamp-3">
+                        {editingStory.description || 'Deskripsi buku akan tampil di kartu katalog.'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block font-bold mb-1">Deskripsi Singkat Katalog</label>
+                  <textarea
+                    rows={2}
+                    value={editingStory.description}
+                    onChange={(e) => setEditingStory({ ...editingStory, description: e.target.value })}
                     className="reader-field w-full px-3 py-2 rounded-xl"
                     required
                   />
@@ -1228,17 +1414,108 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     <span className="text-[10px] bg-indigo-200 text-indigo-900 font-bold px-2 py-0.5 rounded-full">
                       {editingStory.pages.length} Halaman
                     </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const nextPage = createBlankPage(editingStory.pages.length + 1);
+                        setEditingStory({ ...editingStory, pages: [...editingStory.pages, nextPage] });
+                        setPreviewPageIndex(editingStory.pages.length);
+                      }}
+                      className="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-[11px]"
+                    >
+                      + Tambah Halaman
+                    </button>
                   </div>
 
-                  <div className="flex flex-col gap-3 max-h-60 overflow-y-auto pr-1">
+                  <div className="flex flex-col gap-3 max-h-[28rem] overflow-y-auto pr-1">
                     {editingStory.pages.map((pg, idx) => (
                       <div
                         key={pg.id || idx}
                         className="reader-soft-panel p-3 rounded-xl flex flex-col gap-2"
                       >
-                        <span className="font-extrabold text-xs text-indigo-800 dark:text-indigo-300">
-                          Halaman {pg.pageNumber}
-                        </span>
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setPreviewPageIndex(idx)}
+                            className={`text-left font-extrabold text-xs ${
+                              previewPageIndex === idx ? 'text-[var(--story-green)]' : 'text-indigo-800 dark:text-indigo-300'
+                            }`}
+                          >
+                            Halaman {idx + 1}
+                          </button>
+                          <div className="flex flex-wrap gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newPages = [...editingStory.pages];
+                                const copy = {
+                                  ...pg,
+                                  id: `page_${Date.now()}`,
+                                  pageNumber: idx + 2,
+                                  title: `${pg.title || `Halaman ${idx + 1}`} (salinan)`,
+                                };
+                                newPages.splice(idx + 1, 0, copy);
+                                setEditingStory({ ...editingStory, pages: newPages });
+                                setPreviewPageIndex(idx + 1);
+                              }}
+                              className="px-2 py-1 rounded-lg bg-white/70 dark:bg-slate-900 text-[10px] font-bold"
+                            >
+                              Duplikat
+                            </button>
+                            <button
+                              type="button"
+                              disabled={editingStory.pages.length <= 1}
+                              onClick={() => {
+                                const newPages = editingStory.pages.filter((_, pageIdx) => pageIdx !== idx);
+                                setEditingStory({ ...editingStory, pages: newPages });
+                                setPreviewPageIndex(Math.max(0, Math.min(previewPageIndex, newPages.length - 1)));
+                              }}
+                              className="px-2 py-1 rounded-lg bg-rose-500/10 text-rose-600 dark:text-rose-300 disabled:opacity-40 text-[10px] font-bold"
+                            >
+                              Hapus
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-[1fr_12rem] gap-2">
+                          <div>
+                            <label className="block text-[10px] font-bold text-[var(--muted-ink)] dark:text-slate-300">
+                              Judul halaman
+                            </label>
+                            <input
+                              type="text"
+                              value={pg.title || ''}
+                              onChange={(e) => {
+                                const newPages = [...editingStory.pages];
+                                newPages[idx] = { ...newPages[idx], title: e.target.value };
+                                setEditingStory({ ...editingStory, pages: newPages });
+                              }}
+                              className="reader-field w-full p-2 text-[11px] rounded-lg"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] font-bold text-[var(--muted-ink)] dark:text-slate-300">
+                              Ilustrasi
+                            </label>
+                            <select
+                              value={pg.illustrationType}
+                              onChange={(e) => {
+                                const newPages = [...editingStory.pages];
+                                newPages[idx] = { ...newPages[idx], illustrationType: e.target.value as StoryPage['illustrationType'] };
+                                setEditingStory({ ...editingStory, pages: newPages });
+                              }}
+                              className="reader-field w-full p-2 text-[11px] rounded-lg"
+                            >
+                              <option value="forest">Forest</option>
+                              <option value="dragon">Dragon</option>
+                              <option value="space">Space</option>
+                              <option value="sea">Sea</option>
+                              <option value="castle">Castle</option>
+                              <option value="garden">Garden</option>
+                              <option value="custom">Custom</option>
+                            </select>
+                          </div>
+                        </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                           <div>
@@ -1274,10 +1551,264 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                             />
                           </div>
                         </div>
+
+                        {pg.illustrationType === 'custom' && (
+                          <div>
+                            <label className="block text-[10px] font-bold text-[var(--muted-ink)] dark:text-slate-300">
+                              Prompt ilustrasi custom / catatan aset
+                            </label>
+                            <textarea
+                              rows={2}
+                              value={pg.illustrationPrompt || ''}
+                              onChange={(e) => {
+                                const newPages = [...editingStory.pages];
+                                newPages[idx] = { ...newPages[idx], illustrationPrompt: e.target.value };
+                                setEditingStory({ ...editingStory, pages: newPages });
+                              }}
+                              className="reader-field w-full p-2 text-[11px] rounded-lg"
+                            />
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
                 </div>
+
+                {editingStory.pages.length > 0 && (
+                  <div className="reader-soft-panel p-3.5 rounded-2xl flex flex-col gap-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-black text-xs uppercase text-[var(--muted-ink)] dark:text-blue-200 flex items-center gap-1.5">
+                        <Eye className="w-4 h-4 text-[var(--story-green)]" />
+                        Preview halaman
+                      </span>
+                      <select
+                        value={Math.min(previewPageIndex, editingStory.pages.length - 1)}
+                        onChange={(e) => setPreviewPageIndex(Number(e.target.value))}
+                        className="reader-field px-2 py-1 rounded-lg text-[11px]"
+                      >
+                        {editingStory.pages.map((page, idx) => (
+                          <option key={`${page.pageNumber}-${idx}`} value={idx}>
+                            Halaman {idx + 1}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    {(() => {
+                      const page = editingStory.pages[Math.min(previewPageIndex, editingStory.pages.length - 1)];
+                      return (
+                        <div className="rounded-2xl border border-[#eadbc1] dark:border-blue-900 overflow-hidden bg-[#fffaf0] dark:bg-slate-950">
+                          <div className="p-4 bg-gradient-to-br from-emerald-100 to-amber-100 dark:from-slate-800 dark:to-slate-900">
+                            <div className="min-h-36 rounded-2xl bg-white/70 dark:bg-slate-900/70 p-4 flex flex-col justify-end">
+                              <p className="text-[11px] font-black text-[var(--story-green)] uppercase">
+                                {page.illustrationType}
+                              </p>
+                              <h4 className="text-base font-black mb-1">{page.title || `Halaman ${page.pageNumber}`}</h4>
+                              <p className="text-sm leading-relaxed font-bold text-slate-800 dark:text-slate-100">
+                                {page.text || 'Teks cerita halaman ini belum diisi.'}
+                              </p>
+                              {page.textEn && (
+                                <p className="mt-2 text-xs leading-relaxed text-indigo-800 dark:text-indigo-200">
+                                  {page.textEn}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </div>
+                )}
+
+                {editingStory.pages.length > 0 && (() => {
+                  const pageIndex = Math.min(previewPageIndex, editingStory.pages.length - 1);
+                  const page = editingStory.pages[pageIndex];
+                  const updatePage = (nextPage: StoryPage) => {
+                    const newPages = [...editingStory.pages];
+                    newPages[pageIndex] = nextPage;
+                    setEditingStory({ ...editingStory, pages: newPages });
+                  };
+
+                  return (
+                    <div className="reader-soft-panel p-3.5 rounded-2xl flex flex-col gap-3">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <span className="font-black text-xs uppercase text-[var(--muted-ink)] dark:text-blue-200">
+                          Interaksi & kuis halaman {pageIndex + 1}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const nextElement: InteractiveElement = {
+                              id: `elem_${Date.now()}`,
+                              type: 'character',
+                              label: 'Tokoh',
+                              x: 50,
+                              y: 50,
+                              animation: 'bounce',
+                              soundType: 'pop',
+                              dialogue: 'Halo!',
+                              emoji: '⭐',
+                            };
+                            updatePage({ ...page, interactiveElements: [...(page.interactiveElements || []), nextElement] });
+                          }}
+                          className="px-2.5 py-1 rounded-lg bg-[var(--story-green)] hover:bg-[#27795b] text-white font-bold text-[11px]"
+                        >
+                          + Elemen Interaktif
+                        </button>
+                      </div>
+
+                      <div className="flex flex-col gap-2">
+                        {(page.interactiveElements || []).map((element, elemIdx) => (
+                          <div key={element.id || elemIdx} className="grid grid-cols-1 sm:grid-cols-[1fr_4rem_4rem_4rem_auto] gap-2 items-end rounded-xl bg-white/60 dark:bg-slate-900/60 p-2">
+                            <div>
+                              <label className="block text-[10px] font-bold">Label & dialog</label>
+                              <input
+                                value={element.label}
+                                onChange={(e) => {
+                                  const updated = [...(page.interactiveElements || [])];
+                                  updated[elemIdx] = { ...updated[elemIdx], label: e.target.value };
+                                  updatePage({ ...page, interactiveElements: updated });
+                                }}
+                                className="reader-field w-full p-2 text-[11px] rounded-lg"
+                              />
+                              <input
+                                value={element.dialogue || ''}
+                                onChange={(e) => {
+                                  const updated = [...(page.interactiveElements || [])];
+                                  updated[elemIdx] = { ...updated[elemIdx], dialogue: e.target.value };
+                                  updatePage({ ...page, interactiveElements: updated });
+                                }}
+                                className="reader-field w-full p-2 text-[11px] rounded-lg mt-1"
+                                placeholder="Dialog saat disentuh"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[10px] font-bold">Emoji</label>
+                              <input
+                                value={element.emoji || ''}
+                                onChange={(e) => {
+                                  const updated = [...(page.interactiveElements || [])];
+                                  updated[elemIdx] = { ...updated[elemIdx], emoji: e.target.value };
+                                  updatePage({ ...page, interactiveElements: updated });
+                                }}
+                                className="reader-field w-full p-2 text-[11px] rounded-lg"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[10px] font-bold">X%</label>
+                              <input
+                                type="number"
+                                min={0}
+                                max={100}
+                                value={element.x}
+                                onChange={(e) => {
+                                  const updated = [...(page.interactiveElements || [])];
+                                  updated[elemIdx] = { ...updated[elemIdx], x: Number(e.target.value) };
+                                  updatePage({ ...page, interactiveElements: updated });
+                                }}
+                                className="reader-field w-full p-2 text-[11px] rounded-lg"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[10px] font-bold">Y%</label>
+                              <input
+                                type="number"
+                                min={0}
+                                max={100}
+                                value={element.y}
+                                onChange={(e) => {
+                                  const updated = [...(page.interactiveElements || [])];
+                                  updated[elemIdx] = { ...updated[elemIdx], y: Number(e.target.value) };
+                                  updatePage({ ...page, interactiveElements: updated });
+                                }}
+                                className="reader-field w-full p-2 text-[11px] rounded-lg"
+                              />
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const updated = (page.interactiveElements || []).filter((_, i) => i !== elemIdx);
+                                updatePage({ ...page, interactiveElements: updated });
+                              }}
+                              className="px-2 py-2 rounded-lg bg-rose-500/10 text-rose-600 dark:text-rose-300 text-[10px] font-bold"
+                            >
+                              Hapus
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="rounded-xl bg-white/60 dark:bg-slate-900/60 p-3 flex flex-col gap-2">
+                        <label className="flex items-center gap-2 font-bold">
+                          <input
+                            type="checkbox"
+                            checked={Boolean(page.quizQuestion)}
+                            onChange={(e) => {
+                              updatePage({
+                                ...page,
+                                quizQuestion: e.target.checked
+                                  ? {
+                                      question: 'Apa pesan dari halaman ini?',
+                                      options: ['Berani mencoba', 'Menyerah', 'Tidak peduli', 'Marah-marah'],
+                                      answerIndex: 0,
+                                      explanation: 'Jawaban terbaik adalah berani mencoba dengan hati baik.',
+                                    }
+                                  : undefined,
+                              });
+                            }}
+                          />
+                          Kuis mini di halaman ini
+                        </label>
+                        {page.quizQuestion && (
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            <textarea
+                              rows={2}
+                              value={page.quizQuestion.question}
+                              onChange={(e) =>
+                                updatePage({ ...page, quizQuestion: { ...page.quizQuestion!, question: e.target.value } })
+                              }
+                              className="reader-field w-full p-2 text-[11px] rounded-lg sm:col-span-2"
+                              placeholder="Pertanyaan"
+                            />
+                            {page.quizQuestion.options.map((option, optionIdx) => (
+                              <input
+                                key={optionIdx}
+                                value={option}
+                                onChange={(e) => {
+                                  const options = [...page.quizQuestion!.options];
+                                  options[optionIdx] = e.target.value;
+                                  updatePage({ ...page, quizQuestion: { ...page.quizQuestion!, options } });
+                                }}
+                                className="reader-field w-full p-2 text-[11px] rounded-lg"
+                                placeholder={`Pilihan ${optionIdx + 1}`}
+                              />
+                            ))}
+                            <select
+                              value={page.quizQuestion.answerIndex}
+                              onChange={(e) =>
+                                updatePage({ ...page, quizQuestion: { ...page.quizQuestion!, answerIndex: Number(e.target.value) } })
+                              }
+                              className="reader-field w-full p-2 text-[11px] rounded-lg"
+                            >
+                              {page.quizQuestion.options.map((_, optionIdx) => (
+                                <option key={optionIdx} value={optionIdx}>
+                                  Jawaban benar: pilihan {optionIdx + 1}
+                                </option>
+                              ))}
+                            </select>
+                            <input
+                              value={page.quizQuestion.explanation}
+                              onChange={(e) =>
+                                updatePage({ ...page, quizQuestion: { ...page.quizQuestion!, explanation: e.target.value } })
+                              }
+                              className="reader-field w-full p-2 text-[11px] rounded-lg"
+                              placeholder="Penjelasan jawaban"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 {/* --- 2. MANAJEMEN GLOSARIUM KAMUS SENTUH --- */}
                 <div className="p-3.5 rounded-2xl bg-purple-50 dark:bg-slate-800 border-2 border-purple-200 dark:border-purple-800 flex flex-col gap-3">

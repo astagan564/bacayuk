@@ -59,10 +59,12 @@ export const StorySelector: React.FC<StorySelectorProps> = ({
 }) => {
   const [selectedCategory, setSelectedCategory] = useState<string>('Semua');
 
+  const publicStories = stories.filter((story) => story.status !== 'draft');
+
   const filteredStories =
     selectedCategory === 'Semua'
-      ? stories
-      : stories.filter((story) => story.category.includes(selectedCategory) || selectedCategory.includes(story.category));
+      ? publicStories
+      : publicStories.filter((story) => story.category.includes(selectedCategory) || selectedCategory.includes(story.category));
 
   const totalReadSeconds = (Object.values(readingTimes) as number[]).reduce((acc, curr) => acc + curr, 0);
   const adminSettings = adminStore.getSettings();

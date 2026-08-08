@@ -1,5 +1,11 @@
 ## Pembaruan UI - 2026-08-08
 
+### Admin tambah buku sudah lebih lengkap
+- Buku yang ditambah dari admin kini bisa disimpan ke database Supabase, dengan cadangan lokal bila koneksi database bermasalah.
+- Admin bisa mengatur status Draft atau Published agar buku baru tidak langsung tampil sebelum siap.
+- Form buku sekarang punya validasi, preview cover, tambah/duplikat/hapus halaman, editor elemen interaktif, dan kuis mini per halaman.
+- Harga dan judul buku baru akan dipakai saat proses pembelian e-book.
+
 ### Mode baca lebih nyaman di HP dan tablet
 - Tampilan membaca sekarang lebih mengutamakan 1 halaman di layar kecil agar cerita tidak terasa sempit.
 - Tombol lanjut, kembali, daftar halaman, rekam suara, unduh offline, bahasa, tema, dan ukuran teks dibuat lebih mudah disentuh.

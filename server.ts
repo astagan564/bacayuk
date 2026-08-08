@@ -4,9 +4,43 @@ import path from 'path';
 import { GoogleGenAI } from '@google/genai';
 import midtransClient from 'midtrans-client';
 import { INITIAL_STORIES } from './src/data/stories';
+import { createClient } from '@supabase/supabase-js';
+import type { Story } from './src/types';
 
 const DEFAULT_EBOOK_PRICE = 15000;
 const VIP_SUBSCRIPTION_PRICE = 100000;
+
+function getSupabaseAdminClient() {
+  const supabaseUrl = process.env.VITE_SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY;
+
+  if (!supabaseUrl || !serviceRoleKey) {
+    throw new Error('Supabase admin credentials are not configured.');
+  }
+
+  return createClient(supabaseUrl, serviceRoleKey, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+    },
+  });
+}
+
+function isValidAdminPin(pin: unknown) {
+  const configuredPin = process.env.ADMIN_PIN || process.env.VITE_ADMIN_PIN;
+  return Boolean(configuredPin && typeof pin === 'string' && pin === configuredPin);
+}
+
+function normalizeStory(story: Story): Story {
+  return {
+    ...story,
+    status: story.status || 'published',
+    pages: story.pages.map((page, index) => ({
+      ...page,
+      pageNumber: index + 1,
+    })),
+  };
+}
 
 const SERVER_COUPONS = [
   { code: 'BUKUANAK20', type: 'percent', value: 20, maxUsage: 100 },
@@ -64,7 +98,27 @@ function calculateDiscount(couponCode: unknown, originalAmount: number) {
   };
 }
 
-function resolveTransactionRequest(body: Record<string, unknown>) {
+async function findStoryForCheckout(storyId: string): Promise<Story | undefined> {
+  try {
+    const supabase = getSupabaseAdminClient();
+    const { data, error } = await supabase
+      .from('admin_stories')
+      .select('story, status')
+      .eq('id', storyId)
+      .eq('status', 'published')
+      .maybeSingle();
+
+    if (!error && data?.story) {
+      return normalizeStory(data.story as Story);
+    }
+  } catch (error) {
+    console.warn('Failed to load checkout story from Supabase:', error);
+  }
+
+  return INITIAL_STORIES.find((item) => item.id === storyId);
+}
+
+async function resolveTransactionRequest(body: Record<string, unknown>) {
   const purchaseType = body.purchaseType === 'vip' ? 'vip' : 'book';
   const customerName = typeof body.customerName === 'string' ? body.customerName.trim() : '';
   const customerEmail =
@@ -92,7 +146,7 @@ function resolveTransactionRequest(body: Record<string, unknown>) {
     throw new Error('storyId is required.');
   }
 
-  const story = INITIAL_STORIES.find((item) => item.id === body.storyId);
+  const story = await findStoryForCheckout(body.storyId);
   if (story?.downloadEnabled === false) {
     throw new Error('Offline download is disabled for this story.');
   }
@@ -115,12 +169,101 @@ function resolveTransactionRequest(body: Record<string, unknown>) {
   };
 }
 
-async function startServer() {
+export async function createApp(options: { serveClient?: boolean } = {}) {
   const app = express();
-  const PORT = 3000;
+  const serveClient = options.serveClient ?? true;
   const isProductionServer = process.env.NODE_ENV === 'production' || process.argv[1]?.endsWith('server.cjs');
 
   app.use(express.json());
+
+  app.get('/api/stories', async (_req, res) => {
+    try {
+      const supabase = getSupabaseAdminClient();
+      const { data, error } = await supabase
+        .from('admin_stories')
+        .select('id, story, status, sort_order, updated_at')
+        .eq('status', 'published')
+        .order('sort_order', { ascending: true })
+        .order('updated_at', { ascending: false });
+
+      if (error) {
+        throw error;
+      }
+
+      const stories = data && data.length > 0
+        ? data.map((row) => normalizeStory({ ...row.story, id: row.id, status: row.status }))
+        : INITIAL_STORIES.map(normalizeStory);
+
+      res.json({ stories });
+    } catch (error) {
+      console.warn('Falling back to bundled stories:', error);
+      res.json({ stories: INITIAL_STORIES.map(normalizeStory), fallback: true });
+    }
+  });
+
+  app.get('/api/admin/stories', async (req, res) => {
+    if (!isValidAdminPin(req.headers['x-admin-pin'])) {
+      return res.status(403).json({ error: 'PIN admin tidak valid.' });
+    }
+
+    try {
+      const supabase = getSupabaseAdminClient();
+      const { data, error } = await supabase
+        .from('admin_stories')
+        .select('id, story, status, sort_order, updated_at')
+        .order('sort_order', { ascending: true })
+        .order('updated_at', { ascending: false });
+
+      if (error) {
+        throw error;
+      }
+
+      const stories = data && data.length > 0
+        ? data.map((row) => normalizeStory({ ...row.story, id: row.id, status: row.status }))
+        : INITIAL_STORIES.map(normalizeStory);
+
+      res.json({ stories });
+    } catch (error) {
+      console.error('Failed to load admin stories:', error);
+      res.status(500).json({ error: 'Gagal memuat buku dari Supabase.' });
+    }
+  });
+
+  app.post('/api/admin/stories', async (req, res) => {
+    if (!isValidAdminPin(req.headers['x-admin-pin'])) {
+      return res.status(403).json({ error: 'PIN admin tidak valid.' });
+    }
+
+    const stories: Story[] = Array.isArray(req.body?.stories)
+      ? (req.body.stories as Story[]).map((story) => normalizeStory(story))
+      : [];
+    if (stories.length === 0) {
+      return res.status(400).json({ error: 'Daftar buku tidak boleh kosong.' });
+    }
+
+    try {
+      const supabase = getSupabaseAdminClient();
+      const payload = stories.map((story, index) => ({
+        id: story.id,
+        title: story.title,
+        category: story.category,
+        status: story.status || 'published',
+        story,
+        sort_order: index,
+        updated_at: new Date().toISOString(),
+      }));
+
+      const { error } = await supabase.from('admin_stories').upsert(payload, { onConflict: 'id' });
+      if (error) {
+        throw error;
+      }
+
+      res.json({ stories });
+    } catch (error) {
+      console.error('Failed to save admin stories:', error);
+      res.status(500).json({ error: 'Gagal menyimpan buku ke Supabase.' });
+    }
+  });
 
   // Gemini AI endpoint for custom children's story generation
   app.post('/api/generate-story', async (req, res) => {
@@ -221,7 +364,7 @@ Format JSON yang HARUS dikembalikan (tanpa markdown pembungkus selain json):
   // Midtrans Snap Token endpoint
   app.post('/api/create-transaction', async (req, res) => {
     try {
-      const order = resolveTransactionRequest(req.body);
+      const order = await resolveTransactionRequest(req.body);
       const snap = getSnapClient();
       const transactionId = `TRX-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`;
 
@@ -311,25 +454,36 @@ Format JSON yang HARUS dikembalikan (tanpa markdown pembungkus selain json):
     }
   });
 
-  // Vite middleware for development
-  if (!isProductionServer) {
-    const { createServer: createViteServer } = await import('vite');
-    const vite = await createViteServer({
-      server: { middlewareMode: true },
-      appType: 'spa',
-    });
-    app.use(vite.middlewares);
-  } else {
-    const distPath = path.join(process.cwd(), 'dist');
-    app.use(express.static(distPath));
-    app.get('*', (req, res) => {
-      res.sendFile(path.join(distPath, 'index.html'));
-    });
+  if (serveClient) {
+    // Vite middleware for development
+    if (!isProductionServer) {
+      const { createServer: createViteServer } = await import('vite');
+      const vite = await createViteServer({
+        server: { middlewareMode: true },
+        appType: 'spa',
+      });
+      app.use(vite.middlewares);
+    } else {
+      const distPath = path.join(process.cwd(), 'dist');
+      app.use(express.static(distPath));
+      app.get('*', (req, res) => {
+        res.sendFile(path.join(distPath, 'index.html'));
+      });
+    }
   }
+
+  return app;
+}
+
+async function startServer() {
+  const PORT = 3000;
+  const app = await createApp();
 
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on http://0.0.0.0:${PORT}`);
   });
 }
 
-startServer();
+if (!process.env.VERCEL) {
+  startServer();
+}

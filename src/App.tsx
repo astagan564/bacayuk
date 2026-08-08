@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Story, StoryPage, ReadingSettings } from './types';
-import { INITIAL_STORIES } from './data/stories';
 import { Flipbook3D } from './components/Flipbook3D';
 import { NavigationControls } from './components/NavigationControls';
 import { StorySelector } from './components/StorySelector';
@@ -22,6 +21,7 @@ import { VipOfferModal } from './components/VipOfferModal';
 import { userAuthStore, UserAccount } from './utils/userAuthStore';
 import { paymentStore } from './utils/paymentStore';
 import { adminStore } from './utils/adminStore';
+import { storyStore } from './utils/storyStore';
 import { userSettingsStore } from './utils/userSettingsStore';
 import { speechEngine } from './utils/speechEngine';
 import packageJson from '../package.json';
@@ -29,7 +29,7 @@ import confetti from 'canvas-confetti';
 import { Sparkles, BookOpen, Award, Sun, Moon, Bookmark, BarChart3, Clock, User, LogOut, ShieldCheck, Settings, Bell } from 'lucide-react';
 
 export default function App() {
-  const [stories, setStories] = useState<Story[]>(INITIAL_STORIES);
+  const [stories, setStories] = useState<Story[]>(() => storyStore.getLocalStories());
   const [selectedStory, setSelectedStory] = useState<Story | null>(null);
   const [currentPageIndex, setCurrentPageIndex] = useState<number>(0);
 
@@ -93,6 +93,7 @@ export default function App() {
   const [showRestReminder, setShowRestReminder] = useState<boolean>(false);
   const [showRestParentalGate, setShowRestParentalGate] = useState<boolean>(false);
   const [showAdminPinPrompt, setShowAdminPinPrompt] = useState<boolean>(false);
+  const [adminPin, setAdminPin] = useState<string>('');
   const [showStatsModal, setShowStatsModal] = useState<boolean>(false);
   
   const [showVipOfferModal, setShowVipOfferModal] = useState<boolean>(false);
@@ -117,6 +118,20 @@ export default function App() {
   const [hasUnreadChangelog, setHasUnreadChangelog] = useState(() => {
     return localStorage.getItem('bacayuk_last_seen_version') !== packageJson.version;
   });
+
+  useEffect(() => {
+    let isMounted = true;
+
+    storyStore.loadStories().then((loadedStories) => {
+      if (isMounted) {
+        setStories(loadedStories);
+      }
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const toggleWhatsNew = () => {
     setShowWhatsNewDropdown(!showWhatsNewDropdown);
@@ -145,6 +160,9 @@ export default function App() {
       const result = await response.json();
 
       if (response.ok && result.ok) {
+        setAdminPin(pin);
+        const adminStories = await storyStore.loadAdminStories(pin);
+        setStories(adminStories);
         setShowAdminPinPrompt(false);
         setCurrentView('admin');
         return;
@@ -363,7 +381,11 @@ export default function App() {
   };
 
   const handleStoryCreated = (newStory: Story) => {
-    setStories((prev) => [newStory, ...prev]);
+    setStories((prev) => {
+      const updated = [newStory, ...prev];
+      storyStore.saveStories(updated, adminPin || undefined);
+      return updated;
+    });
     setSelectedStory(newStory);
     setCurrentPageIndex(0);
   };
@@ -372,8 +394,20 @@ export default function App() {
     return (
       <AdminDashboard
         stories={stories}
-        onUpdateStories={(updatedStories) => setStories(updatedStories)}
-        onBackToHome={() => setCurrentView('main')}
+        onUpdateStories={async (updatedStories) => {
+          try {
+            const savedStories = await storyStore.saveStories(updatedStories, adminPin || undefined);
+            setStories(savedStories);
+          } catch (error) {
+            setStories(storyStore.getLocalStories());
+            throw error;
+          }
+        }}
+        onBackToHome={async () => {
+          const publicStories = await storyStore.loadStories();
+          setStories(publicStories);
+          setCurrentView('main');
+        }}
         isNight={isNight}
       />
     );
@@ -491,9 +525,9 @@ export default function App() {
                   </div>
                   <div className={`p-3 sm:p-4 text-xs sm:text-sm space-y-2 ${isNight ? 'text-slate-300' : 'text-slate-600'}`}>
                     <ul className="list-disc pl-4 space-y-1">
-                      <li><strong>Mode baca mobile</strong> kini lebih lega untuk HP dan tablet.</li>
-                      <li><strong>Navbar lebih rapi</strong> dengan tombol tema yang tetap terlihat.</li>
-                      <li><strong>Header depan</strong> tidak lagi memotong logo BacaYuk.</li>
+                      <li><strong>Admin tambah buku</strong> kini tersimpan ke Supabase.</li>
+                      <li><strong>Draft/Published</strong> membantu menyiapkan buku sebelum tampil.</li>
+                      <li><strong>Editor halaman</strong> kini punya validasi, preview, interaksi, dan kuis.</li>
                     </ul>
                   </div>
                   <div className={`p-3 border-t ${isNight ? 'border-slate-700 bg-slate-800/50' : 'border-slate-100 bg-slate-50'}`}>
