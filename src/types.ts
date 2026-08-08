@@ -48,6 +48,7 @@ export interface StoryPage {
   text: string;
   textEn?: string; // English translation for bilingual mode
   illustrationType: 'forest' | 'dragon' | 'space' | 'sea' | 'castle' | 'garden' | 'custom';
+  imageUrl?: string;
   illustrationPrompt?: string;
   customSvgPath?: string;
   colors: {

@@ -373,6 +373,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     setEditingStory({ ...editingStory, pages: newPages });
   };
 
+  const renderPageImagePreview = (page: StoryPage, className = '') => (
+    page.imageUrl ? (
+      <img
+        src={page.imageUrl}
+        alt=""
+        className={`h-full w-full object-cover ${className}`}
+        loading="lazy"
+      />
+    ) : null
+  );
+
   const refreshGlossaryCandidates = () => {
     if (!editingStory) return;
     const manuscript = editingStory.pages.map((page) => `${page.title || ''}\n${page.text}`).join('\n\n');
@@ -751,6 +762,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       title: page.title?.trim() || `Halaman ${index + 1}`,
       text: page.text.trim(),
       textEn: page.textEn?.trim(),
+      imageUrl: page.imageUrl?.trim(),
       illustrationType: page.illustrationType || 'forest',
       colors: page.colors || createBlankPage(index + 1).colors,
     }));
@@ -799,8 +811,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
     normalized.pages.forEach((page, index) => {
       if (!page.text) errors.push(`Teks Bahasa Indonesia halaman ${index + 1} masih kosong.`);
-      if (page.illustrationType === 'custom' && !page.illustrationPrompt?.trim() && !page.customSvgPath?.trim()) {
-        errors.push(`Halaman ${index + 1} bertipe custom perlu prompt ilustrasi atau path SVG.`);
+      if (
+        page.illustrationType === 'custom' &&
+        !page.illustrationPrompt?.trim() &&
+        !page.customSvgPath?.trim() &&
+        !page.imageUrl?.trim()
+      ) {
+        errors.push(`Halaman ${index + 1} bertipe custom perlu prompt ilustrasi, path SVG, atau image URL.`);
       }
     });
 
@@ -1935,9 +1952,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
         {/* Story editor sub-modal */}
         {editingStory && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in overflow-y-auto">
+          <div className="fixed inset-0 z-50 flex items-stretch justify-center bg-black/80 backdrop-blur-md animate-fade-in overflow-hidden">
             <div
-              className="reader-modal w-full max-w-5xl rounded-[1.35rem] p-5 sm:p-6 relative my-auto flex flex-col gap-5 max-h-[90vh] overflow-y-auto"
+              className="reader-modal w-full max-w-none h-[100dvh] rounded-none p-4 sm:p-6 relative flex flex-col gap-5 overflow-y-auto"
             >
               <div className="flex items-start sm:items-center justify-between gap-3 pb-3 border-b reader-divider">
                 <h3 className="text-lg font-black">
@@ -2084,10 +2101,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                             </div>
                             <div
                               onClick={(e) => handleCanvasInteractionClick(e, page, pageIndex)}
-                              className={`relative min-h-36 rounded-2xl bg-white/65 dark:bg-slate-950/70 p-4 border border-white/70 dark:border-blue-900/50 ${
+                              className={`relative min-h-36 rounded-2xl bg-white/65 dark:bg-slate-950/70 overflow-hidden border border-white/70 dark:border-blue-900/50 ${
                                 interactionPlaceMode ? 'cursor-crosshair ring-2 ring-[var(--story-green)]' : ''
                               }`}
                             >
+                              {renderPageImagePreview(page, 'absolute inset-0 opacity-95')}
+                              {page.imageUrl && <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-black/10 to-transparent" />}
+                              <div className="relative z-10 p-4">
                               <div className="mb-2 flex items-center justify-between gap-2">
                                 <span className="text-[10px] font-black text-[var(--story-green)] dark:text-emerald-300">
                                   Illustration canvas
@@ -2096,9 +2116,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                   {page.illustrationType}
                                 </span>
                               </div>
-                              <p className="text-xs leading-5 text-[var(--muted-ink)] dark:text-slate-300">
+                              <p className={`text-xs leading-5 ${page.imageUrl ? 'text-white font-bold drop-shadow' : 'text-[var(--muted-ink)] dark:text-slate-300'}`}>
                                 {page.illustrationPrompt || `Scene ${page.illustrationType} untuk halaman ini.`}
                               </p>
+                              </div>
                               {(page.interactiveElements || []).map((element) => (
                                 <button
                                   key={element.id}
@@ -2148,6 +2169,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                               <option value="garden">Garden</option>
                               <option value="custom">Custom</option>
                             </select>
+                            <input
+                              type="url"
+                              value={page.imageUrl || ''}
+                              onChange={(e) => updatePage({ ...page, imageUrl: e.target.value })}
+                              className="reader-field mt-2 w-full p-2 text-[11px] rounded-lg"
+                              placeholder="Image URL hasil generate / asset"
+                            />
                           </div>
                           <div>
                             <div className="mb-1 flex items-center justify-between gap-2">

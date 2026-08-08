@@ -2,15 +2,31 @@ import React from 'react';
 
 interface IllustrationProps {
   type: 'forest' | 'dragon' | 'space' | 'sea' | 'castle' | 'garden' | 'custom';
+  imageUrl?: string;
   accentColor?: string;
   className?: string;
 }
 
 export const StoryIllustration: React.FC<IllustrationProps> = ({
   type,
+  imageUrl,
   accentColor = '#10B981',
   className = '',
 }) => {
+  if (imageUrl) {
+    return (
+      <div className={`relative w-full h-full overflow-hidden flex items-center justify-center bg-slate-100 ${className}`}>
+        <img
+          src={imageUrl}
+          alt=""
+          className="h-full w-full object-cover"
+          loading="lazy"
+          draggable={false}
+        />
+      </div>
+    );
+  }
+
   switch (type) {
     case 'forest':
       return (

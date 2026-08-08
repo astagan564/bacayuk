@@ -478,7 +478,10 @@ export const Flipbook3D: React.FC<FlipbookProps> = ({
 
           {/* Illustration Stage */}
           <div className={`relative flex-1 w-full rounded-xl overflow-hidden border-2 shadow-inner my-2 ${isNight ? 'border-indigo-900/60' : 'border-white/60'}`}>
-            <StoryIllustration type={leftPageObj?.illustrationType || 'forest'} />
+            <StoryIllustration
+              type={leftPageObj?.illustrationType || 'forest'}
+              imageUrl={leftPageObj?.imageUrl}
+            />
 
             {/* Interactive Tap Elements Overlay */}
             {leftPageObj?.interactiveElements?.map((elem) => {
@@ -635,7 +638,10 @@ export const Flipbook3D: React.FC<FlipbookProps> = ({
 
                 {/* Right Page Illustration */}
                 <div className={`relative flex-1 w-full rounded-xl overflow-hidden border-2 shadow-inner my-2 ${isNight ? 'border-indigo-900/60' : 'border-white/60'}`}>
-                  <StoryIllustration type={rightPageObj.illustrationType} />
+                  <StoryIllustration
+                    type={rightPageObj.illustrationType}
+                    imageUrl={rightPageObj.imageUrl}
+                  />
 
                   {/* Interactive Tap Elements */}
                   {rightPageObj.interactiveElements?.map((elem) => {
