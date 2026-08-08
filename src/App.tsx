@@ -392,9 +392,10 @@ export default function App() {
 
   if (currentView === 'admin') {
     return (
-      <AdminDashboard
-        stories={stories}
-        onUpdateStories={async (updatedStories) => {
+        <AdminDashboard
+          stories={stories}
+          adminPin={adminPin}
+          onUpdateStories={async (updatedStories) => {
           try {
             const savedStories = await storyStore.saveStories(updatedStories, adminPin || undefined);
             setStories(savedStories);

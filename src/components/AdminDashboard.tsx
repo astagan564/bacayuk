@@ -42,6 +42,7 @@ interface AdminDashboardProps {
   stories: Story[];
   onUpdateStories: (updatedStories: Story[]) => void | Promise<void>;
   onBackToHome: () => void;
+  adminPin?: string;
   isNight?: boolean;
 }
 
@@ -64,10 +65,19 @@ const DEFAULT_QUICK_CREATE_FORM: QuickCreateForm = {
   manuscript: '',
 };
 
+const PIPELINE_STEPS: Array<{ id: NonNullable<Story['pipelineStatus']>; label: string }> = [
+  { id: 'draft', label: 'Draft' },
+  { id: 'story_complete', label: 'Story Complete' },
+  { id: 'illustrated', label: 'Illustrated' },
+  { id: 'enhanced', label: 'Enhanced' },
+  { id: 'ready_to_publish', label: 'Ready to Publish' },
+];
+
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   stories,
   onUpdateStories,
   onBackToHome,
+  adminPin,
   isNight = false,
 }) => {
   const [activeTab, setActiveTab] = useState<'cms' | 'users' | 'finance' | 'settings' | 'analytics'>('cms');
@@ -126,6 +136,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [showQuickCreate, setShowQuickCreate] = useState(false);
   const [quickCreateForm, setQuickCreateForm] = useState<QuickCreateForm>(DEFAULT_QUICK_CREATE_FORM);
   const [quickCreateErrors, setQuickCreateErrors] = useState<string[]>([]);
+  const [showAdvancedEditor, setShowAdvancedEditor] = useState(false);
+  const [interactionPlaceMode, setInteractionPlaceMode] = useState(false);
+  const [isGeneratingTranslation, setIsGeneratingTranslation] = useState(false);
 
   // New Coupon Form State
   const [newCouponCode, setNewCouponCode] = useState('');
@@ -306,6 +319,124 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       .map(({ match, ...term }) => term);
   };
 
+  const inferPipelineStatus = (story: Story): NonNullable<Story['pipelineStatus']> => {
+    if (story.pipelineStatus) return story.pipelineStatus;
+    const hasStory = story.pages.length > 0 && story.pages.every((page) => page.text.trim());
+    const hasIllustrations = story.pages.length > 0 && story.pages.every((page) => page.illustrationType || page.illustrationPrompt);
+    const hasEnhancements = Boolean(
+      story.glossary?.length ||
+      story.pages.some((page) => page.textEn || page.quizQuestion || page.interactiveElements?.length)
+    );
+
+    if (story.status === 'published') return 'ready_to_publish';
+    if (hasEnhancements) return 'enhanced';
+    if (hasIllustrations) return 'illustrated';
+    if (hasStory) return 'story_complete';
+    return 'draft';
+  };
+
+  const updateEditingPage = (pageIndex: number, nextPage: StoryPage) => {
+    if (!editingStory) return;
+    const newPages = [...editingStory.pages];
+    newPages[pageIndex] = nextPage;
+    setEditingStory({ ...editingStory, pages: newPages });
+  };
+
+  const refreshGlossaryCandidates = () => {
+    if (!editingStory) return;
+    const manuscript = editingStory.pages.map((page) => `${page.title || ''}\n${page.text}`).join('\n\n');
+    const candidates = extractGlossaryCandidates(manuscript);
+    const existing = editingStory.glossary || [];
+    const merged = [
+      ...existing,
+      ...candidates.filter((candidate) =>
+        !existing.some((item) => item.wordEn.toLowerCase() === candidate.wordEn.toLowerCase())
+      ),
+    ];
+    setEditingStory({ ...editingStory, glossary: merged });
+    showToast(`Glosarium terdeteksi: ${merged.length} kata.`);
+  };
+
+  const handleGenerateTranslation = async () => {
+    if (!editingStory) return;
+    if (!adminPin) {
+      showToast('PIN admin tidak tersedia untuk generate translation.');
+      return;
+    }
+
+    setIsGeneratingTranslation(true);
+    try {
+      const response = await fetch('/api/admin/translate-story', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-pin': adminPin,
+        },
+        body: JSON.stringify({
+          title: editingStory.title,
+          pages: editingStory.pages.map((page) => ({
+            pageNumber: page.pageNumber,
+            title: page.title,
+            text: page.text,
+          })),
+        }),
+      });
+
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data.error || 'Gagal membuat translation.');
+      }
+
+      const translations = Array.isArray(data.translations) ? data.translations : [];
+      const translatedPages = editingStory.pages.map((page) => {
+        const match = translations.find((item: { pageNumber?: number }) => item.pageNumber === page.pageNumber);
+        return match?.textEn ? { ...page, textEn: match.textEn } : page;
+      });
+
+      setEditingStory({
+        ...editingStory,
+        pages: translatedPages,
+        pipelineStatus: 'enhanced',
+      });
+      showToast(`Translation dibuat untuk ${translations.length} halaman.`);
+    } catch (error) {
+      console.error('Translation generation failed:', error);
+      showToast(error instanceof Error ? error.message : 'Gagal membuat translation.');
+    } finally {
+      setIsGeneratingTranslation(false);
+    }
+  };
+
+  const handleCanvasInteractionClick = (
+    e: React.MouseEvent<HTMLDivElement>,
+    page: StoryPage,
+    pageIndex: number
+  ) => {
+    if (!interactionPlaceMode) return;
+
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = Math.round(((e.clientX - rect.left) / rect.width) * 100);
+    const y = Math.round(((e.clientY - rect.top) / rect.height) * 100);
+    const nextElement: InteractiveElement = {
+      id: `elem_${Date.now()}`,
+      type: 'character',
+      label: 'Interaksi baru',
+      x: Math.min(100, Math.max(0, x)),
+      y: Math.min(100, Math.max(0, y)),
+      animation: 'bounce',
+      soundType: 'pop',
+      dialogue: 'Halo!',
+      emoji: '✨',
+    };
+
+    updateEditingPage(pageIndex, {
+      ...page,
+      interactiveElements: [...(page.interactiveElements || []), nextElement],
+    });
+    setInteractionPlaceMode(false);
+    showToast('Interaksi ditaruh di canvas.');
+  };
+
   const buildDraftStoryFromQuickCreate = (form: QuickCreateForm): Story => {
     const pageDrafts = splitManuscriptIntoPageDrafts(form.manuscript);
     const pages: StoryPage[] = pageDrafts.map((draft, index) => {
@@ -357,6 +488,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       targetAge: form.targetAge,
       description: pages[0]?.text.slice(0, 150) || 'Draft buku cerita baru dari naskah yang ditempel.',
       status: 'draft',
+      pipelineStatus: 'story_complete',
       accessStatus: 'free_member',
       downloadEnabled: true,
       ebookPrice: settings.defaultEbookPrice,
@@ -392,6 +524,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     setIsNewStory(true);
     setStoryFormErrors([]);
     setPreviewPageIndex(0);
+    setShowAdvancedEditor(false);
+    setInteractionPlaceMode(false);
     setShowQuickCreate(false);
     setQuickCreateForm(DEFAULT_QUICK_CREATE_FORM);
     setQuickCreateErrors([]);
@@ -672,6 +806,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       targetAge: '4-8 Tahun',
                       description: 'Kisah seru yang penuh pesan kebaikan untuk anak.',
                       status: 'draft',
+                      pipelineStatus: 'draft',
                       accessStatus: 'free_member',
                       downloadEnabled: true,
                       ebookPrice: 15000,
@@ -694,6 +829,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     setIsNewStory(true);
                     setStoryFormErrors([]);
                     setPreviewPageIndex(0);
+                    setShowAdvancedEditor(false);
+                    setInteractionPlaceMode(false);
                   }}
                   className="py-2.5 px-4 rounded-xl text-xs flex items-center gap-1.5 shrink-0 bg-white/70 hover:bg-white dark:bg-slate-800 dark:hover:bg-slate-700 text-[var(--muted-ink)] dark:text-slate-200 border border-[#eadbc1] dark:border-slate-700 font-bold transition-all"
                 >
@@ -778,6 +915,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                               setIsNewStory(false);
                               setStoryFormErrors([]);
                               setPreviewPageIndex(0);
+                              setShowAdvancedEditor(false);
+                              setInteractionPlaceMode(false);
                             }}
                             className="p-1.5 rounded-lg bg-[var(--magic-blue)]/10 text-[var(--magic-blue)] dark:text-blue-200 hover:bg-[var(--magic-blue)]/18 font-bold transition-colors flex items-center gap-1"
                             title="Edit Buku Cerita"
@@ -1592,6 +1731,53 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   </div>
                 )}
 
+                <section className="reader-soft-panel rounded-2xl p-3.5 flex flex-col gap-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                      <span className="text-[10px] font-black uppercase text-[var(--muted-ink)] dark:text-blue-200">
+                        Status produksi buku
+                      </span>
+                      <p className="mt-1 text-[11px] leading-5 text-[var(--muted-ink)] dark:text-slate-300">
+                        Buku tetap draft sampai kamu publish, tetapi pipeline ini membantu melacak kesiapan konten.
+                      </p>
+                    </div>
+                    <select
+                      value={inferPipelineStatus(editingStory)}
+                      onChange={(e) =>
+                        setEditingStory({
+                          ...editingStory,
+                          pipelineStatus: e.target.value as NonNullable<Story['pipelineStatus']>,
+                        })
+                      }
+                      className="reader-field rounded-xl px-3 py-2 text-[11px] font-black"
+                    >
+                      {PIPELINE_STEPS.map((step) => (
+                        <option key={step.id} value={step.id}>
+                          {step.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                    {PIPELINE_STEPS.map((step) => {
+                      const activeIndex = PIPELINE_STEPS.findIndex((item) => item.id === inferPipelineStatus(editingStory));
+                      const stepIndex = PIPELINE_STEPS.findIndex((item) => item.id === step.id);
+                      return (
+                        <div
+                          key={step.id}
+                          className={`rounded-xl px-2.5 py-2 text-[10px] font-black border ${
+                            stepIndex <= activeIndex
+                              ? 'bg-[var(--story-green)]/12 border-[var(--story-green)]/35 text-[var(--story-green)]'
+                              : 'bg-white/45 dark:bg-slate-900/45 border-[#eadbc1] dark:border-blue-900/60 text-[var(--muted-ink)] dark:text-slate-300'
+                          }`}
+                        >
+                          {step.label}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </section>
+
                 {editingStory.pages.length > 0 && (() => {
                   const pageIndex = Math.min(previewPageIndex, editingStory.pages.length - 1);
                   const page = editingStory.pages[pageIndex];
@@ -1661,7 +1847,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                 placeholder="Teks cerita halaman ini"
                               />
                             </div>
-                            <div className="rounded-2xl bg-white/65 dark:bg-slate-950/70 p-4 border border-white/70 dark:border-blue-900/50">
+                            <div
+                              onClick={(e) => handleCanvasInteractionClick(e, page, pageIndex)}
+                              className={`relative min-h-36 rounded-2xl bg-white/65 dark:bg-slate-950/70 p-4 border border-white/70 dark:border-blue-900/50 ${
+                                interactionPlaceMode ? 'cursor-crosshair ring-2 ring-[var(--story-green)]' : ''
+                              }`}
+                            >
                               <div className="mb-2 flex items-center justify-between gap-2">
                                 <span className="text-[10px] font-black text-[var(--story-green)] dark:text-emerald-300">
                                   Illustration canvas
@@ -1673,6 +1864,23 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                               <p className="text-xs leading-5 text-[var(--muted-ink)] dark:text-slate-300">
                                 {page.illustrationPrompt || `Scene ${page.illustrationType} untuk halaman ini.`}
                               </p>
+                              {(page.interactiveElements || []).map((element) => (
+                                <button
+                                  key={element.id}
+                                  type="button"
+                                  className="absolute -translate-x-1/2 -translate-y-1/2 rounded-full bg-[var(--story-green)] px-2 py-1 text-xs font-black text-white shadow-md"
+                                  style={{ left: `${element.x}%`, top: `${element.y}%` }}
+                                  title={`${element.label} (${element.x}%, ${element.y}%)`}
+                                  onClick={(event) => event.stopPropagation()}
+                                >
+                                  {element.emoji || '✨'}
+                                </button>
+                              ))}
+                              {interactionPlaceMode && (
+                                <div className="absolute inset-x-3 bottom-3 rounded-xl bg-[var(--story-green)] px-3 py-2 text-[11px] font-black text-white shadow-lg">
+                                  Klik area canvas untuk menaruh interaksi.
+                                </div>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -1697,9 +1905,19 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                             </select>
                           </div>
                           <div>
-                            <label className="block text-[10px] font-black mb-1 text-[var(--muted-ink)] dark:text-blue-200">
-                              Translation
-                            </label>
+                            <div className="mb-1 flex items-center justify-between gap-2">
+                              <label className="block text-[10px] font-black text-[var(--muted-ink)] dark:text-blue-200">
+                                Translation
+                              </label>
+                              <button
+                                type="button"
+                                onClick={handleGenerateTranslation}
+                                disabled={isGeneratingTranslation}
+                                className="rounded-lg bg-[var(--magic-blue)]/12 px-2 py-1 text-[10px] font-black text-[var(--magic-blue)] disabled:opacity-50 dark:text-blue-200"
+                              >
+                                {isGeneratingTranslation ? 'Generating...' : 'Generate'}
+                              </button>
+                            </div>
                             <textarea
                               value={page.textEn || ''}
                               onChange={(e) => updatePage({ ...page, textEn: e.target.value })}
@@ -1727,12 +1945,104 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                           <p className="text-[11px] leading-5 text-[var(--muted-ink)] dark:text-slate-300">
                             Pengaturan detail tetap tersedia di bagian Advanced di bawah.
                           </p>
+                          <button
+                            type="button"
+                            onClick={() => setInteractionPlaceMode((value) => !value)}
+                            className={`rounded-xl px-3 py-2 text-[11px] font-black transition-all ${
+                              interactionPlaceMode
+                                ? 'bg-[var(--story-green)] text-white'
+                                : 'reader-field text-[var(--ink)] dark:text-slate-100'
+                            }`}
+                          >
+                            {interactionPlaceMode ? 'Batal taruh interaksi' : '+ Klik canvas untuk interaction'}
+                          </button>
                         </aside>
                       </div>
                     </section>
                   );
                 })()}
 
+                <section className="reader-soft-panel rounded-2xl p-3.5 flex flex-col gap-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div>
+                      <span className="font-black text-xs text-[var(--muted-ink)] dark:text-blue-200">
+                        Glosarium terdeteksi — {editingStory.glossary?.length || 0} kata
+                      </span>
+                      <p className="mt-1 text-[11px] leading-5 text-[var(--muted-ink)] dark:text-slate-300">
+                        Approve kata yang layak masuk kamus sentuh. Kata yang dihapus tidak ikut tersimpan.
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={refreshGlossaryCandidates}
+                        className="rounded-xl bg-[var(--magic-blue)]/12 px-3 py-2 text-[11px] font-black text-[var(--magic-blue)] dark:text-blue-200"
+                      >
+                        Generate ulang
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setEditingStory({ ...editingStory, glossary: [] })}
+                        className="rounded-xl bg-rose-500/10 px-3 py-2 text-[11px] font-black text-rose-600 dark:text-rose-300"
+                      >
+                        Kosongkan
+                      </button>
+                    </div>
+                  </div>
+                  {(editingStory.glossary || []).length > 0 ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+                      {(editingStory.glossary || []).map((item) => (
+                        <label
+                          key={item.id}
+                          className="reader-field rounded-xl p-2.5 flex items-center gap-2 text-[11px] cursor-pointer"
+                        >
+                          <input
+                            type="checkbox"
+                            checked
+                            onChange={() =>
+                              setEditingStory({
+                                ...editingStory,
+                                glossary: (editingStory.glossary || []).filter((entry) => entry.id !== item.id),
+                              })
+                            }
+                          />
+                          <span className="text-base leading-none">{item.emoji || '•'}</span>
+                          <span className="min-w-0">
+                            <span className="block font-black truncate">{item.wordEn}</span>
+                            <span className="block text-[var(--muted-ink)] dark:text-slate-300 truncate">
+                              {item.translationId}
+                            </span>
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="rounded-xl border border-dashed border-[#eadbc1] dark:border-blue-900/60 p-4 text-center text-[11px] font-bold text-[var(--muted-ink)] dark:text-slate-300">
+                      Belum ada kandidat glosarium. Klik Generate ulang setelah teks halaman siap.
+                    </div>
+                  )}
+                </section>
+
+                <button
+                  type="button"
+                  onClick={() => setShowAdvancedEditor((value) => !value)}
+                  className="reader-soft-panel rounded-2xl p-3.5 flex items-center justify-between gap-3 text-left"
+                >
+                  <span>
+                    <span className="block text-xs font-black text-[var(--ink)] dark:text-slate-100">
+                      Advanced editor
+                    </span>
+                    <span className="mt-1 block text-[11px] font-bold text-[var(--muted-ink)] dark:text-slate-300">
+                      Metadata, akses, halaman detail, kuis, koordinat X/Y, glosarium manual, dan narasi.
+                    </span>
+                  </span>
+                  <span className="rounded-lg bg-white/70 px-3 py-1 text-[11px] font-black dark:bg-slate-900">
+                    {showAdvancedEditor ? 'Sembunyikan' : 'Buka'}
+                  </span>
+                </button>
+
+                {showAdvancedEditor && (
+                  <>
                 <div>
                   <label className="block font-bold mb-1">Judul Buku Cerita</label>
                   <input
@@ -2446,6 +2756,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     Audio otomatis memakai suara perangkat. Orang tua juga dapat merekam narasi per halaman.
                   </p>
                 </div>
+                  </>
+                )}
 
                 <button
                   type="submit"

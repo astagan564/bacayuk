@@ -174,7 +174,7 @@ export async function createApp(options: { serveClient?: boolean } = {}) {
   const serveClient = options.serveClient ?? true;
   const isProductionServer = process.env.NODE_ENV === 'production' || process.argv[1]?.endsWith('server.cjs');
 
-  app.use(express.json());
+  app.use(express.json({ limit: '1mb' }));
 
   app.get('/api/stories', async (_req, res) => {
     try {
@@ -347,6 +347,82 @@ Format JSON yang HARUS dikembalikan (tanpa markdown pembungkus selain json):
     } catch (error) {
       console.error('Error generating story:', error);
       res.status(500).json({ error: 'Failed to generate story with Gemini.' });
+    }
+  });
+
+  app.post('/api/admin/translate-story', async (req, res) => {
+    if (!isValidAdminPin(req.headers['x-admin-pin'])) {
+      return res.status(403).json({ error: 'PIN admin tidak valid.' });
+    }
+
+    try {
+      const title = typeof req.body?.title === 'string' ? req.body.title.trim().slice(0, 120) : 'BacaYuk Story';
+      const pages = Array.isArray(req.body?.pages)
+        ? req.body.pages
+            .map((page: unknown, index: number) => {
+              const item = page as Record<string, unknown>;
+              return {
+                pageNumber: Number(item.pageNumber) || index + 1,
+                title: typeof item.title === 'string' ? item.title.trim().slice(0, 120) : '',
+                text: typeof item.text === 'string' ? item.text.trim().slice(0, 1800) : '',
+              };
+            })
+            .filter((page) => page.text)
+        : [];
+
+      if (pages.length === 0) {
+        return res.status(400).json({ error: 'Tidak ada teks halaman untuk diterjemahkan.' });
+      }
+
+      const apiKey = process.env.GEMINI_API_KEY;
+      if (!apiKey) {
+        return res.status(400).json({ error: 'GEMINI_API_KEY is not configured.' });
+      }
+
+      const ai = new GoogleGenAI({ apiKey });
+      const prompt = `Translate this Indonesian children's storybook into natural, simple English for children.
+Keep the same number of pages. Keep the meaning warm and child-safe. Do not add markdown.
+
+Return only valid JSON with this shape:
+{
+  "translations": [
+    { "pageNumber": 1, "textEn": "English translation..." }
+  ]
+}
+
+Book title: ${title}
+Pages:
+${pages.map((page) => `Page ${page.pageNumber}${page.title ? ` - ${page.title}` : ''}:\n${page.text}`).join('\n\n')}`;
+
+      const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: prompt,
+        config: {
+          responseMimeType: 'application/json',
+        },
+      });
+
+      const parsedJson = JSON.parse(response.text || '{}');
+      const translations = Array.isArray(parsedJson.translations)
+        ? parsedJson.translations
+            .map((item: unknown) => {
+              const row = item as Record<string, unknown>;
+              return {
+                pageNumber: Number(row.pageNumber),
+                textEn: typeof row.textEn === 'string' ? row.textEn.trim() : '',
+              };
+            })
+            .filter((item: { pageNumber: number; textEn: string }) => item.pageNumber && item.textEn)
+        : [];
+
+      if (translations.length === 0) {
+        return res.status(502).json({ error: 'AI tidak mengembalikan hasil terjemahan yang valid.' });
+      }
+
+      res.json({ translations });
+    } catch (error) {
+      console.error('Error translating story:', error);
+      res.status(500).json({ error: 'Gagal membuat terjemahan cerita.' });
     }
   });
 

@@ -82,6 +82,7 @@ export interface Story {
   epubUrl?: string;
   watermarkEnabled?: boolean;
   status?: 'draft' | 'published';
+  pipelineStatus?: 'draft' | 'story_complete' | 'illustrated' | 'enhanced' | 'ready_to_publish';
   glossary?: GlossaryItem[];
   vocabularyQuiz?: VocabularyQuiz;
 }
