@@ -58,6 +58,27 @@ interface PageDraft {
   text: string;
 }
 
+interface AiBookDraftPage {
+  title?: string;
+  text?: string;
+  textEn?: string;
+  illustrationType?: StoryPage['illustrationType'];
+  illustrationPrompt?: string;
+  interactiveElements?: InteractiveElement[];
+  quizQuestion?: StoryPage['quizQuestion'];
+}
+
+interface AiBookDraft {
+  title?: string;
+  category?: string;
+  description?: string;
+  moralMessage?: string;
+  coverPrompt?: string;
+  pages?: AiBookDraftPage[];
+  glossary?: Story['glossary'];
+  vocabularyQuiz?: Story['vocabularyQuiz'];
+}
+
 const DEFAULT_QUICK_CREATE_FORM: QuickCreateForm = {
   title: '',
   targetAge: '4-8 Tahun',
@@ -139,6 +160,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [showAdvancedEditor, setShowAdvancedEditor] = useState(false);
   const [interactionPlaceMode, setInteractionPlaceMode] = useState(false);
   const [isGeneratingTranslation, setIsGeneratingTranslation] = useState(false);
+  const [isGeneratingBookDraft, setIsGeneratingBookDraft] = useState(false);
 
   // New Coupon Form State
   const [newCouponCode, setNewCouponCode] = useState('');
@@ -506,7 +528,96 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     };
   };
 
-  const handleQuickCreateDraft = (e: React.FormEvent) => {
+  const buildDraftStoryFromAiDraft = (form: QuickCreateForm, draft: AiBookDraft): Story => {
+    const rawPages = Array.isArray(draft.pages) && draft.pages.length > 0
+      ? draft.pages
+      : splitManuscriptIntoPageDrafts(form.manuscript);
+    const pages: StoryPage[] = rawPages.slice(0, 12).map((page, index) => {
+      const basePage = createBlankPage(index + 1);
+      const title = page.title?.trim() || `Halaman ${index + 1}`;
+      const text = page.text?.trim() || '';
+      const illustrationType = page.illustrationType || inferIllustrationType(`${title} ${text}`);
+
+      return {
+        ...basePage,
+        title,
+        text,
+        textEn: page.textEn?.trim() || '',
+        illustrationType,
+        illustrationPrompt:
+          page.illustrationPrompt?.trim() ||
+          `${title}: ${text.slice(0, 180)} Child-safe colorful storybook illustration.`,
+        interactiveElements: page.interactiveElements || [],
+        quizQuestion: page.quizQuestion,
+      };
+    });
+    const hasEnhancements = Boolean(
+      draft.glossary?.length ||
+      draft.vocabularyQuiz?.questions?.length ||
+      pages.some((page) => page.quizQuestion || page.interactiveElements?.length)
+    );
+
+    return {
+      id: createStoryId(draft.title || form.title),
+      title: draft.title?.trim() || form.title.trim(),
+      author: 'BacaYuk Studio',
+      category: draft.category?.trim() || 'Petualangan',
+      coverImage: 'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=600',
+      coverBg: 'from-amber-400 to-orange-500',
+      themeColor: 'amber',
+      accentColor: 'orange',
+      moralMessage:
+        draft.moralMessage?.trim() ||
+        'Setiap perjalanan menjadi lebih indah saat dijalani dengan berani dan hati baik.',
+      targetAge: form.targetAge,
+      description: draft.description?.trim() || pages[0]?.text.slice(0, 150) || 'Draft buku cerita baru dari AI.',
+      status: 'draft',
+      pipelineStatus: hasEnhancements ? 'enhanced' : 'illustrated',
+      accessStatus: 'free_member',
+      downloadEnabled: true,
+      ebookPrice: settings.defaultEbookPrice,
+      watermarkEnabled: true,
+      pages,
+      glossary: draft.glossary || [],
+      vocabularyQuiz: draft.vocabularyQuiz,
+    };
+  };
+
+  const createDraftWithAi = async (form: QuickCreateForm): Promise<Story> => {
+    if (!adminPin) {
+      throw new Error('PIN admin tidak tersedia untuk AI draft.');
+    }
+
+    const response = await fetch('/api/admin/generate-book-draft', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-admin-pin': adminPin,
+      },
+      body: JSON.stringify(form),
+    });
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Gagal membuat draft buku dengan AI.');
+    }
+
+    return buildDraftStoryFromAiDraft(form, data.draft || {});
+  };
+
+  const openDraftStory = (draftStory: Story) => {
+    setEditingStory(draftStory);
+    setIsNewStory(true);
+    setStoryFormErrors([]);
+    setPreviewPageIndex(0);
+    setShowAdvancedEditor(false);
+    setInteractionPlaceMode(false);
+    setShowQuickCreate(false);
+    setQuickCreateForm(DEFAULT_QUICK_CREATE_FORM);
+    setQuickCreateErrors([]);
+  };
+
+  const handleQuickCreateDraft = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const errors: string[] = [];
@@ -521,23 +632,26 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       return;
     }
 
-    const draftStory = buildDraftStoryFromQuickCreate({
+    const normalizedForm = {
       ...quickCreateForm,
       title: quickCreateForm.title.trim(),
       targetAge: quickCreateForm.targetAge.trim(),
       manuscript: quickCreateForm.manuscript.trim(),
-    });
+    };
 
-    setEditingStory(draftStory);
-    setIsNewStory(true);
-    setStoryFormErrors([]);
-    setPreviewPageIndex(0);
-    setShowAdvancedEditor(false);
-    setInteractionPlaceMode(false);
-    setShowQuickCreate(false);
-    setQuickCreateForm(DEFAULT_QUICK_CREATE_FORM);
-    setQuickCreateErrors([]);
-    showToast(`Draft "${draftStory.title}" siap direview.`);
+    setIsGeneratingBookDraft(true);
+    try {
+      const draftStory = await createDraftWithAi(normalizedForm);
+      openDraftStory(draftStory);
+      showToast(`Draft AI "${draftStory.title}" siap direview.`);
+    } catch (error) {
+      console.error('AI book draft failed, using local fallback:', error);
+      const draftStory = buildDraftStoryFromQuickCreate(normalizedForm);
+      openDraftStory(draftStory);
+      showToast('AI draft belum berhasil, jadi dibuat draft lokal untuk direview.');
+    } finally {
+      setIsGeneratingBookDraft(false);
+    }
   };
 
   const normalizeStoryForSave = (story: Story): Story => {
@@ -1620,7 +1734,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   </div>
                   <h3 className="text-lg font-black">Buat draft buku dari naskah</h3>
                   <p className="mt-1 max-w-2xl text-xs leading-5 text-[var(--muted-ink)] dark:text-slate-300">
-                    Tempel cerita lengkap, lalu BacaYuk menyiapkan halaman, scene ilustrasi, terjemahan awal, glosarium kandidat, dan kuis akhir untuk direview.
+                    Tempel cerita lengkap, lalu BacaYuk menyiapkan halaman, scene ilustrasi, glosarium kandidat, kuis, dan ide interaksi untuk direview.
                   </p>
                 </div>
                 <button
@@ -1711,9 +1825,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   <p className="text-[11px] leading-5 text-[var(--muted-ink)] dark:text-slate-300">
                     Draft tetap berstatus belum terbit. Setelah dibuat, kamu akan masuk ke editor untuk review dan koreksi.
                   </p>
-                  <button type="submit" className="btn-primary py-3 px-5 text-xs flex items-center justify-center gap-1.5 shrink-0">
-                    <Sparkles className="w-4 h-4" />
-                    <span>Buat Draft Buku</span>
+                  <button
+                    type="submit"
+                    disabled={isGeneratingBookDraft}
+                    className="btn-primary py-3 px-5 text-xs flex items-center justify-center gap-1.5 shrink-0 disabled:opacity-60 disabled:cursor-wait"
+                  >
+                    {isGeneratingBookDraft ? (
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Sparkles className="w-4 h-4" />
+                    )}
+                    <span>{isGeneratingBookDraft ? 'Membuat Draft...' : 'Buat Draft Buku'}</span>
                   </button>
                 </div>
               </form>

@@ -5,10 +5,38 @@ import { GoogleGenAI } from '@google/genai';
 import midtransClient from 'midtrans-client';
 import { INITIAL_STORIES } from './src/data/stories';
 import { createClient } from '@supabase/supabase-js';
-import type { Story } from './src/types';
+import type {
+  GlossaryItem,
+  InteractiveElement,
+  QuizQuestion,
+  Story,
+  StoryPage,
+  VocabularyQuiz,
+  VocabularyQuizQuestion,
+} from './src/types';
 
 const DEFAULT_EBOOK_PRICE = 15000;
 const VIP_SUBSCRIPTION_PRICE = 100000;
+const STORYBOOK_ILLUSTRATION_TYPES: StoryPage['illustrationType'][] = [
+  'forest',
+  'dragon',
+  'space',
+  'sea',
+  'castle',
+  'garden',
+  'custom',
+];
+const STORYBOOK_ANIMATIONS: InteractiveElement['animation'][] = ['hop', 'spin', 'bounce', 'glow', 'pulse', 'float'];
+const STORYBOOK_SOUNDS: NonNullable<InteractiveElement['soundType']>[] = [
+  'pop',
+  'chime',
+  'giggle',
+  'magic',
+  'sparkle',
+  'roar',
+  'splash',
+];
+type GeneratedStoryPage = Omit<StoryPage, 'colors'>;
 
 function getSupabaseAdminClient() {
   const supabaseUrl = process.env.VITE_SUPABASE_URL;
@@ -93,6 +121,167 @@ function normalizeStory(story: Story): Story {
       ...page,
       pageNumber: index + 1,
     })),
+  };
+}
+
+function cleanAiText(value: unknown, maxLength: number, fallback = '') {
+  if (typeof value !== 'string') return fallback;
+
+  return value
+    .replace(/```(?:json)?/gi, '')
+    .replace(/```/g, '')
+    .replace(/\r\n/g, '\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
+    .slice(0, maxLength);
+}
+
+function cleanOneLine(value: unknown, maxLength: number, fallback = '') {
+  return cleanAiText(value, maxLength, fallback).replace(/\s+/g, ' ').trim();
+}
+
+function asRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {};
+}
+
+function clampPercent(value: unknown, fallback: number) {
+  const numberValue = Number(value);
+  if (!Number.isFinite(numberValue)) return fallback;
+  return Math.min(100, Math.max(0, Math.round(numberValue)));
+}
+
+function normalizeIllustrationType(value: unknown, text = ''): StoryPage['illustrationType'] {
+  if (typeof value === 'string' && STORYBOOK_ILLUSTRATION_TYPES.includes(value as StoryPage['illustrationType'])) {
+    return value as StoryPage['illustrationType'];
+  }
+
+  const lower = text.toLowerCase();
+  if (/laut|pantai|ombak|ikan|perahu|sungai|danau|hujan|sea|river|lake|boat/.test(lower)) return 'sea';
+  if (/bintang|bulan|langit|planet|roket|angkasa|awan|space|star|moon|rocket/.test(lower)) return 'space';
+  if (/naga|ajaib|sihir|peri|cahaya|kristal|magic|dragon|crystal/.test(lower)) return 'dragon';
+  if (/istana|raja|ratu|putri|pangeran|menara|castle|kingdom|palace/.test(lower)) return 'castle';
+  if (/kebun|bunga|taman|kupu|lebah|garden|flower|butterfly/.test(lower)) return 'garden';
+  return 'forest';
+}
+
+function normalizeQuizQuestion(value: unknown): QuizQuestion | undefined {
+  const raw = asRecord(value);
+  const question = cleanOneLine(raw.question, 180);
+  const options = Array.isArray(raw.options)
+    ? raw.options.map((option) => cleanOneLine(option, 80)).filter(Boolean).slice(0, 4)
+    : [];
+
+  if (!question || options.length < 2) return undefined;
+
+  const answerIndex = Math.min(options.length - 1, Math.max(0, Number(raw.answerIndex) || 0));
+
+  return {
+    question,
+    options,
+    answerIndex,
+    explanation: cleanOneLine(raw.explanation, 220, 'Jawaban ini paling sesuai dengan isi cerita.'),
+  };
+}
+
+function normalizeInteractiveElements(value: unknown, pageNumber: number): InteractiveElement[] {
+  if (!Array.isArray(value)) return [];
+
+  return value
+    .map((item, index): InteractiveElement | null => {
+      const raw = asRecord(item);
+      const label = cleanOneLine(raw.label, 60, 'Interaksi');
+      if (!label) return null;
+
+      const animation = STORYBOOK_ANIMATIONS.includes(raw.animation as InteractiveElement['animation'])
+        ? raw.animation as InteractiveElement['animation']
+        : 'bounce';
+      const soundType = STORYBOOK_SOUNDS.includes(raw.soundType as NonNullable<InteractiveElement['soundType']>)
+        ? raw.soundType as NonNullable<InteractiveElement['soundType']>
+        : 'pop';
+
+      return {
+        id: cleanOneLine(raw.id, 40, `ai_${pageNumber}_${index + 1}`),
+        type: ['animal', 'star', 'item', 'sound', 'character'].includes(raw.type as string)
+          ? raw.type as InteractiveElement['type']
+          : 'item',
+        label,
+        x: clampPercent(raw.x, 50),
+        y: clampPercent(raw.y, 55),
+        animation,
+        soundType,
+        dialogue: cleanOneLine(raw.dialogue, 120),
+        emoji: cleanOneLine(raw.emoji, 12, '✨'),
+      };
+    })
+    .filter((item): item is InteractiveElement => Boolean(item))
+    .slice(0, 2);
+}
+
+function normalizeGlossary(value: unknown): GlossaryItem[] {
+  if (!Array.isArray(value)) return [];
+
+  const seen = new Set<string>();
+  return value
+    .map((item, index): GlossaryItem | null => {
+      const raw = asRecord(item);
+      const wordEn = cleanOneLine(raw.wordEn, 50);
+      const translationId = cleanOneLine(raw.translationId, 70);
+      if (!wordEn || !translationId) return null;
+
+      const key = wordEn.toLowerCase();
+      if (seen.has(key)) return null;
+      seen.add(key);
+
+      return {
+        id: cleanOneLine(raw.id, 40, `ai-glossary-${index + 1}`),
+        wordEn,
+        translationId,
+        phonetic: cleanOneLine(raw.phonetic, 60),
+        emoji: cleanOneLine(raw.emoji, 12, '📖'),
+        exampleEn: cleanOneLine(raw.exampleEn, 140),
+        exampleId: cleanOneLine(raw.exampleId, 140),
+      };
+    })
+    .filter((item): item is GlossaryItem => Boolean(item))
+    .slice(0, 12);
+}
+
+function normalizeVocabularyQuiz(value: unknown): VocabularyQuiz | undefined {
+  const raw = asRecord(value);
+  const questions = Array.isArray(raw.questions)
+    ? raw.questions
+        .map((item): VocabularyQuizQuestion | null => {
+          const question = asRecord(item);
+          const wordEn = cleanOneLine(question.wordEn, 50);
+          const correctTranslationId = cleanOneLine(question.correctTranslationId, 70);
+          const optionsId = Array.isArray(question.optionsId)
+            ? question.optionsId.map((option) => cleanOneLine(option, 70)).filter(Boolean).slice(0, 4)
+            : [];
+
+          if (!wordEn || !correctTranslationId || optionsId.length < 2) return null;
+
+          const options = optionsId.includes(correctTranslationId)
+            ? optionsId
+            : [correctTranslationId, ...optionsId].slice(0, 4);
+
+          return {
+            wordEn,
+            correctTranslationId,
+            optionsId: options,
+            emoji: cleanOneLine(question.emoji, 12),
+            phonetic: cleanOneLine(question.phonetic, 60),
+          };
+        })
+        .filter((item): item is VocabularyQuiz['questions'][number] => Boolean(item))
+        .slice(0, 6)
+    : [];
+
+  if (questions.length === 0) return undefined;
+
+  return {
+    title: cleanOneLine(raw.title, 100, 'Kuis Kosakata'),
+    description: cleanOneLine(raw.description, 160, 'Latihan kosakata dari cerita.'),
+    questions,
   };
 }
 
@@ -394,6 +583,168 @@ Format JSON yang HARUS dikembalikan (tanpa markdown pembungkus selain json):
     } catch (error) {
       console.error('Error generating story:', error);
       res.status(500).json({ error: 'Failed to generate story with Gemini.' });
+    }
+  });
+
+  app.post('/api/admin/generate-book-draft', async (req, res) => {
+    if (!isValidAdminPin(req.headers['x-admin-pin'])) {
+      return res.status(403).json({ error: 'PIN admin tidak valid.' });
+    }
+
+    try {
+      const title = cleanOneLine(req.body?.title, 120);
+      const targetAge = cleanOneLine(req.body?.targetAge, 40, '4-8 Tahun');
+      const primaryLanguage = req.body?.primaryLanguage === 'en' ? 'en' : 'id';
+      const manuscript = cleanAiText(req.body?.manuscript, 24000);
+
+      if (!title) {
+        return res.status(400).json({ error: 'Judul buku wajib diisi.' });
+      }
+      if (manuscript.length < 120) {
+        return res.status(400).json({ error: 'Naskah cerita terlalu pendek untuk dibuat menjadi buku.' });
+      }
+
+      const apiKey = process.env.GEMINI_API_KEY;
+      if (!apiKey) {
+        return res.status(400).json({ error: 'GEMINI_API_KEY is not configured.' });
+      }
+
+      const ai = new GoogleGenAI({ apiKey });
+      const prompt = `You are BacaYuk Book Studio, an expert children's storybook editor.
+Create a reviewable storybook draft from the pasted manuscript. Do not publish it.
+
+Input:
+- Title: ${title}
+- Target age: ${targetAge}
+- Primary language: ${primaryLanguage === 'id' ? 'Indonesian' : 'English'}
+- Manuscript:
+${manuscript}
+
+Rules:
+- Return only valid JSON. No markdown wrapper.
+- Remove meta-chat, assistant follow-up questions, and source formatting artifacts.
+- Produce 8 to 12 pages for a normal picture book.
+- Each page must have one clear story beat, a short title, child-safe text, one visual scene prompt, and an illustrationType.
+- illustrationType must be one of: forest, dragon, space, sea, castle, garden, custom.
+- If the manuscript is Indonesian, keep page text in Indonesian and leave textEn empty.
+- If the manuscript is English, keep page text in English and leave textEn empty.
+- Do not invent a fake English translation.
+- Create glossary candidates only from useful words that appear in the story.
+- Create quiz/interactions as suggestions only. Keep them simple and stable.
+- Visual prompts must describe subject + action + setting + mood + important object + child-safe illustration style.
+
+JSON shape:
+{
+  "title": "Book title",
+  "category": "Story category",
+  "description": "Short description",
+  "moralMessage": "Moral message",
+  "coverPrompt": "Cover scene prompt",
+  "pages": [
+    {
+      "title": "Page title",
+      "text": "Page story text",
+      "textEn": "",
+      "illustrationType": "forest",
+      "illustrationPrompt": "Scene prompt",
+      "interactiveElements": [
+        {
+          "type": "character",
+          "label": "Object or character",
+          "x": 50,
+          "y": 55,
+          "animation": "bounce",
+          "soundType": "chime",
+          "dialogue": "Short child-friendly dialogue",
+          "emoji": "✨"
+        }
+      ],
+      "quizQuestion": {
+        "question": "Question about this page",
+        "options": ["Correct", "Wrong", "Wrong", "Wrong"],
+        "answerIndex": 0,
+        "explanation": "Why the answer is correct"
+      }
+    }
+  ],
+  "glossary": [
+    {
+      "wordEn": "Forest",
+      "translationId": "Hutan",
+      "phonetic": "for-est",
+      "emoji": "🌲",
+      "exampleEn": "The forest is green.",
+      "exampleId": "Hutan itu hijau."
+    }
+  ],
+  "vocabularyQuiz": {
+    "title": "Kuis Kosakata",
+    "description": "Latihan kosakata dari cerita.",
+    "questions": [
+      {
+        "wordEn": "Forest",
+        "correctTranslationId": "Hutan",
+        "optionsId": ["Hutan", "Laut", "Istana", "Bintang"],
+        "emoji": "🌲",
+        "phonetic": "for-est"
+      }
+    ]
+  }
+}`;
+
+      const response = await generateGeminiJson(ai, prompt);
+      const parsed = asRecord(JSON.parse(response.text || '{}'));
+      const rawPages = Array.isArray(parsed.pages) ? parsed.pages : [];
+      const pages = rawPages
+        .map((item, index): GeneratedStoryPage | null => {
+          const page = asRecord(item);
+          const pageTitle = cleanOneLine(page.title, 100, `Halaman ${index + 1}`);
+          const text = cleanAiText(page.text, 1800);
+          if (!text) return null;
+          const illustrationType = normalizeIllustrationType(page.illustrationType, `${pageTitle} ${text}`);
+
+          return {
+            pageNumber: index + 1,
+            title: pageTitle,
+            text,
+            textEn: cleanAiText(page.textEn, 1800),
+            illustrationType,
+            illustrationPrompt: cleanAiText(
+              page.illustrationPrompt,
+              500,
+              `${pageTitle}: ${text.slice(0, 180)} Child-safe colorful storybook illustration.`
+            ),
+            interactiveElements: normalizeInteractiveElements(page.interactiveElements, index + 1),
+            quizQuestion: normalizeQuizQuestion(page.quizQuestion),
+          };
+        })
+        .filter((page): page is GeneratedStoryPage => Boolean(page))
+        .slice(0, 12);
+
+      if (pages.length < 4) {
+        return res.status(502).json({ error: 'AI tidak mengembalikan halaman cerita yang cukup valid.' });
+      }
+
+      res.json({
+        draft: {
+          title: cleanOneLine(parsed.title, 120, title),
+          category: cleanOneLine(parsed.category, 80, 'Petualangan'),
+          description: cleanOneLine(parsed.description, 220, pages[0]?.text.slice(0, 150) || ''),
+          moralMessage: cleanOneLine(parsed.moralMessage, 220, 'Gunakan kebaikan dan keberanian dalam setiap perjalanan.'),
+          coverPrompt: cleanAiText(
+            parsed.coverPrompt,
+            500,
+            `${title}, main character in the main setting, warm child-safe storybook cover illustration.`
+          ),
+          pages,
+          glossary: normalizeGlossary(parsed.glossary),
+          vocabularyQuiz: normalizeVocabularyQuiz(parsed.vocabularyQuiz),
+        },
+        model: response.model,
+      });
+    } catch (error) {
+      console.error('Error generating book draft:', error);
+      res.status(500).json({ error: 'Gagal membuat draft buku dengan AI.' });
     }
   });
 
