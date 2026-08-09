@@ -8,7 +8,11 @@ server.js
 server.js.map
 .env*
 !.env.example
-.agents
+.agents/*
+!.agents/skills/
+.agents/skills/*
+!.agents/skills/ai-storybook-studio/
+!.agents/skills/ai-storybook-studio/**
 skills-lock.json
 
 .vercel

@@ -1,0 +1,258 @@
+{
+  "schemaVersion": "1.0",
+  "story": {
+    "id": "lila-berani-bercerita-demo",
+    "title": "Lila Berani Bercerita",
+    "author": "BacaYuk Studio",
+    "category": "Keberanian",
+    "coverImage": "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=600",
+    "coverBg": "from-amber-300 to-rose-400",
+    "themeColor": "amber",
+    "accentColor": "rose",
+    "moralMessage": "Keberanian tumbuh ketika kita mencoba dan menerima dukungan dari teman.",
+    "targetAge": "6-8 Tahun",
+    "description": "Lila si kelinci kecil belajar mengatasi rasa gugup saat mendapat giliran bercerita di depan kelas.",
+    "accessStatus": "free_member",
+    "downloadEnabled": true,
+    "ebookPrice": 15000,
+    "watermarkEnabled": true,
+    "status": "draft",
+    "pipelineStatus": "illustrated",
+    "pages": [
+      {
+        "pageNumber": 1,
+        "title": "Giliran Lila",
+        "text": "Bu Rani mengumumkan bahwa besok setiap murid akan bercerita di depan kelas. Telinga Lila langsung menunduk karena ia merasa gugup.",
+        "textEn": "",
+        "illustrationType": "forest",
+        "illustrationPrompt": "Lila, a small cream-colored rabbit wearing yellow overalls and a teal scarf, sits in a warm woodland classroom while her owl teacher announces story day, Lila's ears lowered with gentle nervousness, colorful books and leaf-shaped windows, soft colorful children's storybook illustration.",
+        "colors": {
+          "bgGradFrom": "from-amber-100",
+          "bgGradTo": "to-rose-100",
+          "textBg": "bg-white/85",
+          "accentColor": "amber",
+          "borderAccent": "border-amber-300"
+        }
+      },
+      {
+        "pageNumber": 2,
+        "title": "Cerita di Dalam Tas",
+        "text": "Di rumah, Lila memilih cerita tentang benih kecil yang tumbuh menjadi bunga. Ia memasukkan gambar benih itu ke dalam tas merahnya.",
+        "textEn": "",
+        "illustrationType": "garden",
+        "illustrationPrompt": "Lila, the same cream-colored rabbit in yellow overalls and teal scarf, prepares a drawing of a tiny seed growing into a flower at her bedroom desk, placing it into her small red satchel, warm evening mood, soft colorful children's storybook illustration.",
+        "colors": {
+          "bgGradFrom": "from-emerald-100",
+          "bgGradTo": "to-amber-100",
+          "textBg": "bg-white/85",
+          "accentColor": "emerald",
+          "borderAccent": "border-emerald-300"
+        }
+      },
+      {
+        "pageNumber": 3,
+        "title": "Latihan Pertama",
+        "text": "Lila mencoba bercerita di depan cermin. Suaranya pelan sekali, tetapi ia berhasil menyelesaikan satu kalimat.",
+        "textEn": "",
+        "illustrationType": "custom",
+        "illustrationPrompt": "Lila, the same cream-colored rabbit with round brown eyes, yellow overalls, and teal scarf, practices speaking in front of a round bedroom mirror, holding her seed drawing with both paws, shy but determined expression, gentle morning light, soft colorful children's storybook illustration.",
+        "colors": {
+          "bgGradFrom": "from-sky-100",
+          "bgGradTo": "to-amber-100",
+          "textBg": "bg-white/85",
+          "accentColor": "sky",
+          "borderAccent": "border-sky-300"
+        }
+      },
+      {
+        "pageNumber": 4,
+        "title": "Dukungan Momo",
+        "text": "Momo si tupai datang mendengarkan. “Aku suka ceritamu,” katanya. Lila pun mencoba lagi dengan suara sedikit lebih jelas.",
+        "textEn": "",
+        "illustrationType": "forest",
+        "illustrationPrompt": "Lila, unchanged in yellow overalls and teal scarf, tells her seed story to Momo, a small reddish-brown squirrel wearing a blue vest, inside Lila's cozy room, Momo smiles and listens attentively, encouraging mood, soft colorful children's storybook illustration.",
+        "colors": {
+          "bgGradFrom": "from-orange-100",
+          "bgGradTo": "to-sky-100",
+          "textBg": "bg-white/85",
+          "accentColor": "orange",
+          "borderAccent": "border-orange-300"
+        },
+        "interactiveElements": [
+          {
+            "id": "momo-support-page-4",
+            "type": "character",
+            "label": "Momo memberi semangat",
+            "x": 72,
+            "y": 58,
+            "animation": "bounce",
+            "soundType": "chime",
+            "dialogue": "Aku suka ceritamu!",
+            "emoji": "🐿️"
+          }
+        ]
+      },
+      {
+        "pageNumber": 5,
+        "title": "Pagi yang Mendebarkan",
+        "text": "Keesokan paginya, jantung Lila berdebar saat berjalan ke sekolah. Ia menyentuh syal hijaunya dan mengingat latihan bersama Momo.",
+        "textEn": "",
+        "illustrationType": "forest",
+        "illustrationPrompt": "Lila, the same cream-colored rabbit wearing yellow overalls and teal scarf and carrying a red satchel, walks along a sunny woodland path toward school, one paw touching her scarf, nervous but hopeful mood, soft colorful children's storybook illustration.",
+        "colors": {
+          "bgGradFrom": "from-lime-100",
+          "bgGradTo": "to-sky-100",
+          "textBg": "bg-white/85",
+          "accentColor": "lime",
+          "borderAccent": "border-lime-300"
+        }
+      },
+      {
+        "pageNumber": 6,
+        "title": "Satu Tarikan Napas",
+        "text": "Ketika namanya dipanggil, Lila berdiri di depan kelas. Ia menarik napas pelan, melihat Momo tersenyum, lalu mengucapkan kalimat pertamanya.",
+        "textEn": "",
+        "illustrationType": "forest",
+        "illustrationPrompt": "Lila, unchanged with cream fur, round brown eyes, yellow overalls, and teal scarf, stands at the front of the woodland classroom holding her seed drawing, taking a calm breath as Momo smiles from his seat, supportive classmates, warm reassuring mood, soft colorful children's storybook illustration.",
+        "colors": {
+          "bgGradFrom": "from-amber-100",
+          "bgGradTo": "to-emerald-100",
+          "textBg": "bg-white/85",
+          "accentColor": "emerald",
+          "borderAccent": "border-emerald-300"
+        }
+      },
+      {
+        "pageNumber": 7,
+        "title": "Suara yang Tumbuh",
+        "text": "Setiap kalimat membuat suara Lila semakin mantap. Teman-temannya mengikuti kisah benih kecil itu sampai akhirnya tumbuh menjadi bunga yang cerah.",
+        "textEn": "",
+        "illustrationType": "garden",
+        "illustrationPrompt": "Lila, identical cream-colored rabbit in yellow overalls and teal scarf, speaks confidently beside her seed-to-flower drawing in the woodland classroom, classmates watching with delighted faces, an imaginative glowing flower motif behind her, joyful mood, soft colorful children's storybook illustration.",
+        "colors": {
+          "bgGradFrom": "from-rose-100",
+          "bgGradTo": "to-amber-100",
+          "textBg": "bg-white/85",
+          "accentColor": "rose",
+          "borderAccent": "border-rose-300"
+        }
+      },
+      {
+        "pageNumber": 8,
+        "title": "Berani Mencoba",
+        "text": "Kelas bertepuk tangan ketika Lila selesai. Lila masih merasa sedikit gugup, tetapi kini ia tahu bahwa keberanian dimulai dari satu kali mencoba.",
+        "textEn": "",
+        "illustrationType": "forest",
+        "illustrationPrompt": "Lila, unchanged in her yellow overalls and teal scarf, smiles with relief at the front of the woodland classroom while Momo, the reddish-brown squirrel in a blue vest, and other classmates clap, seed drawing visible, warm celebratory mood, soft colorful children's storybook illustration.",
+        "colors": {
+          "bgGradFrom": "from-yellow-100",
+          "bgGradTo": "to-rose-100",
+          "textBg": "bg-white/85",
+          "accentColor": "yellow",
+          "borderAccent": "border-yellow-300"
+        },
+        "quizQuestion": {
+          "question": "Apa yang membantu Lila berani bercerita?",
+          "options": [
+            "Berlatih dan menerima dukungan teman",
+            "Menyembunyikan gambarnya",
+            "Tidak datang ke sekolah",
+            "Meminta orang lain menggantikannya"
+          ],
+          "answerIndex": 0,
+          "explanation": "Lila menjadi lebih berani setelah berlatih dan mendapat dukungan dari Momo."
+        }
+      }
+    ],
+    "glossary": [
+      {
+        "id": "brave",
+        "wordEn": "Brave",
+        "translationId": "Berani",
+        "phonetic": "breiv",
+        "emoji": "🌟",
+        "exampleEn": "Lila is brave.",
+        "exampleId": "Lila berani."
+      },
+      {
+        "id": "friend",
+        "wordEn": "Friend",
+        "translationId": "Teman",
+        "phonetic": "frend",
+        "emoji": "🤝",
+        "exampleEn": "Momo is a good friend.",
+        "exampleId": "Momo adalah teman yang baik."
+      }
+    ],
+    "vocabularyQuiz": {
+      "title": "Kuis Kosakata",
+      "description": "Pilih arti kata yang tepat.",
+      "questions": [
+        {
+          "wordEn": "Brave",
+          "correctTranslationId": "Berani",
+          "optionsId": ["Berani", "Sedih", "Lapar", "Sepi"],
+          "emoji": "🌟",
+          "phonetic": "breiv"
+        }
+      ]
+    }
+  },
+  "productionGuide": {
+    "visualPreset": "colorful-storybook",
+    "aspectRatio": "4:3",
+    "characterBible": [
+      {
+        "id": "lila",
+        "name": "Lila",
+        "role": "main",
+        "speciesOrIdentity": "Kelinci antropomorfik kecil",
+        "ageAppearance": "Setara anak usia 7 tahun",
+        "bodyAndFace": "Tubuh mungil, wajah bulat, mata cokelat besar, telinga panjang dengan ujung sedikit melengkung",
+        "skinFurOrHair": "Bulu krem lembut dengan bagian dalam telinga merah muda",
+        "outfit": "Overall kuning di atas kaus putih dan syal hijau teal",
+        "accessories": ["Tas selempang merah saat pergi ke sekolah"],
+        "signatureColors": ["#F6E3C5", "#F4C542", "#238A8D", "#C94B50"],
+        "personality": ["pemalu", "teliti", "baik hati", "mau mencoba"],
+        "expressionGuide": ["Gugup: telinga menunduk dan kedua tangan merapat", "Berani: telinga tegak dan senyum kecil"],
+        "immutableTraits": ["Bulu selalu krem", "Overall selalu kuning", "Syal selalu hijau teal", "Tidak memakai sepatu"]
+      },
+      {
+        "id": "momo",
+        "name": "Momo",
+        "role": "supporting",
+        "speciesOrIdentity": "Tupai antropomorfik kecil",
+        "ageAppearance": "Setara anak usia 7 tahun",
+        "bodyAndFace": "Tubuh kecil, pipi bulat, ekor besar melengkung",
+        "skinFurOrHair": "Bulu cokelat kemerahan dengan dada krem",
+        "outfit": "Rompi biru tanpa lengan",
+        "accessories": [],
+        "signatureColors": ["#A65332", "#F1D2A9", "#3A74B8"],
+        "personality": ["ceria", "mendukung", "pendengar yang baik"],
+        "expressionGuide": ["Mendukung: senyum hangat dan kedua tangan terbuka"],
+        "immutableTraits": ["Bulu selalu cokelat kemerahan", "Rompi selalu biru", "Ekor selalu besar dan melengkung"]
+      }
+    ],
+    "palette": ["#F6E3C5", "#F4C542", "#238A8D", "#C94B50", "#3A74B8"],
+    "coverPrompt": "Lila, a small cream-colored rabbit in yellow overalls and a teal scarf, stands outside a cozy woodland school holding a seed-to-flower drawing, Momo the reddish-brown squirrel in a blue vest cheering beside her, hopeful and warm emotional promise, soft colorful children's storybook cover illustration, no readable text.",
+    "continuityRules": [
+      "Gunakan desain, pakaian, warna, dan proporsi character bible tanpa perubahan.",
+      "Tampilkan tas merah Lila hanya saat perjalanan ke atau dari sekolah.",
+      "Pertahankan kelas sebagai ruang kayu hangat dengan jendela berbentuk daun.",
+      "Jangan memasukkan teks terbaca ke dalam ilustrasi."
+    ],
+    "negativePrompt": "photorealistic, horror, violence, weapons, injury, threatening expressions, dark oppressive lighting, readable text, watermark, logo, extra limbs, duplicate character, changed outfit, changed fur color, inconsistent proportions"
+  },
+  "review": {
+    "status": "needs_review",
+    "checklist": [
+      "Periksa kesesuaian kosakata dengan usia 6-8 tahun.",
+      "Pastikan karakter Lila dan Momo konsisten pada semua ilustrasi.",
+      "Pastikan tidak ada teks terbaca atau watermark pada gambar.",
+      "Tinjau glosarium dan kuis sebelum buku diterbitkan."
+    ],
+    "warnings": [
+      "coverImage masih menggunakan placeholder dan harus diganti dengan hasil ilustrasi final."
+    ]
+  }
+}

@@ -46,7 +46,9 @@ Use this skill for BacaYuk features that generate or refine children's books wit
 
 ## Implementation Notes
 
-- For exact BacaYuk `Story` / `StoryPage` fields, read `references/bacayuk-story-schema.md`.
+- For exact BacaYuk input, package, `Story`, and `StoryPage` interfaces, read `references/storybook-contract.ts`.
+- For required versus optional fields and persistence mapping, read `references/bacayuk-story-schema.md`.
+- For a complete known-good payload, read `references/example-story.json` and preserve its object shape.
 - For visual prompt and illustration rules, read `references/visual-generation.md`.
 - If implementing a backend AI endpoint, keep parsing and validation deterministic around the AI call.
 - If changing database tables, load the Supabase/Postgres skills first.
@@ -56,12 +58,13 @@ Use this skill for BacaYuk features that generate or refine children's books wit
 When asked to generate a book draft, provide:
 
 ```text
-Book metadata
-Page list
-Visual scenes per page
-Enhancement candidates
-Known gaps / review checklist
+GeneratedStorybookPackage
+|- story (directly compatible with BacaYuk admin)
+|- productionGuide (character and illustration continuity)
+`- review (warnings and human checklist)
 ```
+
+Require only `brief`, `targetAge`, and `primaryLanguage` from Quick Create. Generate the remaining required `Story` and production fields. Keep `productionGuide` outside `story` until the application schema explicitly stores it.
 
 When implementing code, create small focused changes and verify with:
 
