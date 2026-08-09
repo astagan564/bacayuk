@@ -62,6 +62,37 @@ export interface StoryPage {
   quizQuestion?: QuizQuestion;
 }
 
+export type StoryVisualPreset =
+  | 'soft-2d-cartoon'
+  | 'colorful-storybook'
+  | 'stylized-adventure-cartoon';
+
+export interface StoryCharacterBibleEntry {
+  id: string;
+  name: string;
+  role: 'main' | 'supporting' | 'background';
+  speciesOrIdentity: string;
+  ageAppearance: string;
+  bodyAndFace: string;
+  skinFurOrHair: string;
+  outfit: string;
+  accessories: string[];
+  signatureColors: string[];
+  personality: string[];
+  expressionGuide: string[];
+  immutableTraits: string[];
+}
+
+export interface StoryProductionGuide {
+  visualPreset: StoryVisualPreset;
+  aspectRatio: '4:3' | '1:1' | '16:9';
+  characterBible: StoryCharacterBibleEntry[];
+  palette: string[];
+  coverPrompt: string;
+  continuityRules: string[];
+  negativePrompt: string;
+}
+
 export interface Story {
   id: string;
   title: string;
@@ -86,6 +117,7 @@ export interface Story {
   pipelineStatus?: 'draft' | 'story_complete' | 'illustrated' | 'enhanced' | 'ready_to_publish';
   glossary?: GlossaryItem[];
   vocabularyQuiz?: VocabularyQuiz;
+  productionGuide?: StoryProductionGuide;
 }
 
 export type DisplayView = 'double' | 'single';

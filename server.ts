@@ -10,7 +10,10 @@ import type {
   InteractiveElement,
   QuizQuestion,
   Story,
+  StoryCharacterBibleEntry,
   StoryPage,
+  StoryProductionGuide,
+  StoryVisualPreset,
   VocabularyQuiz,
   VocabularyQuizQuestion,
 } from './src/types';
@@ -35,6 +38,11 @@ const STORYBOOK_SOUNDS: NonNullable<InteractiveElement['soundType']>[] = [
   'sparkle',
   'roar',
   'splash',
+];
+const STORYBOOK_VISUAL_PRESETS: StoryVisualPreset[] = [
+  'soft-2d-cartoon',
+  'colorful-storybook',
+  'stylized-adventure-cartoon',
 ];
 type GeneratedStoryPage = Omit<StoryPage, 'colors'>;
 
@@ -282,6 +290,65 @@ function normalizeInteractiveElements(value: unknown, pageNumber: number): Inter
     })
     .filter((item): item is InteractiveElement => Boolean(item))
     .slice(0, 2);
+}
+
+function normalizeStringList(value: unknown, maxItems: number, maxLength: number): string[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item) => cleanOneLine(item, maxLength))
+    .filter(Boolean)
+    .slice(0, maxItems);
+}
+
+function normalizeProductionGuide(value: unknown, fallbackPreset: StoryVisualPreset): StoryProductionGuide {
+  const raw = asRecord(value);
+  const visualPreset = STORYBOOK_VISUAL_PRESETS.includes(raw.visualPreset as StoryVisualPreset)
+    ? raw.visualPreset as StoryVisualPreset
+    : fallbackPreset;
+  const characterBible = Array.isArray(raw.characterBible)
+    ? raw.characterBible
+        .map((item, index): StoryCharacterBibleEntry | null => {
+          const character = asRecord(item);
+          const name = cleanOneLine(character.name, 60);
+          if (!name) return null;
+
+          return {
+            id: cleanOneLine(character.id, 50, `character-${index + 1}`),
+            name,
+            role: ['main', 'supporting', 'background'].includes(character.role as string)
+              ? character.role as StoryCharacterBibleEntry['role']
+              : index === 0 ? 'main' : 'supporting',
+            speciesOrIdentity: cleanOneLine(character.speciesOrIdentity, 120, 'Child-friendly story character'),
+            ageAppearance: cleanOneLine(character.ageAppearance, 80, 'Matches the target reader age'),
+            bodyAndFace: cleanOneLine(character.bodyAndFace, 220),
+            skinFurOrHair: cleanOneLine(character.skinFurOrHair, 180),
+            outfit: cleanOneLine(character.outfit, 180),
+            accessories: normalizeStringList(character.accessories, 8, 100),
+            signatureColors: normalizeStringList(character.signatureColors, 8, 30),
+            personality: normalizeStringList(character.personality, 8, 60),
+            expressionGuide: normalizeStringList(character.expressionGuide, 8, 160),
+            immutableTraits: normalizeStringList(character.immutableTraits, 10, 160),
+          };
+        })
+        .filter((character): character is StoryCharacterBibleEntry => Boolean(character))
+        .slice(0, 8)
+    : [];
+
+  return {
+    visualPreset,
+    aspectRatio: ['4:3', '1:1', '16:9'].includes(raw.aspectRatio as string)
+      ? raw.aspectRatio as StoryProductionGuide['aspectRatio']
+      : '4:3',
+    characterBible,
+    palette: normalizeStringList(raw.palette, 10, 30),
+    coverPrompt: cleanAiText(raw.coverPrompt, 700),
+    continuityRules: normalizeStringList(raw.continuityRules, 12, 180),
+    negativePrompt: cleanAiText(
+      raw.negativePrompt,
+      700,
+      'photorealistic, horror, violence, readable text, watermark, logo, extra limbs, duplicate character, changed outfit, changed colors'
+    ),
+  };
 }
 
 function normalizeGlossary(value: unknown): GlossaryItem[] {
@@ -659,16 +726,33 @@ Format JSON yang HARUS dikembalikan (tanpa markdown pembungkus selain json):
     }
 
     try {
-      const title = cleanOneLine(req.body?.title, 120);
-      const targetAge = cleanOneLine(req.body?.targetAge, 40, '4-8 Tahun');
+      const requestedTitle = cleanOneLine(req.body?.title, 120);
+      const targetAgeInput = cleanOneLine(req.body?.targetAge, 40, '6-8');
+      const targetAgeKey = ['3-5', '6-8', '9-12'].find((value) => targetAgeInput.includes(value)) || '6-8';
+      const targetAge = `${targetAgeKey} Tahun`;
       const primaryLanguage = req.body?.primaryLanguage === 'en' ? 'en' : 'id';
-      const manuscript = cleanAiText(req.body?.manuscript, 24000);
+      const brief = cleanAiText(req.body?.brief ?? req.body?.manuscript, 24000);
+      const moralMessage = cleanOneLine(req.body?.moralMessage, 220);
+      const characterHints = cleanAiText(req.body?.characterHints, 800);
+      const pageCount = Math.min(12, Math.max(8, Math.round(Number(req.body?.pageCount) || 10)));
+      const defaultVisualPreset: StoryVisualPreset = targetAgeKey === '3-5'
+        ? 'soft-2d-cartoon'
+        : targetAgeKey === '9-12'
+          ? 'stylized-adventure-cartoon'
+          : 'colorful-storybook';
+      const visualPreset = STORYBOOK_VISUAL_PRESETS.includes(req.body?.visualPreset as StoryVisualPreset)
+        ? req.body.visualPreset as StoryVisualPreset
+        : defaultVisualPreset;
+      const tabooContent = normalizeStringList(
+        Array.isArray(req.body?.tabooContent)
+          ? req.body.tabooContent
+          : cleanAiText(req.body?.tabooContent, 500).split(',').map((item) => item.trim()),
+        12,
+        100
+      );
 
-      if (!title) {
-        return res.status(400).json({ error: 'Judul buku wajib diisi.' });
-      }
-      if (manuscript.length < 120) {
-        return res.status(400).json({ error: 'Naskah cerita terlalu pendek untuk dibuat menjadi buku.' });
+      if (brief.length < 12) {
+        return res.status(400).json({ error: 'Tuliskan sedikitnya satu ide cerita yang jelas.' });
       }
 
       const apiKey = process.env.GEMINI_API_KEY;
@@ -677,28 +761,36 @@ Format JSON yang HARUS dikembalikan (tanpa markdown pembungkus selain json):
       }
 
       const ai = new GoogleGenAI({ apiKey });
-      const prompt = `You are BacaYuk Book Studio, an expert children's storybook editor.
-Create a reviewable storybook draft from the pasted manuscript. Do not publish it.
+      const prompt = `You are BacaYuk Book Studio, an expert children's storybook writer and visual continuity editor.
+Create a complete, reviewable storybook draft from a short idea, premise, or pasted manuscript. Do not publish it.
 
 Input:
-- Title: ${title}
+- Optional title: ${requestedTitle || 'Generate a fitting title'}
 - Target age: ${targetAge}
 - Primary language: ${primaryLanguage === 'id' ? 'Indonesian' : 'English'}
-- Manuscript:
-${manuscript}
+- Desired page count: ${pageCount}
+- Visual preset: ${visualPreset}
+- Optional moral direction: ${moralMessage || 'Infer a gentle lesson from the story'}
+- Optional character hints: ${characterHints || 'Create fitting original characters'}
+- Additional content to avoid: ${tabooContent.length ? tabooContent.join(', ') : 'None beyond standard child-safety rules'}
+- Story idea or manuscript:
+${brief}
 
 Rules:
 - Return only valid JSON. No markdown wrapper.
 - Remove meta-chat, assistant follow-up questions, and source formatting artifacts.
-- Produce 8 to 12 pages for a normal picture book.
+- Produce exactly ${pageCount} pages.
+- Expand a short premise into a coherent beginning, problem, attempts, resolution, and reflection.
 - Each page must have one clear story beat, a short title, child-safe text, one visual scene prompt, and an illustrationType.
 - illustrationType must be one of: forest, dragon, space, sea, castle, garden, custom.
-- If the manuscript is Indonesian, keep page text in Indonesian and leave textEn empty.
-- If the manuscript is English, keep page text in English and leave textEn empty.
+- Keep page text in the requested primary language and leave textEn empty.
 - Do not invent a fake English translation.
 - Create glossary candidates only from useful words that appear in the story.
 - Create quiz/interactions as suggestions only. Keep them simple and stable.
 - Visual prompts must describe subject + action + setting + mood + important object + child-safe illustration style.
+- Define the character bible before scene prompts. Repeat immutable character traits in every relevant scene prompt.
+- Keep the same visual preset, character design, outfit, colors, proportions, and recurring setting details across all pages.
+- Avoid photorealism, violence, frightening imagery, readable text, logos, watermarks, extra limbs, and duplicate characters.
 
 JSON shape:
 {
@@ -707,6 +799,31 @@ JSON shape:
   "description": "Short description",
   "moralMessage": "Moral message",
   "coverPrompt": "Cover scene prompt",
+  "productionGuide": {
+    "visualPreset": "${visualPreset}",
+    "aspectRatio": "4:3",
+    "characterBible": [
+      {
+        "id": "character-id",
+        "name": "Character name",
+        "role": "main",
+        "speciesOrIdentity": "Identity or species",
+        "ageAppearance": "Age appearance",
+        "bodyAndFace": "Stable body and face details",
+        "skinFurOrHair": "Stable skin, fur, or hair details",
+        "outfit": "Exact recurring outfit",
+        "accessories": ["Stable accessory"],
+        "signatureColors": ["#F4C542"],
+        "personality": ["Kind", "Curious"],
+        "expressionGuide": ["Nervous: lowered ears"],
+        "immutableTraits": ["Outfit never changes"]
+      }
+    ],
+    "palette": ["#F4C542", "#238A8D"],
+    "coverPrompt": "Cover scene prompt without readable text",
+    "continuityRules": ["Visual continuity rule"],
+    "negativePrompt": "Unsafe or inconsistent visual traits to exclude"
+  },
   "pages": [
     {
       "title": "Page title",
@@ -761,6 +878,7 @@ JSON shape:
 
       const response = await generateGeminiJson(ai, prompt);
       const parsed = asRecord(JSON.parse(response.text || '{}'));
+      const productionGuide = normalizeProductionGuide(parsed.productionGuide, visualPreset);
       const rawPages = Array.isArray(parsed.pages) ? parsed.pages : [];
       const pages = rawPages
         .map((item, index): GeneratedStoryPage | null => {
@@ -788,21 +906,25 @@ JSON shape:
         .filter((page): page is GeneratedStoryPage => Boolean(page))
         .slice(0, 12);
 
-      if (pages.length < 4) {
+      if (pages.length < 8) {
         return res.status(502).json({ error: 'AI tidak mengembalikan halaman cerita yang cukup valid.' });
+      }
+      if (productionGuide.characterBible.length === 0) {
+        return res.status(502).json({ error: 'AI belum menghasilkan acuan karakter yang valid.' });
       }
 
       res.json({
         draft: {
-          title: cleanOneLine(parsed.title, 120, title),
+          title: cleanOneLine(parsed.title, 120, requestedTitle || 'Buku Cerita Baru'),
           category: cleanOneLine(parsed.category, 80, 'Petualangan'),
           description: cleanOneLine(parsed.description, 220, pages[0]?.text.slice(0, 150) || ''),
           moralMessage: cleanOneLine(parsed.moralMessage, 220, 'Gunakan kebaikan dan keberanian dalam setiap perjalanan.'),
           coverPrompt: cleanAiText(
             parsed.coverPrompt,
             500,
-            `${title}, main character in the main setting, warm child-safe storybook cover illustration.`
+            productionGuide.coverPrompt || `${requestedTitle || 'BacaYuk story'}, main character in the main setting, warm child-safe storybook cover illustration.`
           ),
+          productionGuide,
           pages,
           glossary: normalizeGlossary(parsed.glossary),
           vocabularyQuiz: normalizeVocabularyQuiz(parsed.vocabularyQuiz),
@@ -824,6 +946,14 @@ JSON shape:
       const mode = req.body?.mode;
       const title = cleanOneLine(req.body?.title, 120, 'BacaYuk Story');
       const targetAge = cleanOneLine(req.body?.targetAge, 40, '4-8 Tahun');
+      const productionGuide = normalizeProductionGuide(req.body?.productionGuide, 'colorful-storybook');
+      const visualContinuityContext = JSON.stringify({
+        visualPreset: productionGuide.visualPreset,
+        characterBible: productionGuide.characterBible,
+        palette: productionGuide.palette,
+        continuityRules: productionGuide.continuityRules,
+        negativePrompt: productionGuide.negativePrompt,
+      }).slice(0, 7000);
       const pages = Array.isArray(req.body?.pages)
         ? req.body.pages
             .map((item: unknown, index: number) => {
@@ -868,8 +998,11 @@ Rules:
 - Keep the same page numbers.
 - illustrationType must be one of: forest, dragon, space, sea, castle, garden, custom.
 - Prompt shape: subject + action + setting + mood + important object + child-safe storybook style.
-- Keep recurring characters visually consistent.
+- Repeat the relevant immutable character traits in every prompt.
 - Do not include readable text inside images.
+
+Visual continuity guide:
+${visualContinuityContext}
 
 Title: ${title}
 Target age: ${targetAge}
@@ -1036,6 +1169,14 @@ ${pageContext}`,
       const pageText = cleanAiText(req.body?.pageText, 1800);
       const illustrationType = normalizeIllustrationType(req.body?.illustrationType, `${pageTitle} ${pageText}`);
       const illustrationPrompt = cleanAiText(req.body?.illustrationPrompt, 700);
+      const productionGuide = normalizeProductionGuide(req.body?.productionGuide, 'colorful-storybook');
+      const visualContinuityContext = JSON.stringify({
+        visualPreset: productionGuide.visualPreset,
+        characterBible: productionGuide.characterBible,
+        palette: productionGuide.palette,
+        continuityRules: productionGuide.continuityRules,
+        negativePrompt: productionGuide.negativePrompt,
+      }).slice(0, 7000);
 
       if (!pageText && !illustrationPrompt) {
         return res.status(400).json({ error: 'Teks halaman atau prompt ilustrasi diperlukan.' });
@@ -1056,13 +1197,16 @@ Scene prompt: ${illustrationPrompt || `${pageTitle}. ${pageText}`}
 Story text context: ${pageText}
 
 Art direction:
-- Colorful, warm children's storybook illustration.
+- Use the visual preset and character bible below as the source of truth.
 - Indonesian-friendly characters/settings when context suggests Indonesia.
 - One clear focal action.
-- Keep recurring characters visually consistent with the written prompt.
+- Preserve every immutable character trait, outfit, color, accessory, and proportion.
 - Avoid scary, violent, dark, or photorealistic adult styling.
 - No readable text, captions, speech bubbles, logos, or watermark inside the image.
-- Leave clean room for app-rendered story text outside the image.`;
+- Leave clean room for app-rendered story text outside the image.
+
+Visual continuity guide:
+${visualContinuityContext}`;
 
       const ai = new GoogleGenAI({ apiKey });
       const generatedImage = await generateGeminiImage(ai, prompt);

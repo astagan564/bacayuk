@@ -1,5 +1,11 @@
 ﻿import React, { useState, useEffect } from 'react';
-import { InteractiveElement, Story, StoryPage } from '../types';
+import {
+  InteractiveElement,
+  Story,
+  StoryPage,
+  StoryProductionGuide,
+  StoryVisualPreset,
+} from '../types';
 import {
   adminStore,
   AdminSettings,
@@ -47,10 +53,15 @@ interface AdminDashboardProps {
 }
 
 interface QuickCreateForm {
-  title: string;
-  targetAge: string;
+  brief: string;
+  targetAge: '3-5' | '6-8' | '9-12';
   primaryLanguage: 'id' | 'en';
-  manuscript: string;
+  title: string;
+  moralMessage: string;
+  characterHints: string;
+  pageCount: 8 | 10 | 12;
+  visualPreset: 'auto' | StoryVisualPreset;
+  tabooContent: string;
 }
 
 interface PageDraft {
@@ -77,13 +88,19 @@ interface AiBookDraft {
   pages?: AiBookDraftPage[];
   glossary?: Story['glossary'];
   vocabularyQuiz?: Story['vocabularyQuiz'];
+  productionGuide?: StoryProductionGuide;
 }
 
 const DEFAULT_QUICK_CREATE_FORM: QuickCreateForm = {
-  title: '',
-  targetAge: '4-8 Tahun',
+  brief: '',
+  targetAge: '6-8',
   primaryLanguage: 'id',
-  manuscript: '',
+  title: '',
+  moralMessage: '',
+  characterHints: '',
+  pageCount: 10,
+  visualPreset: 'auto',
+  tabooContent: '',
 };
 
 const PIPELINE_STEPS: Array<{ id: NonNullable<Story['pipelineStatus']>; label: string }> = [
@@ -157,6 +174,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [showQuickCreate, setShowQuickCreate] = useState(false);
   const [quickCreateForm, setQuickCreateForm] = useState<QuickCreateForm>(DEFAULT_QUICK_CREATE_FORM);
   const [quickCreateErrors, setQuickCreateErrors] = useState<string[]>([]);
+  const [showQuickCreateAdvanced, setShowQuickCreateAdvanced] = useState(false);
   const [showAdvancedEditor, setShowAdvancedEditor] = useState(false);
   const [interactionPlaceMode, setInteractionPlaceMode] = useState(false);
   const [isGeneratingTranslation, setIsGeneratingTranslation] = useState(false);
@@ -201,6 +219,21 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       .slice(0, 42);
     return `${slug || 'buku-baru'}-${Date.now()}`;
   };
+
+  const targetAgeLabel = (targetAge: QuickCreateForm['targetAge']): string => `${targetAge} Tahun`;
+
+  const resolvedVisualPreset = (form: QuickCreateForm): StoryVisualPreset => {
+    if (form.visualPreset !== 'auto') return form.visualPreset;
+    if (form.targetAge === '3-5') return 'soft-2d-cartoon';
+    if (form.targetAge === '9-12') return 'stylized-adventure-cartoon';
+    return 'colorful-storybook';
+  };
+
+  const visualPresetLabel = (preset: StoryVisualPreset): string => ({
+    'soft-2d-cartoon': 'Soft 2D cartoon',
+    'colorful-storybook': 'Colorful storybook',
+    'stylized-adventure-cartoon': 'Stylized adventure',
+  })[preset];
 
   const sentenceCaseTitle = (sentence: string, fallback: string): string => {
     const cleaned = sentence
@@ -481,6 +514,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           mode,
           title: editingStory.title,
           targetAge: editingStory.targetAge,
+          productionGuide: editingStory.productionGuide,
           pages: sourcePages.map((page) => ({
             pageNumber: page.pageNumber,
             title: page.title,
@@ -563,6 +597,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           pageText: page.text,
           illustrationType: page.illustrationType,
           illustrationPrompt: page.illustrationPrompt,
+          productionGuide: editingStory.productionGuide,
         }),
       });
       const data = await response.json().catch(() => ({}));
@@ -616,7 +651,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   };
 
   const buildDraftStoryFromQuickCreate = (form: QuickCreateForm): Story => {
-    const pageDrafts = splitManuscriptIntoPageDrafts(form.manuscript);
+    const pageDrafts = splitManuscriptIntoPageDrafts(form.brief);
+    const fallbackTitle = form.title.trim() || sentenceCaseTitle(form.brief, 'Buku Cerita Baru');
     const pages: StoryPage[] = pageDrafts.map((draft, index) => {
       const basePage = createBlankPage(index + 1);
       const illustrationType = inferIllustrationType(`${draft.title} ${draft.text}`);
@@ -654,16 +690,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     });
 
     return {
-      id: createStoryId(form.title),
-      title: form.title.trim(),
+      id: createStoryId(fallbackTitle),
+      title: fallbackTitle,
       author: 'BacaYuk Studio',
       category: 'Petualangan',
       coverImage: 'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=600',
       coverBg: 'from-amber-400 to-orange-500',
       themeColor: 'amber',
       accentColor: 'orange',
-      moralMessage: 'Setiap perjalanan menjadi lebih indah saat dijalani dengan berani dan hati baik.',
-      targetAge: form.targetAge,
+      moralMessage: form.moralMessage.trim() || 'Setiap perjalanan menjadi lebih indah saat dijalani dengan berani dan hati baik.',
+      targetAge: targetAgeLabel(form.targetAge),
       description: pages[0]?.text.slice(0, 150) || 'Draft buku cerita baru dari naskah yang ditempel.',
       status: 'draft',
       pipelineStatus: 'story_complete',
@@ -672,14 +708,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       ebookPrice: settings.defaultEbookPrice,
       watermarkEnabled: true,
       pages,
-      glossary: extractGlossaryCandidates(form.manuscript),
+      glossary: extractGlossaryCandidates(form.brief),
     };
   };
 
   const buildDraftStoryFromAiDraft = (form: QuickCreateForm, draft: AiBookDraft): Story => {
     const rawPages = Array.isArray(draft.pages) && draft.pages.length > 0
       ? draft.pages
-      : splitManuscriptIntoPageDrafts(form.manuscript);
+      : splitManuscriptIntoPageDrafts(form.brief);
     const pages: StoryPage[] = rawPages.slice(0, 12).map((page, index) => {
       const basePage = createBlankPage(index + 1);
       const title = page.title?.trim() || `Halaman ${index + 1}`;
@@ -706,8 +742,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     );
 
     return {
-      id: createStoryId(draft.title || form.title),
-      title: draft.title?.trim() || form.title.trim(),
+      id: createStoryId(draft.title || form.title || 'Buku Cerita Baru'),
+      title: draft.title?.trim() || form.title.trim() || 'Buku Cerita Baru',
       author: 'BacaYuk Studio',
       category: draft.category?.trim() || 'Petualangan',
       coverImage: 'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=600',
@@ -717,7 +753,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       moralMessage:
         draft.moralMessage?.trim() ||
         'Setiap perjalanan menjadi lebih indah saat dijalani dengan berani dan hati baik.',
-      targetAge: form.targetAge,
+      targetAge: targetAgeLabel(form.targetAge),
       description: draft.description?.trim() || pages[0]?.text.slice(0, 150) || 'Draft buku cerita baru dari AI.',
       status: 'draft',
       pipelineStatus: hasEnhancements ? 'enhanced' : 'illustrated',
@@ -728,6 +764,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       pages,
       glossary: draft.glossary || [],
       vocabularyQuiz: draft.vocabularyQuiz,
+      productionGuide: draft.productionGuide,
     };
   };
 
@@ -742,7 +779,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         'Content-Type': 'application/json',
         'x-admin-pin': adminPin,
       },
-      body: JSON.stringify(form),
+        body: JSON.stringify({
+          ...form,
+          visualPreset: resolvedVisualPreset(form),
+          tabooContent: form.tabooContent
+            .split(',')
+            .map((item) => item.trim())
+            .filter(Boolean),
+        }),
     });
     const data = await response.json().catch(() => ({}));
 
@@ -763,16 +807,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     setShowQuickCreate(false);
     setQuickCreateForm(DEFAULT_QUICK_CREATE_FORM);
     setQuickCreateErrors([]);
+    setShowQuickCreateAdvanced(false);
   };
 
   const handleQuickCreateDraft = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const errors: string[] = [];
-    if (!quickCreateForm.title.trim()) errors.push('Judul buku wajib diisi.');
-    if (!quickCreateForm.targetAge.trim()) errors.push('Kelompok umur wajib diisi.');
-    if (quickCreateForm.manuscript.trim().length < 120) {
-      errors.push('Naskah cerita terlalu pendek untuk dipecah menjadi draft buku.');
+    if (quickCreateForm.brief.trim().length < 12) {
+      errors.push('Tuliskan sedikitnya satu ide cerita yang jelas.');
     }
 
     if (errors.length > 0) {
@@ -782,9 +825,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
     const normalizedForm = {
       ...quickCreateForm,
+      brief: quickCreateForm.brief.trim(),
       title: quickCreateForm.title.trim(),
-      targetAge: quickCreateForm.targetAge.trim(),
-      manuscript: quickCreateForm.manuscript.trim(),
+      moralMessage: quickCreateForm.moralMessage.trim(),
+      characterHints: quickCreateForm.characterHints.trim(),
+      tabooContent: quickCreateForm.tabooContent.trim(),
     };
 
     setIsGeneratingBookDraft(true);
@@ -793,10 +838,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       openDraftStory(draftStory);
       showToast(`Draft AI "${draftStory.title}" siap direview.`);
     } catch (error) {
-      console.error('AI book draft failed, using local fallback:', error);
-      const draftStory = buildDraftStoryFromQuickCreate(normalizedForm);
-      openDraftStory(draftStory);
-      showToast('AI draft belum berhasil, jadi dibuat draft lokal untuk direview.');
+      console.error('AI book draft failed:', error);
+      if (normalizedForm.brief.length >= 120) {
+        const draftStory = buildDraftStoryFromQuickCreate(normalizedForm);
+        openDraftStory(draftStory);
+        showToast('AI belum tersedia. Naskah tetap dipecah menjadi draft lokal untuk direview.');
+      } else {
+        setQuickCreateErrors([
+          error instanceof Error ? error.message : 'Buku belum berhasil dibuat. Coba kembali beberapa saat lagi.',
+        ]);
+      }
     } finally {
       setIsGeneratingBookDraft(false);
     }
@@ -1075,12 +1126,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   onClick={() => {
                     setQuickCreateForm(DEFAULT_QUICK_CREATE_FORM);
                     setQuickCreateErrors([]);
+                    setShowQuickCreateAdvanced(false);
                     setShowQuickCreate(true);
                   }}
                   className="btn-primary py-2.5 px-4 text-xs flex items-center gap-1.5 shrink-0"
                 >
                   <Sparkles className="w-4 h-4" />
-                  <span>Buat Draft Buku</span>
+                  <span>Buat dengan AI</span>
                 </button>
                 <button
                   onClick={() => {
@@ -1094,7 +1146,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       themeColor: 'amber',
                       accentColor: 'orange',
                       moralMessage: 'Belajar dan bersabar membawa keberhasilan!',
-                      targetAge: '4-8 Tahun',
+                      targetAge: '6-8 Tahun',
                       description: 'Kisah seru yang penuh pesan kebaikan untuk anak.',
                       status: 'draft',
                       pipelineStatus: 'draft',
@@ -1879,16 +1931,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         {/* Quick Create modal */}
         {showQuickCreate && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in overflow-y-auto">
-            <div className="reader-modal w-full max-w-3xl rounded-[1.35rem] p-5 sm:p-6 relative my-auto flex flex-col gap-5 max-h-[90vh] overflow-y-auto">
+            <div className="reader-modal w-full max-w-4xl rounded-[1.6rem] p-5 sm:p-7 relative my-auto flex flex-col gap-5 max-h-[92vh] overflow-y-auto">
               <div className="flex items-start sm:items-center justify-between gap-3 pb-3 border-b reader-divider">
                 <div>
                   <div className="mb-1 inline-flex items-center gap-1.5 text-[10px] font-black text-[var(--story-green)] dark:text-emerald-300">
                     <Sparkles className="w-3.5 h-3.5" />
                     <span>Quick Create</span>
                   </div>
-                  <h3 className="text-lg font-black">Buat draft buku dari naskah</h3>
-                  <p className="mt-1 max-w-2xl text-xs leading-5 text-[var(--muted-ink)] dark:text-slate-300">
-                    Tempel cerita lengkap, lalu BacaYuk menyiapkan halaman, scene ilustrasi, glosarium kandidat, kuis, dan ide interaksi untuk direview.
+                  <h3 className="text-xl sm:text-2xl font-black tracking-tight text-balance">Mulai dari satu ide</h3>
+                  <p className="mt-1.5 max-w-2xl text-xs leading-5 text-[var(--muted-ink)] dark:text-slate-300">
+                    Ceritakan premisnya dengan bahasa biasa. BacaYuk akan menyusun naskah, karakter, halaman, dan arahan ilustrasinya.
                   </p>
                 </div>
                 <button
@@ -1916,64 +1968,182 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   </div>
                 )}
 
-                <div className="grid grid-cols-1 sm:grid-cols-[1fr_12rem_12rem] gap-3">
-                  <div>
-                    <label className="block font-bold mb-1">Judul</label>
-                    <input
-                      type="text"
-                      value={quickCreateForm.title}
-                      onChange={(e) => setQuickCreateForm({ ...quickCreateForm, title: e.target.value })}
-                      className="reader-field w-full px-3 py-2 rounded-xl font-bold"
-                      placeholder="Kiko dan Hutan Kristal"
-                    />
-                  </div>
-                  <div>
-                    <label className="block font-bold mb-1">Kelompok umur</label>
-                    <input
-                      type="text"
-                      value={quickCreateForm.targetAge}
-                      onChange={(e) => setQuickCreateForm({ ...quickCreateForm, targetAge: e.target.value })}
-                      className="reader-field w-full px-3 py-2 rounded-xl"
-                      placeholder="4-8 Tahun"
-                    />
-                  </div>
-                  <div>
-                    <label className="block font-bold mb-1">Bahasa utama</label>
-                    <select
-                      value={quickCreateForm.primaryLanguage}
-                      onChange={(e) => setQuickCreateForm({ ...quickCreateForm, primaryLanguage: e.target.value as QuickCreateForm['primaryLanguage'] })}
-                      className="reader-field w-full px-3 py-2 rounded-xl"
-                    >
-                      <option value="id">Indonesia</option>
-                      <option value="en">English</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block font-bold mb-1">Naskah cerita</label>
+                <div className="rounded-[1.35rem] bg-[var(--story-green)]/8 p-3 sm:p-4 ring-1 ring-[var(--story-green)]/20">
+                  <label className="mb-2 flex items-center justify-between gap-3 font-black text-sm">
+                    <span>Ide cerita atau naskah</span>
+                    <span className="text-[10px] font-bold text-[var(--muted-ink)] dark:text-slate-300">Wajib</span>
+                  </label>
                   <textarea
-                    rows={12}
-                    value={quickCreateForm.manuscript}
-                    onChange={(e) => setQuickCreateForm({ ...quickCreateForm, manuscript: e.target.value })}
-                    className="reader-field w-full px-3 py-3 rounded-xl leading-6"
-                    placeholder="Tempel cerita lengkap di sini. Gunakan paragraf atau kalimat biasa, nanti sistem akan memecahnya menjadi halaman buku."
+                    rows={7}
+                    value={quickCreateForm.brief}
+                    onChange={(e) => setQuickCreateForm({ ...quickCreateForm, brief: e.target.value })}
+                    className="reader-field w-full px-4 py-3.5 rounded-xl leading-6 text-sm resize-y"
+                    placeholder="Contoh: Seekor kelinci kecil takut bercerita di depan kelas. Temannya membantu ia berlatih sampai berani mencoba."
+                    autoFocus
                   />
+                  <p className="mt-2 text-[11px] leading-5 text-[var(--muted-ink)] dark:text-slate-300">
+                    Satu atau dua kalimat sudah cukup. Kamu juga boleh menempel naskah lengkap.
+                  </p>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
-                  {[
-                    '8-12 halaman',
-                    'Judul per halaman',
-                    'Scene ilustrasi',
-                    'Glosarium & kuis',
-                  ].map((item) => (
-                    <div key={item} className="reader-soft-panel rounded-xl p-3 flex items-center gap-2 text-[11px] font-black">
-                      <Check className="w-4 h-4 text-[var(--story-green)] shrink-0" />
-                      <span>{item}</span>
+                <div className="grid grid-cols-1 md:grid-cols-[1.35fr_0.65fr] gap-4">
+                  <fieldset>
+                    <legend className="mb-2 font-black text-xs">Untuk usia berapa?</legend>
+                    <div className="grid grid-cols-3 gap-2">
+                      {([
+                        ['3-5', '3–5 tahun', 'Singkat & repetitif'],
+                        ['6-8', '6–8 tahun', 'Alur & dialog ringan'],
+                        ['9-12', '9–12 tahun', 'Cerita lebih kaya'],
+                      ] as const).map(([value, label, hint]) => (
+                        <button
+                          key={value}
+                          type="button"
+                          aria-pressed={quickCreateForm.targetAge === value}
+                          onClick={() => setQuickCreateForm({ ...quickCreateForm, targetAge: value })}
+                          className={`rounded-xl px-2.5 py-3 text-left transition-all active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--story-green)] ${
+                            quickCreateForm.targetAge === value
+                              ? 'bg-[var(--story-green)] text-white shadow-sm'
+                              : 'reader-field hover:-translate-y-0.5'
+                          }`}
+                        >
+                          <span className="block text-xs font-black">{label}</span>
+                          <span className={`mt-1 block text-[9px] leading-4 ${quickCreateForm.targetAge === value ? 'text-white/80' : 'text-[var(--muted-ink)] dark:text-slate-300'}`}>
+                            {hint}
+                          </span>
+                        </button>
+                      ))}
                     </div>
+                  </fieldset>
+
+                  <fieldset>
+                    <legend className="mb-2 font-black text-xs">Bahasa utama</legend>
+                    <div className="reader-field grid grid-cols-2 gap-1 rounded-xl p-1">
+                      {([
+                        ['id', 'Indonesia'],
+                        ['en', 'English'],
+                      ] as const).map(([value, label]) => (
+                        <button
+                          key={value}
+                          type="button"
+                          aria-pressed={quickCreateForm.primaryLanguage === value}
+                          onClick={() => setQuickCreateForm({ ...quickCreateForm, primaryLanguage: value })}
+                          className={`rounded-lg px-2 py-3 text-[11px] font-black transition-all active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--story-green)] ${
+                            quickCreateForm.primaryLanguage === value
+                              ? 'bg-white text-[var(--ink)] shadow-sm dark:bg-slate-800 dark:text-white'
+                              : 'text-[var(--muted-ink)] hover:text-[var(--ink)] dark:text-slate-300'
+                          }`}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                  </fieldset>
+                </div>
+
+                <button
+                  type="button"
+                  aria-expanded={showQuickCreateAdvanced}
+                  onClick={() => setShowQuickCreateAdvanced((value) => !value)}
+                  className="reader-soft-panel rounded-xl px-3.5 py-3 flex items-center justify-between gap-3 text-left transition-transform active:scale-[0.99]"
+                >
+                  <span className="flex items-center gap-2.5">
+                    <Settings className="h-4 w-4 text-[var(--story-green)]" />
+                    <span>
+                      <span className="block text-xs font-black">Pengaturan tambahan</span>
+                      <span className="mt-0.5 block text-[10px] font-bold text-[var(--muted-ink)] dark:text-slate-300">
+                        Judul, pesan moral, karakter, panjang, dan gaya visual
+                      </span>
+                    </span>
+                  </span>
+                  <span className="rounded-lg bg-white/70 px-2.5 py-1 text-[10px] font-black dark:bg-slate-900">
+                    {showQuickCreateAdvanced ? 'Tutup' : 'Atur'}
+                  </span>
+                </button>
+
+                {showQuickCreateAdvanced && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 rounded-[1.25rem] border border-[#eadbc1] bg-white/35 p-3.5 dark:border-blue-900/60 dark:bg-slate-950/25">
+                    <div>
+                      <label className="block font-bold mb-1">Judul <span className="font-semibold text-[var(--muted-ink)]">(opsional)</span></label>
+                      <input
+                        type="text"
+                        value={quickCreateForm.title}
+                        onChange={(e) => setQuickCreateForm({ ...quickCreateForm, title: e.target.value })}
+                        className="reader-field w-full px-3 py-2.5 rounded-xl"
+                        placeholder="Biarkan AI memilih judul"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-bold mb-1">Jumlah halaman</label>
+                      <select
+                        value={quickCreateForm.pageCount}
+                        onChange={(e) => setQuickCreateForm({ ...quickCreateForm, pageCount: Number(e.target.value) as QuickCreateForm['pageCount'] })}
+                        className="reader-field w-full px-3 py-2.5 rounded-xl"
+                      >
+                        <option value={8}>8 halaman — ringkas</option>
+                        <option value={10}>10 halaman — standar</option>
+                        <option value={12}>12 halaman — lebih lengkap</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block font-bold mb-1">Pesan yang ingin disampaikan</label>
+                      <input
+                        type="text"
+                        value={quickCreateForm.moralMessage}
+                        onChange={(e) => setQuickCreateForm({ ...quickCreateForm, moralMessage: e.target.value })}
+                        className="reader-field w-full px-3 py-2.5 rounded-xl"
+                        placeholder="Misalnya berani mencoba"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-bold mb-1">Gaya ilustrasi</label>
+                      <select
+                        value={quickCreateForm.visualPreset}
+                        onChange={(e) => setQuickCreateForm({ ...quickCreateForm, visualPreset: e.target.value as QuickCreateForm['visualPreset'] })}
+                        className="reader-field w-full px-3 py-2.5 rounded-xl"
+                      >
+                        <option value="auto">Otomatis sesuai usia</option>
+                        <option value="soft-2d-cartoon">Soft 2D cartoon</option>
+                        <option value="colorful-storybook">Colorful storybook</option>
+                        <option value="stylized-adventure-cartoon">Stylized adventure</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block font-bold mb-1">Gambaran karakter</label>
+                      <textarea
+                        rows={3}
+                        value={quickCreateForm.characterHints}
+                        onChange={(e) => setQuickCreateForm({ ...quickCreateForm, characterHints: e.target.value })}
+                        className="reader-field w-full px-3 py-2.5 rounded-xl leading-5"
+                        placeholder="Nama, ciri fisik, pakaian, atau sifat"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-bold mb-1">Konten yang dihindari</label>
+                      <textarea
+                        rows={3}
+                        value={quickCreateForm.tabooContent}
+                        onChange={(e) => setQuickCreateForm({ ...quickCreateForm, tabooContent: e.target.value })}
+                        className="reader-field w-full px-3 py-2.5 rounded-xl leading-5"
+                        placeholder="Pisahkan dengan koma, misalnya laba-laba, suasana gelap"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-2 px-1 text-[10px] font-black text-[var(--muted-ink)] dark:text-slate-300">
+                  {['Naskah & halaman', 'Character bible', 'Prompt ilustrasi', 'Kuis kandidat'].map((item) => (
+                    <span key={item} className="inline-flex items-center gap-1.5">
+                      <Check className="w-3.5 h-3.5 text-[var(--story-green)]" />
+                      {item}
+                    </span>
                   ))}
                 </div>
+
+                {isGeneratingBookDraft && (
+                  <div role="status" className="rounded-xl bg-[var(--magic-blue)]/10 px-3.5 py-3 text-[11px] font-bold text-[var(--magic-blue)] dark:text-blue-200">
+                    Menyusun alur, mengunci desain karakter, lalu menyiapkan adegan setiap halaman…
+                  </div>
+                )}
 
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t reader-divider">
                   <p className="text-[11px] leading-5 text-[var(--muted-ink)] dark:text-slate-300">
@@ -1989,7 +2159,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     ) : (
                       <Sparkles className="w-4 h-4" />
                     )}
-                    <span>{isGeneratingBookDraft ? 'Membuat Draft...' : 'Buat Draft Buku'}</span>
+                    <span>{isGeneratingBookDraft ? 'Membuat buku…' : 'Buat buku'}</span>
                   </button>
                 </div>
               </form>
@@ -2076,6 +2246,50 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     })}
                   </div>
                 </section>
+
+                {editingStory.productionGuide && (
+                  <section className="rounded-2xl border border-[var(--story-green)]/25 bg-[var(--story-green)]/7 p-3.5">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                      <div>
+                        <span className="text-xs font-black">Acuan visual buku</span>
+                        <p className="mt-1 text-[11px] leading-5 text-[var(--muted-ink)] dark:text-slate-300">
+                          Acuan ini otomatis dipakai setiap kali gambar halaman dibuat.
+                        </p>
+                      </div>
+                      <div className="flex flex-wrap gap-2 text-[10px] font-black">
+                        <span className="rounded-lg bg-white/70 px-2.5 py-1.5 dark:bg-slate-900/70">
+                          {visualPresetLabel(editingStory.productionGuide.visualPreset)}
+                        </span>
+                        <span className="rounded-lg bg-white/70 px-2.5 py-1.5 dark:bg-slate-900/70">
+                          {editingStory.productionGuide.characterBible.length} karakter
+                        </span>
+                        <span className="rounded-lg bg-white/70 px-2.5 py-1.5 dark:bg-slate-900/70">
+                          {editingStory.productionGuide.aspectRatio}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+                      {editingStory.productionGuide.characterBible.map((character) => (
+                        <article key={character.id} className="reader-field min-w-[15rem] max-w-[19rem] rounded-xl p-3">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="font-black text-xs">{character.name}</span>
+                            <span className="text-[9px] font-black text-[var(--story-green)] dark:text-emerald-300">
+                              {character.role === 'main' ? 'Tokoh utama' : character.role === 'supporting' ? 'Pendukung' : 'Latar'}
+                            </span>
+                          </div>
+                          <p className="mt-1.5 text-[10px] leading-4 text-[var(--muted-ink)] dark:text-slate-300">
+                            {[character.speciesOrIdentity, character.outfit].filter(Boolean).join(' · ')}
+                          </p>
+                          {character.immutableTraits.length > 0 && (
+                            <p className="mt-2 text-[10px] leading-4 font-bold">
+                              Tetap: {character.immutableTraits.slice(0, 2).join(' · ')}
+                            </p>
+                          )}
+                        </article>
+                      ))}
+                    </div>
+                  </section>
+                )}
 
                 {editingStory.pages.length > 0 && (() => {
                   const pageIndex = Math.min(previewPageIndex, editingStory.pages.length - 1);

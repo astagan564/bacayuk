@@ -1,6 +1,6 @@
 # BacaYuk Story Schema Notes
 
-Use `storybook-contract.ts` as the canonical generation contract and `example-story.json` as the known-good example. Map only `package.story` into the current BacaYuk admin; retain `productionGuide` while generating images and during review.
+Use `storybook-contract.ts` as the canonical generation contract and `example-story.json` as the known-good example. Map `package.story` into the BacaYuk admin and persist its `productionGuide` so every later image request can reuse the same character bible.
 
 ## Quick Create input
 
@@ -26,11 +26,11 @@ Do not ask for fields the system can generate.
 |---|---|---|
 | `schemaVersion` | Yes | Use `1.0`. |
 | `story` | Yes | Must conform to the current BacaYuk `Story` interface. |
-| `productionGuide.visualPreset` | Yes | Keep one preset for the whole book. |
-| `productionGuide.characterBible` | Yes | Define every recurring character before scene prompts. |
-| `productionGuide.coverPrompt` | Yes | Show the main character, setting, key object, and emotional promise. |
-| `productionGuide.continuityRules` | Yes | State the immutable visual traits used on every page. |
-| `productionGuide.negativePrompt` | Yes | Exclude unsafe content, text artifacts, and character drift. |
+| `story.productionGuide.visualPreset` | Yes | Keep one preset for the whole book. |
+| `story.productionGuide.characterBible` | Yes | Define every recurring character before scene prompts. |
+| `story.productionGuide.coverPrompt` | Yes | Show the main character, setting, key object, and emotional promise. |
+| `story.productionGuide.continuityRules` | Yes | State the immutable visual traits used on every page. |
+| `story.productionGuide.negativePrompt` | Yes | Exclude unsafe content, text artifacts, and character drift. |
 | `review.status` | Yes | Always start at `needs_review`. |
 | `review.checklist` | Yes | Include human checks for story, safety, continuity, and images. |
 | `review.warnings` | Yes | Use an empty array when there are no known warnings. |
@@ -71,7 +71,7 @@ Do not ask for fields the system can generate.
 
 ## Persistence mapping
 
-The Supabase `admin_stories` table stores `id`, `title`, `category`, `status`, and `sort_order` as columns, with the complete `Story` object in the `story` JSONB column. Persist `package.story`, not the entire package. Keep `productionGuide` in the generation job, draft workspace, or a future dedicated field.
+The Supabase `admin_stories` table stores `id`, `title`, `category`, `status`, and `sort_order` as columns, with the complete `Story` object in the `story` JSONB column. Persist `package.story`, including `story.productionGuide`, but not the outer review envelope.
 
 ## Validation
 

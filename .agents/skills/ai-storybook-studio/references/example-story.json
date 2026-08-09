@@ -196,9 +196,8 @@
           "phonetic": "breiv"
         }
       ]
-    }
-  },
-  "productionGuide": {
+    },
+    "productionGuide": {
     "visualPreset": "colorful-storybook",
     "aspectRatio": "4:3",
     "characterBible": [
@@ -241,7 +240,8 @@
       "Pertahankan kelas sebagai ruang kayu hangat dengan jendela berbentuk daun.",
       "Jangan memasukkan teks terbaca ke dalam ilustrasi."
     ],
-    "negativePrompt": "photorealistic, horror, violence, weapons, injury, threatening expressions, dark oppressive lighting, readable text, watermark, logo, extra limbs, duplicate character, changed outfit, changed fur color, inconsistent proportions"
+      "negativePrompt": "photorealistic, horror, violence, weapons, injury, threatening expressions, dark oppressive lighting, readable text, watermark, logo, extra limbs, duplicate character, changed outfit, changed fur color, inconsistent proportions"
+    }
   },
   "review": {
     "status": "needs_review",

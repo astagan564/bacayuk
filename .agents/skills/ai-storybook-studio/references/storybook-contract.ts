@@ -107,6 +107,7 @@ export interface Story {
   pipelineStatus?: 'draft' | 'story_complete' | 'illustrated' | 'enhanced' | 'ready_to_publish';
   glossary?: GlossaryItem[];
   vocabularyQuiz?: VocabularyQuiz;
+  productionGuide?: StorybookProductionGuide;
 }
 
 export interface GeneratedStoryPage extends StoryPage {
@@ -114,10 +115,11 @@ export interface GeneratedStoryPage extends StoryPage {
   illustrationPrompt: string;
 }
 
-export interface GeneratedStory extends Omit<Story, 'pages' | 'status' | 'pipelineStatus'> {
+export interface GeneratedStory extends Omit<Story, 'pages' | 'status' | 'pipelineStatus' | 'productionGuide'> {
   pages: GeneratedStoryPage[];
   status: 'draft';
   pipelineStatus: 'story_complete' | 'illustrated' | 'enhanced';
+  productionGuide: StorybookProductionGuide;
 }
 
 export interface CharacterBibleEntry {
@@ -155,6 +157,5 @@ export interface StorybookReview {
 export interface GeneratedStorybookPackage {
   schemaVersion: '1.0';
   story: GeneratedStory;
-  productionGuide: StorybookProductionGuide;
   review: StorybookReview;
 }

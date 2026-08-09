@@ -59,12 +59,11 @@ When asked to generate a book draft, provide:
 
 ```text
 GeneratedStorybookPackage
-|- story (directly compatible with BacaYuk admin)
-|- productionGuide (character and illustration continuity)
+|- story (including productionGuide for character and illustration continuity)
 `- review (warnings and human checklist)
 ```
 
-Require only `brief`, `targetAge`, and `primaryLanguage` from Quick Create. Generate the remaining required `Story` and production fields. Keep `productionGuide` outside `story` until the application schema explicitly stores it.
+Require only `brief`, `targetAge`, and `primaryLanguage` from Quick Create. Generate the remaining required `Story` and production fields. Store `productionGuide` inside the draft `Story` JSON so later illustration requests reuse the same character bible.
 
 When implementing code, create small focused changes and verify with:
 
