@@ -859,7 +859,7 @@ export default function App() {
 
       {vipSubscriptionGate && (
         <ParentalGateModal
-          onClose={() => setVipSubscriptionGate(false)}
+          onCancel={() => setVipSubscriptionGate(false)}
           onSuccess={() => {
             setVipSubscriptionGate(false);
             setVipSubscriptionPayment(true);

@@ -3017,7 +3017,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   <div className="flex flex-col gap-3 max-h-[28rem] overflow-y-auto pr-1">
                     {editingStory.pages.map((pg, idx) => (
                       <div
-                        key={pg.id || idx}
+                        key={idx}
                         className="reader-soft-panel p-3 rounded-xl flex flex-col gap-2"
                       >
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
@@ -3037,7 +3037,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                 const newPages = [...editingStory.pages];
                                 const copy = {
                                   ...pg,
-                                  id: `page_${Date.now()}`,
                                   pageNumber: idx + 2,
                                   title: `${pg.title || `Halaman ${idx + 1}`} (salinan)`,
                                 };
