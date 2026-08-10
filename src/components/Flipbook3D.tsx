@@ -296,12 +296,9 @@ export const Flipbook3D = React.forwardRef<FlipbookHandle, FlipbookProps>(({
           }`}
           style={paperStyle}
         >
-          <header className="flex items-start justify-between gap-4">
+          <header>
             <p className={`text-[10px] font-semibold tracking-[0.18em] ${isNight ? 'text-slate-400' : 'text-[#8a7968]'}`}>
               {story.author}
-            </p>
-            <p className={`text-[10px] font-semibold tabular-nums ${isNight ? 'text-slate-400' : 'text-[#8a7968]'}`}>
-              {String(page.pageNumber).padStart(2, '0')}
             </p>
           </header>
 

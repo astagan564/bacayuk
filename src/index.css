@@ -169,7 +169,7 @@
   /* The desktop reader is a single viewport-sized workspace. Its book is
      capped by available height so the whole spread is visible at once. */
   .reader-book-frame {
-    width: min(100%, calc((100dvh - 7rem) * 16 / 11));
+    width: min(100%, calc((100dvh - 2.5rem) * 16 / 11));
   }
 }
 

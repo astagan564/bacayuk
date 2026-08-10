@@ -435,8 +435,9 @@ export default function App() {
         ? 'night-paper text-slate-100 selection:bg-blue-700'
         : 'app-paper text-[var(--ink)] selection:bg-[#e7a93b]/40'
         }`}
-    >
+      >
       {/* Top Main Navigation Bar */}
+      {!selectedStory && (
       <header
         className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 border-b flex items-center justify-between gap-2 z-40 transition-colors duration-500 backdrop-blur-xl ${isNight
           ? 'bg-[#101923]/92 text-slate-100 border-blue-900/50'
@@ -621,6 +622,7 @@ export default function App() {
           )}
         </div>
       </header>
+      )}
 
       {/* Toast Notification Banner */}
       {toastMessage && (
@@ -630,7 +632,7 @@ export default function App() {
       )}
 
       {/* Main Content Area */}
-      <main className={`flex-1 w-full flex flex-col items-center ${selectedStory ? 'justify-start py-2 sm:py-3 lg:h-[calc(100dvh-4.5rem)] lg:min-h-0' : 'justify-center py-4'}`}>
+      <main className={`flex-1 w-full flex flex-col items-center ${selectedStory ? 'justify-start py-2 sm:py-3 lg:h-[100dvh] lg:min-h-0' : 'justify-center py-4'}`}>
         {!selectedStory ? (
           /* Shelf / Story Selector View */
           <StorySelector

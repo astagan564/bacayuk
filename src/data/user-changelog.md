@@ -16,6 +16,7 @@
 - Saat memilih ID + EN di HP, anak dapat memilih satu bahasa per halaman agar huruf tetap besar dan mudah dibaca.
 - Di komputer, satu buku terbuka dan panel alat baca kini menyesuaikan tinggi layar. Cerita dan alat yang panjang dapat digulir di panelnya masing-masing tanpa menggulir seluruh halaman.
 - Geser halaman di HP dibuat lebih aman agar gerakan saat menggulir teks tidak mudah berpindah halaman.
+- Saat buku dibuka, header utama disembunyikan agar cerita mendapat ruang layar lebih luas. Tombol kembali dan pengaturan tetap tersedia di alat baca.
 
 ### Penutup cerita dan kuis lebih jelas
 - Pada halaman tamat, tombol **Kuis kosakata** dan **Selesaikan buku** kini tampil langsung di dalam buku.
