@@ -22,8 +22,10 @@ Use this skill for BacaYuk features that generate or refine children's books wit
    - interaction ideas
    - narration notes
    - monetization/download settings
-4. Route output into BacaYuk `Story` shape and keep `status: "draft"` until reviewed.
-5. Validate by reading the generated draft as a child-facing book, then by running project typecheck/build when code changes.
+4. Route output into BacaYuk `Story` shape with `pipelineStatus: "story_complete"` and keep `status: "draft"` until reviewed.
+5. After story review, generate the cover and missing page images sequentially using the same `productionGuide`. Preserve completed images when a later request fails so the next run resumes only missing assets.
+6. Set `pipelineStatus: "illustrated"` only after the cover and every page have real image URLs.
+7. Validate by reading the generated draft as a child-facing book, then by running project typecheck/build when code changes.
 
 ## BacaYuk Principles
 

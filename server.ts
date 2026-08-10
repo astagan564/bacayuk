@@ -130,7 +130,7 @@ async function generateGeminiJson(ai: GoogleGenAI, contents: string) {
   throw lastError || new Error('No Gemini text models are configured.');
 }
 
-async function generateGeminiImage(ai: GoogleGenAI, prompt: string) {
+async function generateGeminiImage(ai: GoogleGenAI, prompt: string, aspectRatio: '4:3' | '3:4' = '4:3') {
   let lastError: unknown;
 
   for (const model of GEMINI_IMAGE_MODELS) {
@@ -140,7 +140,7 @@ async function generateGeminiImage(ai: GoogleGenAI, prompt: string) {
         input: prompt,
         response_format: {
           type: 'image',
-          aspect_ratio: '4:3',
+          aspect_ratio: aspectRatio,
           image_size: '1K',
         },
       });
@@ -1164,12 +1164,18 @@ ${pageContext}`,
       const storyId = cleanOneLine(req.body?.storyId, 100, 'story');
       const storyTitle = cleanOneLine(req.body?.storyTitle, 120, 'BacaYuk Story');
       const targetAge = cleanOneLine(req.body?.targetAge, 40, '4-8 Tahun');
+      const imageKind = req.body?.imageKind === 'cover' ? 'cover' : 'page';
       const pageNumber = Math.max(1, Number(req.body?.pageNumber) || 1);
       const pageTitle = cleanOneLine(req.body?.pageTitle, 100, `Halaman ${pageNumber}`);
       const pageText = cleanAiText(req.body?.pageText, 1800);
       const illustrationType = normalizeIllustrationType(req.body?.illustrationType, `${pageTitle} ${pageText}`);
       const illustrationPrompt = cleanAiText(req.body?.illustrationPrompt, 700);
       const productionGuide = normalizeProductionGuide(req.body?.productionGuide, 'colorful-storybook');
+      const coverPrompt = cleanAiText(
+        req.body?.coverPrompt,
+        700,
+        productionGuide.coverPrompt || `${storyTitle}, main character in the main setting, warm child-safe storybook cover.`
+      );
       const visualContinuityContext = JSON.stringify({
         visualPreset: productionGuide.visualPreset,
         characterBible: productionGuide.characterBible,
@@ -1178,7 +1184,7 @@ ${pageContext}`,
         negativePrompt: productionGuide.negativePrompt,
       }).slice(0, 7000);
 
-      if (!pageText && !illustrationPrompt) {
+      if (imageKind === 'page' && !pageText && !illustrationPrompt) {
         return res.status(400).json({ error: 'Teks halaman atau prompt ilustrasi diperlukan.' });
       }
 
@@ -1187,7 +1193,24 @@ ${pageContext}`,
         return res.status(400).json({ error: 'GEMINI_API_KEY is not configured.' });
       }
 
-      const prompt = `Create one polished illustration for a children's storybook page.
+      const prompt = imageKind === 'cover'
+        ? `Create one polished portrait cover illustration for a children's storybook.
+
+Book: ${storyTitle}
+Target age: ${targetAge}
+Cover scene: ${coverPrompt}
+
+Art direction:
+- Use the visual preset and character bible below as the source of truth.
+- Show the main character, main setting, key story object, and emotional promise.
+- Preserve every immutable character trait, outfit, color, accessory, and proportion.
+- Use a clear portrait book-cover composition with one focal scene, not a collage.
+- Avoid scary, violent, dark, or photorealistic adult styling.
+- No readable title, captions, speech bubbles, logos, or watermark inside the image.
+
+Visual continuity guide:
+${visualContinuityContext}`
+        : `Create one polished illustration for a children's storybook page.
 
 Book: ${storyTitle}
 Target age: ${targetAge}
@@ -1209,12 +1232,14 @@ Visual continuity guide:
 ${visualContinuityContext}`;
 
       const ai = new GoogleGenAI({ apiKey });
-      const generatedImage = await generateGeminiImage(ai, prompt);
+      const generatedImage = await generateGeminiImage(ai, prompt, imageKind === 'cover' ? '3:4' : '4:3');
       const imageBuffer = Buffer.from(generatedImage.data, 'base64');
       const contentType = generatedImage.mimeType;
       const extension = imageExtensionFromMimeType(contentType);
       const storySlug = createStorageSlug(storyId || storyTitle, 'story');
-      const objectPath = `${storySlug}/page-${String(pageNumber).padStart(2, '0')}-${Date.now()}.${extension}`;
+      const objectPath = imageKind === 'cover'
+        ? `${storySlug}/cover-${Date.now()}.${extension}`
+        : `${storySlug}/page-${String(pageNumber).padStart(2, '0')}-${Date.now()}.${extension}`;
       const supabase = getSupabaseAdminClient();
       const { error } = await supabase
         .storage
@@ -1237,8 +1262,8 @@ ${visualContinuityContext}`;
         mimeType: contentType,
       });
     } catch (error) {
-      console.error('Error generating page image:', error);
-      res.status(500).json({ error: 'Gagal generate gambar halaman.' });
+      console.error('Error generating story image:', error);
+      res.status(500).json({ error: 'Gagal generate gambar buku.' });
     }
   });
 

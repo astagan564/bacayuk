@@ -78,6 +78,7 @@ The Supabase `admin_stories` table stores `id`, `title`, `category`, `status`, a
 - Return valid JSON without Markdown fences or meta-chat.
 - Keep page numbers sequential and page text non-empty.
 - Keep `status: "draft"` until a human explicitly publishes.
+- Keep `pipelineStatus: "story_complete"` while only prompts exist. Use `illustrated` only after the cover and every page contain non-placeholder image URLs.
 - Use one visual preset and the same character traits across every prompt.
 - Make quiz answer indexes valid for their option arrays.
 - Leave `textEn` empty until a real translation exists.

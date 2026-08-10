@@ -181,6 +181,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [isGeneratingBookDraft, setIsGeneratingBookDraft] = useState(false);
   const [generatingEnhancement, setGeneratingEnhancement] = useState<'illustration' | 'glossary' | 'quiz_interactions' | null>(null);
   const [generatingImagePageNumber, setGeneratingImagePageNumber] = useState<number | null>(null);
+  const [imageGenerationProgress, setImageGenerationProgress] = useState<{
+    completed: number;
+    total: number;
+    label: string;
+  } | null>(null);
 
   // New Coupon Form State
   const [newCouponCode, setNewCouponCode] = useState('');
@@ -385,20 +390,26 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   };
 
   const inferPipelineStatus = (story: Story): NonNullable<Story['pipelineStatus']> => {
-    if (story.pipelineStatus) return story.pipelineStatus;
     const hasStory = story.pages.length > 0 && story.pages.every((page) => page.text.trim());
-    const hasIllustrations = story.pages.length > 0 && story.pages.every((page) => page.illustrationType || page.illustrationPrompt);
-    const hasEnhancements = Boolean(
-      story.glossary?.length ||
-      story.pages.some((page) => page.textEn || page.quizQuestion || page.interactiveElements?.length)
-    );
+    const hasIllustrations = hasCompleteStoryImages(story);
 
     if (story.status === 'published') return 'ready_to_publish';
-    if (hasEnhancements) return 'enhanced';
-    if (hasIllustrations) return 'illustrated';
+    if (hasIllustrations) {
+      if (story.pipelineStatus === 'ready_to_publish') return 'ready_to_publish';
+      if (story.pipelineStatus === 'enhanced') return 'enhanced';
+      return 'illustrated';
+    }
     if (hasStory) return 'story_complete';
     return 'draft';
   };
+
+  const isPlaceholderCover = (coverImage: string): boolean =>
+    !coverImage.trim() || coverImage.includes('images.unsplash.com/photo-1512820790803-83ca734da794');
+
+  const hasCompleteStoryImages = (story: Story): boolean =>
+    !isPlaceholderCover(story.coverImage)
+    && story.pages.length > 0
+    && story.pages.every((page) => Boolean(page.imageUrl?.trim()));
 
   const updateEditingPage = (pageIndex: number, nextPage: StoryPage) => {
     if (!editingStory) return;
@@ -559,11 +570,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         };
       });
 
-      setEditingStory({
+      const nextStory: Story = {
         ...editingStory,
         pages: nextPages,
-        pipelineStatus: mode === 'illustration' ? 'illustrated' : 'enhanced',
-      });
+        pipelineStatus: mode === 'illustration' ? inferPipelineStatus(editingStory) : 'enhanced',
+      };
+      setEditingStory(nextStory);
       showToast(`Enhancement AI diperbarui untuk ${enhancedPages.length} halaman.`);
     } catch (error) {
       console.error('Enhancement generation failed:', error);
@@ -571,6 +583,40 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     } finally {
       setGeneratingEnhancement(null);
     }
+  };
+
+  const requestGeneratedStoryImage = async (
+    story: Story,
+    request: { imageKind: 'cover' } | { imageKind: 'page'; page: StoryPage }
+  ): Promise<string> => {
+    const page = request.imageKind === 'page' ? request.page : undefined;
+    const response = await fetch('/api/admin/generate-page-image', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-pin': adminPin,
+        },
+        body: JSON.stringify({
+          imageKind: request.imageKind,
+          storyId: story.id,
+          storyTitle: story.title,
+          targetAge: story.targetAge,
+          coverPrompt: story.productionGuide?.coverPrompt,
+          pageNumber: page?.pageNumber,
+          pageTitle: page?.title,
+          pageText: page?.text,
+          illustrationType: page?.illustrationType,
+          illustrationPrompt: page?.illustrationPrompt,
+          productionGuide: story.productionGuide,
+        }),
+      });
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok || !data.imageUrl) {
+      throw new Error(data.error || 'Gagal generate gambar buku.');
+    }
+
+    return data.imageUrl as string;
   };
 
   const handleGeneratePageImage = async (page: StoryPage, pageIndex: number) => {
@@ -582,34 +628,21 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
     setGeneratingImagePageNumber(page.pageNumber);
     try {
-      const response = await fetch('/api/admin/generate-page-image', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-admin-pin': adminPin,
-        },
-        body: JSON.stringify({
-          storyId: editingStory.id,
-          storyTitle: editingStory.title,
-          targetAge: editingStory.targetAge,
-          pageNumber: page.pageNumber,
-          pageTitle: page.title,
-          pageText: page.text,
-          illustrationType: page.illustrationType,
-          illustrationPrompt: page.illustrationPrompt,
-          productionGuide: editingStory.productionGuide,
-        }),
-      });
-      const data = await response.json().catch(() => ({}));
+      const imageUrl = await requestGeneratedStoryImage(editingStory, { imageKind: 'page', page });
+      setEditingStory((currentStory) => {
+        if (!currentStory) return currentStory;
+        const nextPages = currentStory.pages.map((item, index) => index === pageIndex
+          ? { ...item, imageUrl, illustrationType: 'custom' as const }
+          : item
+        );
+        const hasAllImages = !isPlaceholderCover(currentStory.coverImage)
+          && nextPages.every((item) => Boolean(item.imageUrl?.trim()));
 
-      if (!response.ok) {
-        throw new Error(data.error || 'Gagal generate gambar halaman.');
-      }
-
-      updateEditingPage(pageIndex, {
-        ...page,
-        imageUrl: data.imageUrl,
-        illustrationType: 'custom',
+        return {
+          ...currentStory,
+          pages: nextPages,
+          pipelineStatus: hasAllImages ? 'illustrated' : 'story_complete',
+        };
       });
       showToast(`Gambar halaman ${page.pageNumber} berhasil dibuat.`);
     } catch (error) {
@@ -617,6 +650,79 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       showToast(error instanceof Error ? error.message : 'Gagal generate gambar halaman.');
     } finally {
       setGeneratingImagePageNumber(null);
+    }
+  };
+
+  const handleGenerateAllImages = async () => {
+    if (!editingStory) return;
+    if (!adminPin) {
+      showToast('PIN admin tidak tersedia untuk generate gambar.');
+      return;
+    }
+
+    const shouldGenerateCover = isPlaceholderCover(editingStory.coverImage);
+    const missingPages = editingStory.pages.filter((page) => !page.imageUrl?.trim());
+    const total = (shouldGenerateCover ? 1 : 0) + missingPages.length;
+
+    if (total === 0) {
+      showToast('Cover dan semua gambar halaman sudah tersedia.');
+      return;
+    }
+
+    let nextCoverImage = editingStory.coverImage;
+    let nextPages = [...editingStory.pages];
+    let completed = 0;
+    setImageGenerationProgress({ completed, total, label: shouldGenerateCover ? 'Menyiapkan cover' : `Menyiapkan halaman ${missingPages[0].pageNumber}` });
+
+    try {
+      if (shouldGenerateCover) {
+        nextCoverImage = await requestGeneratedStoryImage(editingStory, { imageKind: 'cover' });
+        completed += 1;
+        setEditingStory((currentStory) => currentStory ? {
+          ...currentStory,
+          coverImage: nextCoverImage,
+          pipelineStatus: 'story_complete',
+        } : currentStory);
+        setImageGenerationProgress({ completed, total, label: 'Cover selesai' });
+      }
+
+      for (const page of missingPages) {
+        setImageGenerationProgress({ completed, total, label: `Membuat halaman ${page.pageNumber} dari ${editingStory.pages.length}` });
+        const imageUrl = await requestGeneratedStoryImage(editingStory, { imageKind: 'page', page });
+        nextPages = nextPages.map((item) => item.pageNumber === page.pageNumber
+          ? { ...item, imageUrl, illustrationType: 'custom' as const }
+          : item
+        );
+        completed += 1;
+        setEditingStory((currentStory) => currentStory ? {
+          ...currentStory,
+          coverImage: nextCoverImage,
+          pages: currentStory.pages.map((item) => item.pageNumber === page.pageNumber
+            ? { ...item, imageUrl, illustrationType: 'custom' as const }
+            : item
+          ),
+          pipelineStatus: 'story_complete',
+        } : currentStory);
+        setImageGenerationProgress({ completed, total, label: `Halaman ${page.pageNumber} selesai` });
+      }
+
+      const allImagesReady = !isPlaceholderCover(nextCoverImage) && nextPages.every((page) => Boolean(page.imageUrl?.trim()));
+      setEditingStory((currentStory) => currentStory ? {
+        ...currentStory,
+        coverImage: nextCoverImage,
+        pipelineStatus: allImagesReady ? 'illustrated' : 'story_complete',
+      } : currentStory);
+      showToast(allImagesReady ? 'Cover dan semua gambar halaman selesai dibuat.' : `${completed} gambar selesai dibuat.`);
+    } catch (error) {
+      console.error('Bulk story image generation failed:', error);
+      setEditingStory((currentStory) => currentStory ? {
+        ...currentStory,
+        coverImage: nextCoverImage,
+        pipelineStatus: 'story_complete',
+      } : currentStory);
+      showToast(`${completed} dari ${total} gambar selesai. Klik lagi untuk melanjutkan.`);
+    } finally {
+      setImageGenerationProgress(null);
     }
   };
 
@@ -735,12 +841,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         quizQuestion: page.quizQuestion,
       };
     });
-    const hasEnhancements = Boolean(
-      draft.glossary?.length ||
-      draft.vocabularyQuiz?.questions?.length ||
-      pages.some((page) => page.quizQuestion || page.interactiveElements?.length)
-    );
-
     return {
       id: createStoryId(draft.title || form.title || 'Buku Cerita Baru'),
       title: draft.title?.trim() || form.title.trim() || 'Buku Cerita Baru',
@@ -756,7 +856,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       targetAge: targetAgeLabel(form.targetAge),
       description: draft.description?.trim() || pages[0]?.text.slice(0, 150) || 'Draft buku cerita baru dari AI.',
       status: 'draft',
-      pipelineStatus: hasEnhancements ? 'enhanced' : 'illustrated',
+      pipelineStatus: 'story_complete',
       accessStatus: 'free_member',
       downloadEnabled: true,
       ebookPrice: settings.defaultEbookPrice,
@@ -2179,7 +2279,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 </h3>
                 <button
                   onClick={() => setEditingStory(null)}
-                  className="p-2 rounded-full hover:bg-black/10 transition-colors"
+                  disabled={Boolean(imageGenerationProgress)}
+                  className="p-2 rounded-full hover:bg-black/10 transition-colors disabled:opacity-40 disabled:cursor-wait"
+                  aria-label="Tutup editor buku"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -2221,7 +2323,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       className="reader-field rounded-xl px-3 py-2 text-[11px] font-black"
                     >
                       {PIPELINE_STEPS.map((step) => (
-                        <option key={step.id} value={step.id}>
+                        <option
+                          key={step.id}
+                          value={step.id}
+                          disabled={
+                            !hasCompleteStoryImages(editingStory)
+                            && ['illustrated', 'enhanced', 'ready_to_publish'].includes(step.id)
+                          }
+                        >
                           {step.label}
                         </option>
                       ))}
@@ -2290,6 +2399,69 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     </div>
                   </section>
                 )}
+
+                {(() => {
+                  const generatedPageCount = editingStory.pages.filter((page) => Boolean(page.imageUrl?.trim())).length;
+                  const coverReady = !isPlaceholderCover(editingStory.coverImage);
+                  const allImagesReady = coverReady && generatedPageCount === editingStory.pages.length;
+                  const completedAssetCount = generatedPageCount + (coverReady ? 1 : 0);
+                  const totalAssetCount = editingStory.pages.length + 1;
+
+                  return (
+                    <section className="reader-soft-panel rounded-2xl p-3.5">
+                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="text-xs font-black">Produksi ilustrasi</span>
+                            <span className={`rounded-lg px-2 py-1 text-[9px] font-black ${
+                              allImagesReady
+                                ? 'bg-emerald-500/12 text-emerald-700 dark:text-emerald-300'
+                                : 'bg-amber-500/12 text-amber-700 dark:text-amber-300'
+                            }`}>
+                              {allImagesReady ? 'Semua siap' : `${completedAssetCount}/${totalAssetCount} gambar`}
+                            </span>
+                          </div>
+                          <p className="mt-1 text-[11px] leading-5 text-[var(--muted-ink)] dark:text-slate-300">
+                            {imageGenerationProgress
+                              ? imageGenerationProgress.label
+                              : allImagesReady
+                                ? 'Cover dan seluruh halaman sudah memiliki gambar.'
+                                : `Cover ${coverReady ? 'siap' : 'belum dibuat'} · ${generatedPageCount} dari ${editingStory.pages.length} halaman siap.`}
+                          </p>
+                          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-black/8 dark:bg-white/10">
+                            <div
+                              className="h-full rounded-full bg-[var(--story-green)] transition-all duration-300"
+                              style={{
+                                width: `${Math.round(((imageGenerationProgress?.completed ?? completedAssetCount) / Math.max(1, imageGenerationProgress?.total ?? totalAssetCount)) * 100)}%`,
+                              }}
+                            />
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={handleGenerateAllImages}
+                          disabled={Boolean(imageGenerationProgress) || allImagesReady || generatingImagePageNumber !== null}
+                          className="btn-primary min-w-[12rem] px-4 py-3 text-xs flex items-center justify-center gap-2 disabled:opacity-55 disabled:cursor-not-allowed"
+                        >
+                          {imageGenerationProgress ? (
+                            <RefreshCw className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Sparkles className="h-4 w-4" />
+                          )}
+                          <span>
+                            {imageGenerationProgress
+                              ? `${imageGenerationProgress.completed}/${imageGenerationProgress.total} selesai`
+                              : allImagesReady
+                                ? 'Semua gambar siap'
+                                : completedAssetCount > 0
+                                  ? 'Lanjutkan gambar'
+                                  : 'Generate semua gambar'}
+                          </span>
+                        </button>
+                      </div>
+                    </section>
+                  );
+                })()}
 
                 {editingStory.pages.length > 0 && (() => {
                   const pageIndex = Math.min(previewPageIndex, editingStory.pages.length - 1);
@@ -2411,7 +2583,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                               <button
                                 type="button"
                                 onClick={() => handleGenerateEnhancement('illustration', page.pageNumber)}
-                                disabled={generatingEnhancement === 'illustration'}
+                                disabled={generatingEnhancement === 'illustration' || Boolean(imageGenerationProgress)}
                                 className="rounded-lg bg-[var(--story-green)]/12 px-2 py-1 text-[10px] font-black text-[var(--story-green)] disabled:opacity-50 dark:text-emerald-200"
                               >
                                 {generatingEnhancement === 'illustration' ? 'Generating...' : 'Regenerate'}
@@ -2440,7 +2612,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                             <button
                               type="button"
                               onClick={() => handleGeneratePageImage(page, pageIndex)}
-                              disabled={generatingImagePageNumber === page.pageNumber}
+                               disabled={generatingImagePageNumber === page.pageNumber || Boolean(imageGenerationProgress)}
                               className="mt-2 w-full rounded-lg bg-[var(--magic-blue)] px-3 py-2 text-[11px] font-black text-white disabled:opacity-60 disabled:cursor-wait"
                             >
                               {generatingImagePageNumber === page.pageNumber ? 'Generate gambar...' : 'Generate gambar halaman'}
@@ -3319,7 +3491,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
                 <button
                   type="submit"
-                  className="btn-primary w-full py-3 px-5 text-xs mt-2"
+                  disabled={Boolean(imageGenerationProgress)}
+                  className="btn-primary w-full py-3 px-5 text-xs mt-2 disabled:opacity-55 disabled:cursor-wait"
                 >
                   Simpan buku
                 </button>
