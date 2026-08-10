@@ -33,6 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Checkout story lookup**: Payment creation now resolves book title and price from the Supabase story table before falling back to bundled stories.
 
 ### Fixed
+- **Admin catalog deletion**: Deleting a book now removes its Supabase record instead of only removing it from the current browser list. Empty catalogs and deleted books no longer repopulate from the bundled fallback when Supabase is available.
 - **Reader control anchoring**: Fixed the mobile navigation bar moving with short story pages by replacing the reader entry transform with an opacity-only animation.
 - **Missing storefront artwork**: Fixed published book cards rendering only a color gradient instead of their saved cover image.
 - **Predictable vocabulary answers**: Fixed every generated vocabulary answer appearing in the first option.

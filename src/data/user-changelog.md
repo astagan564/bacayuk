@@ -5,6 +5,7 @@
 - BacaYuk menyiapkan draft yang bisa diperiksa terlebih dahulu, termasuk judul, pembagian halaman, arahan gambar, glosarium, dan calon kuis.
 - Cover dan gambar halaman dapat dibuat berurutan. Jika proses terhenti, gambar yang sudah selesai tetap tersimpan dan proses bisa dilanjutkan.
 - Status buku kini menunjukkan apakah naskah, cover, dan seluruh ilustrasinya benar-benar sudah siap.
+- Buku yang dihapus dari admin kini benar-benar hilang dari katalog dan tidak muncul lagi setelah halaman dimuat ulang.
 
 ### Tampilan membaca seperti buku cerita
 - Satu halaman cerita sekarang tampil sebagai satu buku terbuka: ilustrasi penuh di kiri dan naskah di kanan.

@@ -494,14 +494,12 @@ async function findStoryForCheckout(storyId: string): Promise<Story | undefined>
       .eq('status', 'published')
       .maybeSingle();
 
-    if (!error && data?.story) {
-      return normalizeStory(data.story as Story);
-    }
+    if (error) throw error;
+    return data?.story ? normalizeStory(data.story as Story) : undefined;
   } catch (error) {
     console.warn('Failed to load checkout story from Supabase:', error);
+    return INITIAL_STORIES.find((item) => item.id === storyId);
   }
-
-  return INITIAL_STORIES.find((item) => item.id === storyId);
 }
 
 async function resolveTransactionRequest(body: Record<string, unknown>) {
@@ -576,9 +574,7 @@ export async function createApp(options: { serveClient?: boolean } = {}) {
         throw error;
       }
 
-      const stories = data && data.length > 0
-        ? data.map((row) => normalizeStory({ ...row.story, id: row.id, status: row.status }))
-        : INITIAL_STORIES.map(normalizeStory);
+      const stories = (data || []).map((row) => normalizeStory({ ...row.story, id: row.id, status: row.status }));
 
       res.json({ stories });
     } catch (error) {
@@ -604,9 +600,7 @@ export async function createApp(options: { serveClient?: boolean } = {}) {
         throw error;
       }
 
-      const stories = data && data.length > 0
-        ? data.map((row) => normalizeStory({ ...row.story, id: row.id, status: row.status }))
-        : INITIAL_STORIES.map(normalizeStory);
+      const stories = (data || []).map((row) => normalizeStory({ ...row.story, id: row.id, status: row.status }));
 
       res.json({ stories });
     } catch (error) {
@@ -623,8 +617,13 @@ export async function createApp(options: { serveClient?: boolean } = {}) {
     const stories: Story[] = Array.isArray(req.body?.stories)
       ? (req.body.stories as Story[]).map((story) => normalizeStory(story))
       : [];
-    if (stories.length === 0) {
-      return res.status(400).json({ error: 'Daftar buku tidak boleh kosong.' });
+    if (!Array.isArray(req.body?.stories)) {
+      return res.status(400).json({ error: 'Daftar buku tidak valid.' });
+    }
+
+    const storyIds = stories.map((story) => story.id?.trim());
+    if (storyIds.some((id) => !id) || new Set(storyIds).size !== storyIds.length) {
+      return res.status(400).json({ error: 'Setiap buku harus memiliki ID unik.' });
     }
 
     try {
@@ -639,9 +638,25 @@ export async function createApp(options: { serveClient?: boolean } = {}) {
         updated_at: new Date().toISOString(),
       }));
 
-      const { error } = await supabase.from('admin_stories').upsert(payload, { onConflict: 'id' });
-      if (error) {
-        throw error;
+      const { data: existingRows, error: existingError } = await supabase
+        .from('admin_stories')
+        .select('id');
+      if (existingError) throw existingError;
+
+      if (payload.length > 0) {
+        const { error: upsertError } = await supabase.from('admin_stories').upsert(payload, { onConflict: 'id' });
+        if (upsertError) throw upsertError;
+      }
+
+      const deletedIds = (existingRows || [])
+        .map((row) => row.id)
+        .filter((id) => !storyIds.includes(id));
+      if (deletedIds.length > 0) {
+        const { error: deleteError } = await supabase
+          .from('admin_stories')
+          .delete()
+          .in('id', deletedIds);
+        if (deleteError) throw deleteError;
       }
 
       res.json({ stories });
