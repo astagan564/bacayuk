@@ -1,8 +1,10 @@
 import { Story } from '../types';
 import momoStorybookPackage from '../../generated-books/momo-dan-bayangan-yang-takut-gelap/story.json';
+import lalaStorybookPackage from '../../generated-books/sepatu-merah-lala-ingin-berlari/story.json';
 
 export const BUNDLED_CATALOG_STORIES: Story[] = [
   momoStorybookPackage.story as Story,
+  lalaStorybookPackage.story as Story,
 ];
 
 export const mergeBundledCatalogStories = (stories: Story[]): Story[] => {
