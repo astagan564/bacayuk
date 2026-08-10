@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.0] - 2026-08-10
 
 ### Added
+- **Cost & margin ledger**: Added a server-written Admin ledger for Gemini draft and image-generation costs, plus Midtrans payment fees after successful verification. Admins can now review total revenue, AI costs, external fees, and per-book cost totals.
+- **PDF-to-book import**: Admin Quick Create can now extract text from a PDF in the browser and turn it into a reviewable Book Studio draft. For image-only scans, compressed page previews are sent temporarily to the existing AI service for OCR; the source PDF itself is not uploaded or stored.
 - **Personal library**: Added per-device collections for Favorite, Continue Reading, Recently Read, and Completed stories. Favorites can be toggled directly on each cover, and collections retain their state separately for guest and signed-in reader profiles on the same device.
 - **AI Storybook Studio**: Added a reusable storybook generation contract, example payload, visual production guide, character bible, review checklist, and illustration continuity rules.
 - **Brief-first Quick Create**: Admins can now start from a short idea or manuscript using only a brief, target age, and primary language; title, structure, page beats, glossary, quiz candidates, and visual direction are generated as a reviewable draft.

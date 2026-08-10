@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { lazy, Suspense, useState, useEffect, useRef } from 'react';
 import { Story, StoryPage, ReadingSettings } from './types';
 import { Flipbook3D, FlipbookHandle } from './components/Flipbook3D';
 import { NavigationControls } from './components/NavigationControls';
@@ -13,7 +13,6 @@ import { PaymentGatewayModal } from './components/PaymentGatewayModal';
 import { OfflineDownloadModal } from './components/OfflineDownloadModal';
 import { ParentLoginModal } from './components/ParentLoginModal';
 import { BookCompletionModal } from './components/BookCompletionModal';
-import { AdminDashboard } from './components/AdminDashboard';
 import { UserSettingsView } from './components/UserSettings';
 import { ParentalGateModal } from './components/ParentalGateModal';
 import { ChangelogModal } from './components/ChangelogModal';
@@ -28,6 +27,10 @@ import { PersonalLibrary, personalLibraryStore } from './utils/personalLibrarySt
 import packageJson from '../package.json';
 import confetti from 'canvas-confetti';
 import { Sparkles, BookOpen, Award, Sun, Moon, Bookmark, BarChart3, Clock, User, LogOut, ShieldCheck, Settings, Bell } from 'lucide-react';
+
+const AdminDashboard = lazy(() =>
+  import('./components/AdminDashboard').then((module) => ({ default: module.AdminDashboard }))
+);
 
 export default function App() {
   const flipbookRef = useRef<FlipbookHandle>(null);
@@ -417,6 +420,7 @@ export default function App() {
 
   if (currentView === 'admin') {
     return (
+      <Suspense fallback={<div className="min-h-screen bg-[var(--cream)] dark:bg-slate-950" />}>
         <AdminDashboard
           stories={stories}
           adminPin={adminPin}
@@ -435,7 +439,8 @@ export default function App() {
           setCurrentView('main');
         }}
         isNight={isNight}
-      />
+        />
+      </Suspense>
     );
   }
 

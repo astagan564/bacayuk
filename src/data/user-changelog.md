@@ -1,7 +1,12 @@
 ## Buku AI dan pengalaman membaca baru - 2026-08-10
 
+### Biaya dan margin kini terlihat di Admin
+- Menu **Biaya & margin** mencatat biaya draft dan gambar Gemini yang berhasil dibuat, serta fee Midtrans setelah pembayaran terverifikasi.
+- Admin dapat melihat pendapatan, biaya AI, fee eksternal, margin bersih, dan total biaya setiap buku.
+
 ### Membuat buku kini jauh lebih sederhana
 - Admin cukup menulis ide atau naskah singkat, memilih usia pembaca, dan menentukan bahasa utama.
+- Admin juga bisa memilih PDF untuk mengambil isi tiap halaman sebagai naskah awal. Setelah itu BacaYuk membuat draft yang tetap dapat diperiksa dan diedit; PDF hasil scan/gambar akan dibaca dengan OCR AI per halaman.
 - BacaYuk menyiapkan draft yang bisa diperiksa terlebih dahulu, termasuk judul, pembagian halaman, arahan gambar, glosarium, dan calon kuis.
 - Cover dan gambar halaman dapat dibuat berurutan. Jika proses terhenti, gambar yang sudah selesai tetap tersimpan dan proses bisa dilanjutkan.
 - Status buku kini menunjukkan apakah naskah, cover, dan seluruh ilustrasinya benar-benar sudah siap.

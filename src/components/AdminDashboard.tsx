@@ -6,6 +6,7 @@ import {
   StoryProductionGuide,
   StoryVisualPreset,
 } from '../types';
+import pdfWorkerSrc from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 import {
   adminStore,
   AdminSettings,
@@ -42,6 +43,7 @@ import {
   AlertCircle,
   Megaphone,
   Languages,
+  ReceiptText,
 } from 'lucide-react';
 
 interface AdminDashboardProps {
@@ -53,6 +55,7 @@ interface AdminDashboardProps {
 }
 
 interface QuickCreateForm {
+  storyId?: string;
   brief: string;
   targetAge: '3-5' | '6-8' | '9-12';
   primaryLanguage: 'id' | 'en';
@@ -92,7 +95,21 @@ interface AiBookDraft {
   productionGuide?: StoryProductionGuide;
 }
 
+interface BookCostEvent {
+  id: string;
+  story_id: string | null;
+  story_title: string;
+  event_type: 'book_draft' | 'image_generation' | 'pdf_ocr' | 'payment_fee';
+  provider: string;
+  model: string | null;
+  amount_idr: number;
+  input_tokens: number | null;
+  output_tokens: number | null;
+  created_at: string;
+}
+
 const DEFAULT_QUICK_CREATE_FORM: QuickCreateForm = {
+  storyId: '',
   brief: '',
   targetAge: '6-8',
   primaryLanguage: 'id',
@@ -103,6 +120,9 @@ const DEFAULT_QUICK_CREATE_FORM: QuickCreateForm = {
   visualPreset: 'auto',
   tabooContent: '',
 };
+
+const MAX_PDF_IMPORT_SIZE = 400 * 1024 * 1024;
+const MAX_PDF_MANUSCRIPT_LENGTH = 22_000;
 
 const PIPELINE_STEPS: Array<{ id: NonNullable<Story['pipelineStatus']>; label: string }> = [
   { id: 'draft', label: 'Draft' },
@@ -119,7 +139,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   adminPin,
   isNight = false,
 }) => {
-  const [activeTab, setActiveTab] = useState<'cms' | 'users' | 'finance' | 'settings' | 'analytics'>('cms');
+  const [activeTab, setActiveTab] = useState<'cms' | 'users' | 'finance' | 'costs' | 'settings' | 'analytics'>('cms');
   const [cronStatus, setCronStatus] = useState<string | null>(null);
 
   // Admin Settings State
@@ -128,6 +148,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [coupons, setCoupons] = useState<DiscountCoupon[]>(() => adminStore.getCoupons());
   // Transactions State
   const [transactions, setTransactions] = useState<TransactionRecord[]>(() => adminStore.getTransactions());
+  const [costEvents, setCostEvents] = useState<BookCostEvent[]>([]);
+  const [costLedgerError, setCostLedgerError] = useState<string | null>(null);
   // Reading Logs
   const [readingLogs, setReadingLogs] = useState<UserReadingActivity[]>(() => adminStore.getReadingLogs());
 
@@ -176,6 +198,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [quickCreateForm, setQuickCreateForm] = useState<QuickCreateForm>(DEFAULT_QUICK_CREATE_FORM);
   const [quickCreateErrors, setQuickCreateErrors] = useState<string[]>([]);
   const [showQuickCreateAdvanced, setShowQuickCreateAdvanced] = useState(false);
+  const [pdfImport, setPdfImport] = useState<{ fileName: string; pageCount: number; characterCount: number } | null>(null);
+  const [pdfImportProgress, setPdfImportProgress] = useState<string | null>(null);
+  const [isExtractingPdf, setIsExtractingPdf] = useState(false);
   const [showAdvancedEditor, setShowAdvancedEditor] = useState(false);
   const [interactionPlaceMode, setInteractionPlaceMode] = useState(false);
   const [isGeneratingTranslation, setIsGeneratingTranslation] = useState(false);
@@ -200,6 +225,26 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     setToast(msg);
     setTimeout(() => setToast(null), 3000);
   };
+
+  const loadCostEvents = async () => {
+    if (!adminPin) return;
+
+    try {
+      const response = await fetch('/api/admin/book-cost-events', {
+        headers: { 'x-admin-pin': adminPin },
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || 'Ledger biaya belum dapat dimuat.');
+      setCostEvents(Array.isArray(data.events) ? data.events : []);
+      setCostLedgerError(null);
+    } catch (error) {
+      setCostLedgerError(error instanceof Error ? error.message : 'Ledger biaya belum dapat dimuat.');
+    }
+  };
+
+  useEffect(() => {
+    void loadCostEvents();
+  }, [adminPin]);
 
   const createBlankPage = (pageNumber: number): StoryPage => ({
     pageNumber,
@@ -802,7 +847,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     });
 
     return {
-      id: createStoryId(fallbackTitle),
+      id: form.storyId || createStoryId(fallbackTitle),
       title: fallbackTitle,
       author: 'BacaYuk Studio',
       category: 'Petualangan',
@@ -849,7 +894,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       };
     });
     return {
-      id: createStoryId(draft.title || form.title || 'Buku Cerita Baru'),
+      id: form.storyId || createStoryId(draft.title || form.title || 'Buku Cerita Baru'),
       title: draft.title?.trim() || form.title.trim() || 'Buku Cerita Baru',
       author: 'BacaYuk Studio',
       category: draft.category?.trim() || 'Petualangan',
@@ -873,6 +918,158 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       vocabularyQuiz: draft.vocabularyQuiz,
       productionGuide: draft.productionGuide,
     };
+  };
+
+  const extractTextFromPdfPageImage = async (imageBase64: string, storyId: string, storyTitle: string): Promise<string> => {
+    if (!adminPin) {
+      throw new Error('PIN admin tidak tersedia untuk membaca PDF hasil scan.');
+    }
+
+    const response = await fetch('/api/admin/extract-pdf-page-text', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-admin-pin': adminPin,
+      },
+      body: JSON.stringify({ imageBase64, storyId, storyTitle }),
+    });
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      throw new Error(data.error || 'OCR halaman PDF gagal.');
+    }
+
+    return typeof data.text === 'string' ? data.text.trim() : '';
+  };
+
+  const handlePdfImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+
+    if (!file) return;
+
+    setQuickCreateErrors([]);
+    setPdfImport(null);
+
+    if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+      setQuickCreateErrors(['Pilih berkas PDF untuk diubah menjadi naskah buku.']);
+      return;
+    }
+
+    if (file.size > MAX_PDF_IMPORT_SIZE) {
+      setQuickCreateErrors(['PDF terlalu besar. Pilih berkas hingga 400 MB agar dapat diproses di browser.']);
+      return;
+    }
+
+    const suggestedPdfTitle = file.name.replace(/\.pdf$/i, '').replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim();
+    const trackingStoryId = quickCreateForm.storyId || createStoryId(suggestedPdfTitle || 'buku-pdf');
+
+    setIsExtractingPdf(true);
+    setPdfImportProgress('Membuka PDF…');
+    let releasePdf: (() => Promise<void>) | null = null;
+
+    try {
+      const { getDocument, GlobalWorkerOptions } = await import('pdfjs-dist');
+      GlobalWorkerOptions.workerSrc = pdfWorkerSrc;
+
+      const loadingTask = getDocument({ data: new Uint8Array(await file.arrayBuffer()) });
+      releasePdf = () => loadingTask.destroy();
+      const document = await loadingTask.promise;
+      const sourcePages: Array<{ pageNumber: number; text: string }> = [];
+
+      for (let pageNumber = 1; pageNumber <= document.numPages; pageNumber += 1) {
+        setPdfImportProgress(`Membaca halaman ${pageNumber} dari ${document.numPages}…`);
+        const page = await document.getPage(pageNumber);
+        const content = await page.getTextContent();
+        const text = content.items
+          .map((item) => ('str' in item ? item.str : ''))
+          .join(' ')
+          .replace(/\s+/g, ' ')
+          .trim();
+
+        sourcePages.push({ pageNumber, text });
+      }
+
+      const scannedPages = sourcePages.filter((sourcePage) => !sourcePage.text);
+      for (const sourcePage of scannedPages) {
+        setPdfImportProgress(`Mengenali teks pada halaman ${sourcePage.pageNumber} dari ${document.numPages}…`);
+        const page = await document.getPage(sourcePage.pageNumber);
+        const baseViewport = page.getViewport({ scale: 1 });
+        const scale = Math.min(1.8, 1_400 / Math.max(baseViewport.width, baseViewport.height));
+        const viewport = page.getViewport({ scale });
+        const canvas = window.document.createElement('canvas');
+        canvas.width = Math.ceil(viewport.width);
+        canvas.height = Math.ceil(viewport.height);
+        if (!canvas.getContext('2d', { alpha: false })) {
+          throw new Error('Kanvas untuk membaca PDF tidak tersedia di browser ini.');
+        }
+
+        await page.render({ canvas, viewport }).promise;
+        let imageBase64 = canvas.toDataURL('image/jpeg', 0.76).split(',')[1] || '';
+        if (imageBase64.length > 650_000) {
+          imageBase64 = canvas.toDataURL('image/jpeg', 0.52).split(',')[1] || '';
+        }
+        if (!imageBase64 || imageBase64.length > 650_000) {
+          throw new Error(`Halaman ${sourcePage.pageNumber} terlalu detail untuk OCR. Coba PDF dengan resolusi lebih rendah.`);
+        }
+
+        sourcePage.text = await extractTextFromPdfPageImage(imageBase64, trackingStoryId, quickCreateForm.title.trim() || suggestedPdfTitle);
+        canvas.width = 1;
+        canvas.height = 1;
+      }
+
+      const readableSourcePages = sourcePages.filter((sourcePage) => sourcePage.text);
+
+      if (readableSourcePages.length === 0) {
+        throw new Error('Teks tidak ditemukan pada PDF ini, termasuk setelah OCR. Tambahkan naskah secara manual atau gunakan PDF lain.');
+      }
+
+      let remainingCharacters = MAX_PDF_MANUSCRIPT_LENGTH;
+      const manuscriptSections = readableSourcePages.flatMap(({ pageNumber, text }) => {
+        const heading = `## Halaman sumber ${pageNumber}\n`;
+        const availableCharacters = remainingCharacters - heading.length;
+        if (availableCharacters < 120) return [];
+
+        const pageText = text.slice(0, availableCharacters).trim();
+        remainingCharacters -= heading.length + pageText.length + 2;
+        return [`${heading}${pageText}`];
+      });
+      const manuscript = manuscriptSections.join('\n\n').trim();
+
+      if (manuscript.length < 12) {
+        throw new Error('Teks PDF terlalu sedikit untuk dibuat menjadi buku. Tambahkan naskah atau pilih PDF lain.');
+      }
+
+      const suggestedTitle = file.name
+        .replace(/\.pdf$/i, '')
+        .replace(/[_-]+/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+      setQuickCreateForm((current) => ({
+        ...current,
+        storyId: current.storyId || trackingStoryId,
+        brief: manuscript,
+        title: current.title.trim() || suggestedTitle,
+      }));
+      setPdfImport({
+        fileName: file.name,
+        pageCount: readableSourcePages.length,
+        characterCount: manuscript.length,
+      });
+      showToast('Teks PDF siap dijadikan draft buku.');
+    } catch (error) {
+      console.error('PDF import failed:', error);
+      setQuickCreateErrors([
+        error instanceof Error ? error.message : 'PDF belum dapat dibaca. Coba berkas PDF lain.',
+      ]);
+    } finally {
+      if (releasePdf) {
+        await releasePdf().catch(() => undefined);
+      }
+      setIsExtractingPdf(false);
+      setPdfImportProgress(null);
+    }
   };
 
   const createDraftWithAi = async (form: QuickCreateForm): Promise<Story> => {
@@ -915,6 +1112,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     setQuickCreateForm(DEFAULT_QUICK_CREATE_FORM);
     setQuickCreateErrors([]);
     setShowQuickCreateAdvanced(false);
+    setPdfImport(null);
+    setPdfImportProgress(null);
   };
 
   const handleQuickCreateDraft = async (e: React.FormEvent) => {
@@ -932,6 +1131,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
     const normalizedForm = {
       ...quickCreateForm,
+      storyId: quickCreateForm.storyId || createStoryId(quickCreateForm.title || 'buku-ai'),
       brief: quickCreateForm.brief.trim(),
       title: quickCreateForm.title.trim(),
       moralMessage: quickCreateForm.moralMessage.trim(),
@@ -1150,6 +1350,34 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const successTrxs = transactions.filter((t) => t.status === 'success');
   const pendingTrxs = transactions.filter((t) => t.status === 'pending');
   const totalRevenue = successTrxs.reduce((sum, t) => sum + t.amount, 0);
+  const totalAiCost = costEvents
+    .filter((event) => event.event_type !== 'payment_fee')
+    .reduce((sum, event) => sum + event.amount_idr, 0);
+  const totalPaymentFee = costEvents
+    .filter((event) => event.event_type === 'payment_fee')
+    .reduce((sum, event) => sum + event.amount_idr, 0);
+  const netProfit = totalRevenue - totalAiCost - totalPaymentFee;
+  const storyCostRows = Object.values(costEvents.reduce<Record<string, {
+    storyId: string;
+    title: string;
+    aiCost: number;
+    paymentFee: number;
+    imageCount: number;
+  }>>((rows, event) => {
+    const storyId = event.story_id || 'belum-tertaut';
+    const row = rows[storyId] || {
+      storyId,
+      title: event.story_title || 'Biaya belum ditautkan ke buku',
+      aiCost: 0,
+      paymentFee: 0,
+      imageCount: 0,
+    };
+    if (event.event_type === 'payment_fee') row.paymentFee += event.amount_idr;
+    else row.aiCost += event.amount_idr;
+    if (event.event_type === 'image_generation') row.imageCount += 1;
+    rows[storyId] = row;
+    return rows;
+  }, {})).sort((a, b) => (b.aiCost + b.paymentFee) - (a.aiCost + a.paymentFee));
 
   return (
     <div className={`min-h-screen w-full flex overflow-hidden animate-fade-in ${
@@ -1183,6 +1411,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             { id: 'cms', icon: BookOpen, label: 'Kelola buku' },
             { id: 'users', icon: Users, label: `Pengguna (${userList.length})` },
             { id: 'finance', icon: CreditCard, label: 'Pembayaran' },
+            { id: 'costs', icon: ReceiptText, label: 'Biaya & margin' },
             { id: 'settings', icon: Settings, label: 'Pengaturan' },
             { id: 'analytics', icon: TrendingUp, label: 'Retensi baca' }
           ].map((item) => (
@@ -1235,6 +1464,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     setQuickCreateForm(DEFAULT_QUICK_CREATE_FORM);
                     setQuickCreateErrors([]);
                     setShowQuickCreateAdvanced(false);
+                    setPdfImport(null);
+                    setPdfImportProgress(null);
                     setShowQuickCreate(true);
                   }}
                   className="btn-primary py-2.5 px-4 text-xs flex items-center gap-1.5 shrink-0"
@@ -1756,6 +1987,80 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           </div>
         )}
 
+        {activeTab === 'costs' && (
+          <div className="flex flex-col gap-6">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <div className="mb-1 inline-flex items-center gap-1.5 text-[10px] font-black text-[var(--story-green)]">
+                  <ReceiptText className="h-3.5 w-3.5" />
+                  Ledger server-side
+                </div>
+                <h3 className="text-xl">Biaya & margin buku</h3>
+                <p className="mt-1 text-xs text-[var(--muted-ink)] dark:text-slate-300">
+                  Biaya AI dicatat saat proses berhasil. Fee Midtrans tercatat ketika pembayaran terverifikasi sukses.
+                </p>
+              </div>
+              <button onClick={() => void loadCostEvents()} className="btn-secondary px-3 py-2 text-xs" type="button">
+                Muat ulang ledger
+              </button>
+            </div>
+
+            {costLedgerError && (
+              <div className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-xs font-semibold text-amber-900 dark:border-amber-700 dark:bg-amber-950/30 dark:text-amber-100">
+                {costLedgerError}
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+              {[
+                ['Pendapatan tercatat', totalRevenue, 'text-[var(--story-green)]'],
+                ['Biaya AI', totalAiCost, 'text-[var(--rose)]'],
+                ['Fee Midtrans', totalPaymentFee, 'text-[var(--warm-gold)]'],
+                ['Margin bersih', netProfit, netProfit >= 0 ? 'text-[var(--story-green)]' : 'text-[var(--rose)]'],
+              ].map(([label, amount, color]) => (
+                <div key={label as string} className="book-panel rounded-xl p-4">
+                  <p className="text-[11px] font-bold text-[var(--muted-ink)] dark:text-slate-300">{label}</p>
+                  <p className={`mt-2 text-2xl font-black tabular-nums ${color}`}>Rp {(amount as number).toLocaleString('id-ID')}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="overflow-hidden rounded-2xl border border-[#eadbc1] bg-white/80 dark:border-blue-900/60 dark:bg-slate-800/80">
+              <div className="border-b border-[#eadbc1] px-4 py-3 dark:border-blue-900/60">
+                <h4 className="text-sm font-black">Biaya aktual per buku</h4>
+                <p className="mt-0.5 text-[10px] text-[var(--muted-ink)] dark:text-slate-300">Token yang dikembalikan Gemini dipakai untuk menghitung estimasi tagihan dalam Rupiah pada saat event dicatat.</p>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-[#fff7e6] text-[10px] font-black text-[var(--muted-ink)] dark:bg-slate-700/80 dark:text-blue-100">
+                    <tr>
+                      <th className="p-3">Buku</th>
+                      <th className="p-3">Gambar</th>
+                      <th className="p-3">Biaya AI</th>
+                      <th className="p-3">Fee eksternal</th>
+                      <th className="p-3">Total biaya</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#eadbc1] dark:divide-slate-700">
+                    {storyCostRows.map((row) => (
+                      <tr key={row.storyId}>
+                        <td className="p-3 font-bold">{row.title}</td>
+                        <td className="p-3 tabular-nums">{row.imageCount}</td>
+                        <td className="p-3 tabular-nums">Rp {row.aiCost.toLocaleString('id-ID')}</td>
+                        <td className="p-3 tabular-nums">Rp {row.paymentFee.toLocaleString('id-ID')}</td>
+                        <td className="p-3 font-black tabular-nums">Rp {(row.aiCost + row.paymentFee).toLocaleString('id-ID')}</td>
+                      </tr>
+                    ))}
+                    {storyCostRows.length === 0 && (
+                      <tr><td colSpan={5} className="p-8 text-center text-[var(--muted-ink)] dark:text-slate-300">Belum ada biaya tercatat. Generate draft atau gambar buku untuk memulai ledger.</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* TAB 4: GLOBAL SYSTEM & CHILD EYE HEALTH SETTINGS */}
         {activeTab === 'settings' && (
           <form onSubmit={handleSaveSettings} className="flex flex-col gap-6">
@@ -2089,10 +2394,46 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     placeholder="Contoh: Seekor kelinci kecil takut bercerita di depan kelas. Temannya membantu ia berlatih sampai berani mencoba."
                     autoFocus
                   />
-                  <p className="mt-2 text-[11px] leading-5 text-[var(--muted-ink)] dark:text-slate-300">
-                    Satu atau dua kalimat sudah cukup. Kamu juga boleh menempel naskah lengkap.
-                  </p>
-                </div>
+                   <p className="mt-2 text-[11px] leading-5 text-[var(--muted-ink)] dark:text-slate-300">
+                     Satu atau dua kalimat sudah cukup. Kamu juga boleh menempel naskah lengkap.
+                   </p>
+
+                    <div className="mt-3 rounded-xl border border-dashed border-[var(--story-green)]/35 bg-white/45 p-3 dark:bg-slate-950/20">
+                      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                          <p className="text-xs font-black">Atau impor dari PDF</p>
+                          <p className="mt-0.5 text-[10px] leading-4 text-[var(--muted-ink)] dark:text-slate-300">
+                            Teks diekstrak di browser; PDF hasil scan dibaca dengan OCR AI per halaman. Hingga 400 MB.
+                          </p>
+                        </div>
+                        <label className={`inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg border border-[var(--story-green)]/30 bg-white px-3 py-2 text-[11px] font-black text-[var(--story-green)] transition-colors hover:bg-[var(--story-green)]/10 dark:bg-slate-900 ${
+                          isExtractingPdf || isGeneratingBookDraft ? 'pointer-events-none opacity-60' : 'cursor-pointer'
+                        }`}>
+                          {isExtractingPdf ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
+                          {isExtractingPdf ? 'Membaca PDF…' : 'Pilih PDF'}
+                          <input
+                            type="file"
+                            accept="application/pdf,.pdf"
+                            className="sr-only"
+                            onChange={handlePdfImport}
+                            disabled={isExtractingPdf || isGeneratingBookDraft}
+                          />
+                        </label>
+                      </div>
+
+                      {pdfImportProgress && (
+                        <p role="status" className="mt-2 text-[10px] font-bold text-[var(--magic-blue)] dark:text-blue-200">
+                          {pdfImportProgress}
+                        </p>
+                      )}
+
+                      {pdfImport && (
+                        <p className="mt-2 text-[10px] font-bold text-[var(--story-green)] dark:text-emerald-300">
+                          {pdfImport.fileName} · {pdfImport.pageCount} halaman teks · {pdfImport.characterCount.toLocaleString('id-ID')} karakter siap direview.
+                        </p>
+                      )}
+                    </div>
+                  </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-[1.35fr_0.65fr] gap-4">
                   <fieldset>
@@ -2259,15 +2600,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   </p>
                   <button
                     type="submit"
-                    disabled={isGeneratingBookDraft}
+                    disabled={isGeneratingBookDraft || isExtractingPdf}
                     className="btn-primary py-3 px-5 text-xs flex items-center justify-center gap-1.5 shrink-0 disabled:opacity-60 disabled:cursor-wait"
                   >
-                    {isGeneratingBookDraft ? (
+                    {isGeneratingBookDraft || isExtractingPdf ? (
                       <RefreshCw className="w-4 h-4 animate-spin" />
                     ) : (
                       <Sparkles className="w-4 h-4" />
                     )}
-                    <span>{isGeneratingBookDraft ? 'Membuat buku…' : 'Buat buku'}</span>
+                    <span>{isGeneratingBookDraft ? 'Membuat buku…' : isExtractingPdf ? 'Membaca PDF…' : 'Buat buku'}</span>
                   </button>
                 </div>
               </form>

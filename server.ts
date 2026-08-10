@@ -87,6 +87,82 @@ const GEMINI_IMAGE_MODELS = Array.from(
     ].filter((model): model is string => Boolean(model?.trim()))
   )
 );
+const USD_TO_IDR = Math.max(1, Number(process.env.USD_TO_IDR_RATE) || 18_088);
+
+type CostEventType = 'book_draft' | 'image_generation' | 'pdf_ocr' | 'payment_fee';
+type GeminiUsage = { inputTokens: number; outputTokens: number; imageTokens: number };
+
+function getGeminiUsage(response: unknown): GeminiUsage {
+  const usage = (response as { usageMetadata?: Record<string, unknown> })?.usageMetadata || {};
+  const inputTokens = Number(usage.promptTokenCount) || 0;
+  const outputTokens = Number(usage.candidatesTokenCount) || 0;
+
+  return { inputTokens, outputTokens, imageTokens: outputTokens };
+}
+
+function estimateGeminiCost(model: string, usage: GeminiUsage, kind: 'text' | 'image'): { amountUsd: number; amountIdr: number } {
+  const imageModel = model.includes('3-pro-image')
+    ? { input: 2, output: 120 }
+    : { input: 0.5, output: 60 };
+  const textModel = model.includes('3.6-flash')
+    ? { input: 1.5, output: 7.5 }
+    : { input: 0.3, output: 2.5 };
+  const pricing = kind === 'image' ? imageModel : textModel;
+  const amountUsd = ((usage.inputTokens * pricing.input) + (usage.outputTokens * pricing.output)) / 1_000_000;
+
+  return { amountUsd, amountIdr: Math.round(amountUsd * USD_TO_IDR) };
+}
+
+async function recordCostEvent(input: {
+  referenceId?: string;
+  storyId?: string;
+  storyTitle?: string;
+  eventType: CostEventType;
+  provider: string;
+  model?: string;
+  amountUsd?: number;
+  amountIdr: number;
+  usage?: GeminiUsage;
+  metadata?: Record<string, unknown>;
+}) {
+  try {
+    const supabase = getSupabaseAdminClient();
+    const usage = input.usage || { inputTokens: 0, outputTokens: 0, imageTokens: 0 };
+    const { error } = await supabase.from('book_cost_events').insert({
+      id: `cost-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
+      reference_id: input.referenceId || null,
+      story_id: input.storyId || null,
+      story_title: input.storyTitle || '',
+      event_type: input.eventType,
+      provider: input.provider,
+      model: input.model || null,
+      amount_idr: input.amountIdr,
+      amount_usd: input.amountUsd || null,
+      input_tokens: usage.inputTokens || null,
+      output_tokens: usage.outputTokens || null,
+      image_tokens: usage.imageTokens || null,
+      metadata: input.metadata || {},
+    });
+    if (error) throw error;
+  } catch (error) {
+    console.error('Failed to record book cost event:', error);
+  }
+}
+
+function estimateMidtransFee(amount: number, paymentMethod: string): number {
+  const method = paymentMethod.toLowerCase();
+  const baseFee = method.includes('qris')
+    ? amount * 0.007
+    : method.includes('gopay') || method.includes('shopee')
+      ? amount * 0.02
+      : method.includes('ovo') || method.includes('dana')
+        ? amount * 0.015
+        : method.includes('credit_card') || method.includes('credit')
+          ? (amount * 0.029) + 2_000
+          : 4_000;
+
+  return Math.round(baseFee * 1.11);
+}
 
 function isGeminiModelUnavailable(error: unknown) {
   const detail = error as { status?: number; message?: string };
@@ -116,7 +192,45 @@ async function generateGeminiJson(ai: GoogleGenAI, contents: string) {
       return {
         model,
         text: response.text || '',
+        usage: getGeminiUsage(response),
       };
+    } catch (error) {
+      lastError = error;
+      if (!isGeminiModelUnavailable(error)) {
+        throw error;
+      }
+
+      console.warn(`Gemini model ${model} unavailable, trying fallback model...`);
+    }
+  }
+
+  throw lastError || new Error('No Gemini text models are configured.');
+}
+
+async function extractGeminiTextFromImage(ai: GoogleGenAI, imageBase64: string) {
+  let lastError: unknown;
+
+  for (const model of GEMINI_TEXT_MODELS) {
+    try {
+      const response = await ai.models.generateContent({
+        model,
+        contents: [{
+          role: 'user',
+          parts: [
+            {
+              text: 'Transcribe every readable word on this children\'s-book page. Preserve natural paragraph breaks and dialogue. Return only the transcribed text: no introduction, no markdown, no description of the image, and no page number.',
+            },
+            {
+              inlineData: {
+                mimeType: 'image/jpeg',
+                data: imageBase64,
+              },
+            },
+          ],
+        }],
+      });
+
+      return { model, text: response.text || '', usage: getGeminiUsage(response) };
     } catch (error) {
       lastError = error;
       if (!isGeminiModelUnavailable(error)) {
@@ -158,6 +272,7 @@ async function generateGeminiImage(ai: GoogleGenAI, prompt: string, aspectRatio:
         model,
         data,
         mimeType: image.mime_type || 'image/png',
+        usage: getGeminiUsage(interaction),
       };
     } catch (error) {
       lastError = error;
@@ -744,6 +859,63 @@ Format JSON yang HARUS dikembalikan (tanpa markdown pembungkus selain json):
     }
   });
 
+  app.get('/api/admin/book-cost-events', async (req, res) => {
+    if (!isValidAdminPin(req.headers['x-admin-pin'])) {
+      return res.status(403).json({ error: 'PIN admin tidak valid.' });
+    }
+
+    try {
+      const supabase = getSupabaseAdminClient();
+      const { data, error } = await supabase
+        .from('book_cost_events')
+        .select('id, story_id, story_title, event_type, provider, model, amount_idr, amount_usd, input_tokens, output_tokens, image_tokens, metadata, created_at')
+        .order('created_at', { ascending: false })
+        .limit(500);
+      if (error) throw error;
+      res.json({ events: data || [] });
+    } catch (error) {
+      console.error('Error fetching book cost events:', error);
+      res.status(500).json({ error: 'Ledger biaya belum tersedia. Terapkan migrasi Supabase terlebih dahulu.' });
+    }
+  });
+
+  app.post('/api/admin/extract-pdf-page-text', async (req, res) => {
+    if (!isValidAdminPin(req.headers['x-admin-pin'])) {
+      return res.status(403).json({ error: 'PIN admin tidak valid.' });
+    }
+
+    const imageBase64 = typeof req.body?.imageBase64 === 'string' ? req.body.imageBase64.trim() : '';
+    if (!/^[A-Za-z0-9+/=]+$/.test(imageBase64) || imageBase64.length < 100 || imageBase64.length > 700_000) {
+      return res.status(400).json({ error: 'Gambar halaman PDF tidak valid atau terlalu besar untuk OCR.' });
+    }
+
+    try {
+      const apiKey = process.env.GEMINI_API_KEY;
+      if (!apiKey) {
+        return res.status(400).json({ error: 'GEMINI_API_KEY is not configured.' });
+      }
+
+      const result = await extractGeminiTextFromImage(new GoogleGenAI({ apiKey }), imageBase64);
+      const text = cleanAiText(result.text, 3_600);
+      const ocrCost = estimateGeminiCost(result.model, result.usage, 'text');
+      await recordCostEvent({
+        storyId: cleanOneLine(req.body?.storyId, 100),
+        storyTitle: cleanOneLine(req.body?.storyTitle, 120),
+        eventType: 'pdf_ocr',
+        provider: 'Gemini',
+        model: result.model,
+        amountUsd: ocrCost.amountUsd,
+        amountIdr: ocrCost.amountIdr,
+        usage: result.usage,
+        metadata: { usdToIdr: USD_TO_IDR },
+      });
+      res.json({ text });
+    } catch (error) {
+      console.error('Error extracting PDF page text:', error);
+      res.status(500).json({ error: 'OCR halaman PDF dengan AI gagal.' });
+    }
+  });
+
   app.post('/api/admin/generate-book-draft', async (req, res) => {
     if (!isValidAdminPin(req.headers['x-admin-pin'])) {
       return res.status(403).json({ error: 'PIN admin tidak valid.' });
@@ -751,6 +923,7 @@ Format JSON yang HARUS dikembalikan (tanpa markdown pembungkus selain json):
 
     try {
       const requestedTitle = cleanOneLine(req.body?.title, 120);
+      const trackingStoryId = cleanOneLine(req.body?.storyId, 100);
       const targetAgeInput = cleanOneLine(req.body?.targetAge, 40, '6-8');
       const targetAgeKey = ['3-5', '6-8', '9-12'].find((value) => targetAgeInput.includes(value)) || '6-8';
       const targetAge = `${targetAgeKey} Tahun`;
@@ -939,6 +1112,19 @@ JSON shape:
       if (productionGuide.characterBible.length === 0) {
         return res.status(502).json({ error: 'AI belum menghasilkan acuan karakter yang valid.' });
       }
+
+      const draftCost = estimateGeminiCost(response.model, response.usage, 'text');
+      await recordCostEvent({
+        storyId: trackingStoryId,
+        storyTitle: requestedTitle || cleanOneLine(parsed.title, 120, 'Buku Cerita Baru'),
+        eventType: 'book_draft',
+        provider: 'Gemini',
+        model: response.model,
+        amountUsd: draftCost.amountUsd,
+        amountIdr: draftCost.amountIdr,
+        usage: response.usage,
+        metadata: { pageCount: pages.length, usdToIdr: USD_TO_IDR },
+      });
 
       res.json({
         draft: {
@@ -1302,12 +1488,25 @@ FINAL CHECK: The finished artwork must contain no visible written characters of 
       }
 
       const { data } = supabase.storage.from('story-images').getPublicUrl(objectPath);
+      const imageCost = estimateGeminiCost(generatedImage.model, generatedImage.usage, 'image');
+      await recordCostEvent({
+        storyId,
+        storyTitle,
+        eventType: 'image_generation',
+        provider: 'Gemini',
+        model: generatedImage.model,
+        amountUsd: imageCost.amountUsd,
+        amountIdr: imageCost.amountIdr,
+        usage: generatedImage.usage,
+        metadata: { imageKind, pageNumber, imageSize: '1K', usdToIdr: USD_TO_IDR },
+      });
 
       res.json({
         imageUrl: data.publicUrl,
         path: objectPath,
         model: generatedImage.model,
         mimeType: contentType,
+        cost: imageCost,
       });
     } catch (error) {
       console.error('Error generating story image:', error);
@@ -1461,6 +1660,21 @@ ${pages.map((page) => `Page ${page.pageNumber}${page.title ? ` - ${page.title}` 
       const isPaid =
         (transactionStatus === 'capture' && fraudStatus === 'accept') ||
         transactionStatus === 'settlement';
+      const grossAmount = Math.max(0, Number(status.gross_amount || 0));
+
+      if (isPaid && grossAmount > 0) {
+        await recordCostEvent({
+          referenceId: `midtrans-fee:${orderId.trim()}`,
+          storyId: typeof (status as { custom_field2?: unknown }).custom_field2 === 'string'
+            ? (status as { custom_field2: string }).custom_field2
+            : undefined,
+          eventType: 'payment_fee',
+          provider: 'Midtrans',
+          model: status.payment_type || undefined,
+          amountIdr: estimateMidtransFee(grossAmount, status.payment_type || ''),
+          metadata: { orderId: orderId.trim(), grossAmount, paymentType: status.payment_type || '' },
+        });
+      }
 
       res.json({
         orderId,
@@ -1468,7 +1682,7 @@ ${pages.map((page) => `Page ${page.pageNumber}${page.title ? ` - ${page.title}` 
         transactionStatus,
         fraudStatus,
         paymentType: status.payment_type,
-        grossAmount: Number(status.gross_amount || 0),
+        grossAmount,
       });
     } catch (error) {
       console.error('Error verifying midtrans transaction:', error);
