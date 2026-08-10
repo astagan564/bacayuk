@@ -684,7 +684,7 @@ export default function App() {
                 settings={settings}
               />
               {/* Mobile bottom spacer — prevents content hiding behind the fixed bar */}
-              <div className="lg:hidden h-24 w-full shrink-0" />
+              <div className="lg:hidden h-32 w-full shrink-0" />
             </div>
 
             {/* Sidebar (desktop) + Bottom bar (mobile) */}

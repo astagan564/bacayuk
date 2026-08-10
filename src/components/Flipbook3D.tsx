@@ -109,7 +109,9 @@ export const Flipbook3D = React.forwardRef<FlipbookHandle, FlipbookProps>(({
   };
 
   const handlePageClick = (event: React.MouseEvent<HTMLElement>) => {
-    if (isFlipping) return;
+    // On small touch screens the story is stacked vertically. Navigation there
+    // is deliberately handled by the bottom controls and horizontal swipes.
+    if (isFlipping || window.matchMedia('(max-width: 767px)').matches) return;
 
     const target = event.target as HTMLElement;
     if (target.closest('button, a, input, textarea, select, [role="button"]')) return;
@@ -272,17 +274,17 @@ export const Flipbook3D = React.forwardRef<FlipbookHandle, FlipbookProps>(({
       <article
         key={page.pageNumber}
         onClick={handlePageClick}
-        className="grid h-full min-h-0 w-full cursor-pointer grid-cols-1 md:grid-cols-2"
-        aria-label={`Halaman ${page.pageNumber}. Klik sisi kiri untuk kembali atau sisi kanan untuk lanjut.`}
+        className="grid min-h-0 w-full grid-cols-1 md:h-full md:cursor-pointer md:grid-cols-2"
+        aria-label={`Halaman ${page.pageNumber}. Di desktop, klik sisi kiri untuk kembali atau sisi kanan untuk lanjut.`}
       >
-        <figure className="relative min-h-[18rem] overflow-hidden md:min-h-0">
+        <figure className="relative aspect-[4/3] min-h-[14rem] overflow-hidden sm:aspect-[16/10] md:min-h-0 md:aspect-auto">
           <StoryIllustration type={page.illustrationType} imageUrl={page.imageUrl} />
           {renderInteractiveElements(page)}
           <figcaption className="sr-only">Ilustrasi untuk halaman {page.pageNumber}: {pageTitle}</figcaption>
         </figure>
 
         <section
-          className={`relative flex min-h-[20rem] flex-col overflow-y-auto border-t px-6 py-7 sm:px-8 sm:py-8 md:min-h-0 md:border-l md:border-t-0 md:px-8 lg:px-10 ${
+          className={`relative flex min-h-0 flex-col overflow-visible border-t px-5 py-6 sm:px-8 sm:py-8 md:min-h-0 md:overflow-y-auto md:border-l md:border-t-0 md:px-8 lg:px-10 ${
             isNight ? 'border-slate-700 text-slate-100' : 'border-[#d9cfbd] text-[#251f1a]'
           }`}
           style={paperStyle}
@@ -296,7 +298,7 @@ export const Flipbook3D = React.forwardRef<FlipbookHandle, FlipbookProps>(({
             </p>
           </header>
 
-          <div className="flex flex-1 items-center py-8 sm:py-10">
+          <div className="flex flex-1 items-center py-6 sm:py-8 md:py-10">
             <div className="mx-auto w-full max-w-[34rem]">
               {pageTitle && (
                 <h2 className={`mb-4 text-balance font-serif text-xl font-semibold leading-[1.18] sm:text-2xl lg:text-[1.7rem] ${isNight ? 'text-slate-50' : 'text-[#2c241e]'}`}>
@@ -344,7 +346,7 @@ export const Flipbook3D = React.forwardRef<FlipbookHandle, FlipbookProps>(({
 
   return (
     <section
-      className="mx-auto flex w-full max-w-[90rem] select-none flex-col items-center px-2 py-2 sm:px-4"
+      className="mx-auto flex w-full max-w-[90rem] touch-pan-y select-none flex-col items-center px-2 py-2 sm:px-4"
       onContextMenu={(event) => event.preventDefault()}
       onCopy={(event) => event.preventDefault()}
       onTouchStart={(event) => {
@@ -363,7 +365,7 @@ export const Flipbook3D = React.forwardRef<FlipbookHandle, FlipbookProps>(({
     >
       <div className="w-full">
         <div
-          className={`relative min-h-[34rem] w-full max-w-none overflow-hidden rounded-[1.4rem] border shadow-[0_24px_70px_rgba(54,39,24,0.22)] transition-all duration-300 md:aspect-[16/11] md:min-h-0 ${
+          className={`relative min-h-0 w-full max-w-none overflow-hidden rounded-[1.4rem] border shadow-[0_24px_70px_rgba(54,39,24,0.22)] transition-all duration-300 md:aspect-[16/11] md:min-h-0 ${
             isNight ? 'border-slate-700 bg-slate-900' : 'border-[#bfae93] bg-[#fffdf7]'
           } ${
             isFlipping ? 'translate-y-1 scale-[0.995] opacity-75' : 'translate-y-0 scale-100 opacity-100'
