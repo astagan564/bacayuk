@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.0] - 2026-08-10
 
 ### Added
+- **Personal library**: Added per-device collections for Favorite, Continue Reading, Recently Read, and Completed stories. Favorites can be toggled directly on each cover, and collections retain their state separately for guest and signed-in reader profiles on the same device.
 - **AI Storybook Studio**: Added a reusable storybook generation contract, example payload, visual production guide, character bible, review checklist, and illustration continuity rules.
 - **Brief-first Quick Create**: Admins can now start from a short idea or manuscript using only a brief, target age, and primary language; title, structure, page beats, glossary, quiz candidates, and visual direction are generated as a reviewable draft.
 - **Sequential illustration workflow**: Added resumable cover-first and page-by-page image generation with progress feedback. Completed images are preserved when a later request fails.

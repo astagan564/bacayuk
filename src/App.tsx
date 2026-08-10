@@ -24,6 +24,7 @@ import { adminStore } from './utils/adminStore';
 import { storyStore } from './utils/storyStore';
 import { userSettingsStore } from './utils/userSettingsStore';
 import { speechEngine } from './utils/speechEngine';
+import { PersonalLibrary, personalLibraryStore } from './utils/personalLibraryStore';
 import packageJson from '../package.json';
 import confetti from 'canvas-confetti';
 import { Sparkles, BookOpen, Award, Sun, Moon, Bookmark, BarChart3, Clock, User, LogOut, ShieldCheck, Settings, Bell } from 'lucide-react';
@@ -112,6 +113,7 @@ export default function App() {
   const [parentalGateTarget, setParentalGateTarget] = useState<Story | null>(null);
 
   const [currentUser, setCurrentUser] = useState<UserAccount | null>(() => userAuthStore.getUser());
+  const [personalLibrary, setPersonalLibrary] = useState<PersonalLibrary>(() => personalLibraryStore.load(userAuthStore.getUser()?.id));
   const [loginStoryTarget, setLoginStoryTarget] = useState<Story | null>(null);
   const [showLoginModal, setShowLoginModal] = useState<boolean>(false);
   const [currentView, setCurrentView] = useState<'main' | 'admin' | 'userSettings'>('main');
@@ -120,6 +122,10 @@ export default function App() {
   const [hasUnreadChangelog, setHasUnreadChangelog] = useState(() => {
     return localStorage.getItem('bacayuk_last_seen_version') !== packageJson.version;
   });
+
+  useEffect(() => {
+    setPersonalLibrary(personalLibraryStore.load(currentUser?.id));
+  }, [currentUser?.id]);
 
   useEffect(() => {
     let isMounted = true;
@@ -317,6 +323,11 @@ export default function App() {
     userAuthStore.recordStoryRead(story.id, story.title);
 
     setSelectedStory(story);
+    setPersonalLibrary((previous) => {
+      const next = personalLibraryStore.recordRecent(previous, story.id);
+      personalLibraryStore.save(next, currentUser?.id);
+      return next;
+    });
     speechEngine.stop();
 
     const savedPage = targetPage !== undefined ? targetPage : bookmarks[story.id];
@@ -326,6 +337,14 @@ export default function App() {
     if (initialPage > 0) {
       showToast(`📖 Melanjutkan dari Halaman ${initialPage + 1}`);
     }
+  };
+
+  const handleToggleStoryFavorite = (storyId: string) => {
+    setPersonalLibrary((previous) => {
+      const next = personalLibraryStore.toggleFavorite(previous, storyId);
+      personalLibraryStore.save(next, currentUser?.id);
+      return next;
+    });
   };
 
   const handleBackToLibrary = () => {
@@ -640,7 +659,10 @@ export default function App() {
             bookmarks={bookmarks}
             completedStories={completedStories}
             readingTimes={readingTimes}
+            favoriteStoryIds={personalLibrary.favoriteStoryIds}
+            recentStoryIds={personalLibrary.recentStoryIds}
             onSelectStory={handleSelectStory}
+            onToggleFavorite={handleToggleStoryFavorite}
             onOpenStoryMaker={() => {
               const user = userAuthStore.getUser();
 

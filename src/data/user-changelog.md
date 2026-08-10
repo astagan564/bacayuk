@@ -7,6 +7,11 @@
 - Status buku kini menunjukkan apakah naskah, cover, dan seluruh ilustrasinya benar-benar sudah siap.
 - Buku yang dihapus dari admin kini benar-benar hilang dari katalog dan tidak muncul lagi setelah halaman dimuat ulang.
 
+### Koleksi buku pribadi
+- Ada bagian **Koleksi saya** di rak buku untuk melihat Favorit, Lanjutkan membaca, Terakhir dibaca, dan buku yang sudah selesai.
+- Tekan ikon hati pada sampul buku untuk menyimpan atau menghapusnya dari Favorit.
+- Koleksi tersimpan di perangkat yang digunakan dan dipisahkan antara mode tamu dan akun orang tua yang masuk.
+
 ### Tampilan membaca seperti buku cerita
 - Satu halaman cerita sekarang tampil sebagai satu buku terbuka: ilustrasi penuh di kiri dan naskah di kanan.
 - Tombol Kuis, Rekam, Baca, Tandai, dan navigasi halaman dipindahkan ke luar buku agar tidak menutupi ilustrasi atau teks.

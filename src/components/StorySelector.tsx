@@ -8,6 +8,8 @@ import {
   Clock,
   Download,
   Eye,
+  Heart,
+  History,
   Lock,
   Megaphone,
   RotateCcw,
@@ -25,7 +27,10 @@ interface StorySelectorProps {
   bookmarks?: Record<string, number>;
   completedStories?: Record<string, boolean>;
   readingTimes?: Record<string, number>;
+  favoriteStoryIds?: string[];
+  recentStoryIds?: string[];
   onSelectStory: (story: Story, pageIndex?: number) => void;
+  onToggleFavorite: (storyId: string) => void;
   onOpenStoryMaker: () => void;
   onOpenStatsModal?: () => void;
   onOpenPaymentModal: (story: Story) => void;
@@ -76,7 +81,10 @@ export const StorySelector: React.FC<StorySelectorProps> = ({
   bookmarks = {},
   completedStories = {},
   readingTimes = {},
+  favoriteStoryIds = [],
+  recentStoryIds = [],
   onSelectStory,
+  onToggleFavorite,
   onOpenStoryMaker,
   onOpenStatsModal,
   onOpenPaymentModal,
@@ -85,13 +93,39 @@ export const StorySelector: React.FC<StorySelectorProps> = ({
   isNight = false,
 }) => {
   const [selectedCategory, setSelectedCategory] = useState<string>('Semua');
+  const [libraryView, setLibraryView] = useState<'all' | 'continue' | 'favorites' | 'recent' | 'completed'>('all');
 
   const publicStories = stories.filter((story) => story.status !== 'draft');
 
+  const getStoryProgress = (story: Story) => {
+    const savedPage = bookmarks[story.id];
+    const isCompleted = completedStories[story.id] || (savedPage !== undefined && savedPage >= story.pages.length - 1);
+    return {
+      savedPage,
+      isCompleted,
+      hasSavedBookmark: !isCompleted && savedPage !== undefined && savedPage > 0,
+    };
+  };
+
+  const favoriteStories = publicStories.filter((story) => favoriteStoryIds.includes(story.id));
+  const recentStories = recentStoryIds
+    .map((storyId) => publicStories.find((story) => story.id === storyId))
+    .filter((story): story is Story => Boolean(story));
+  const continueStories = publicStories.filter((story) => getStoryProgress(story).hasSavedBookmark);
+  const completedStoryList = publicStories.filter((story) => getStoryProgress(story).isCompleted);
+
+  const libraryStories = {
+    all: publicStories,
+    continue: continueStories,
+    favorites: favoriteStories,
+    recent: recentStories,
+    completed: completedStoryList,
+  }[libraryView];
+
   const filteredStories =
     selectedCategory === 'Semua'
-      ? publicStories
-      : publicStories.filter((story) => story.category.includes(selectedCategory) || selectedCategory.includes(story.category));
+      ? libraryStories
+      : libraryStories.filter((story) => story.category.includes(selectedCategory) || selectedCategory.includes(story.category));
 
   const totalReadSeconds = (Object.values(readingTimes) as number[]).reduce((acc, curr) => acc + curr, 0);
   const adminSettings = adminStore.getSettings();
@@ -195,6 +229,43 @@ export const StorySelector: React.FC<StorySelectorProps> = ({
         </div>
       </header>
 
+      <section className={`book-panel rounded-2xl border p-4 sm:p-5 ${isNight ? 'text-slate-100' : 'text-[var(--ink)]'}`} aria-labelledby="personal-library-title">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[var(--muted-ink)] dark:text-blue-200">Untuk waktu baca berikutnya</p>
+            <h2 id="personal-library-title" className="mt-1 text-2xl sm:text-3xl">Koleksi saya</h2>
+          </div>
+          <p className="max-w-md text-xs leading-5 font-medium text-[var(--muted-ink)] dark:text-blue-100/75">
+            Simpan buku kesukaan dan temukan kembali cerita yang terakhir dibaca.
+          </p>
+        </div>
+        <nav className="mt-4 flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none" aria-label="Filter koleksi pribadi">
+          {[
+            { id: 'all' as const, label: 'Semua buku', count: publicStories.length, icon: BookOpen },
+            { id: 'continue' as const, label: 'Lanjutkan', count: continueStories.length, icon: Bookmark },
+            { id: 'favorites' as const, label: 'Favorit', count: favoriteStories.length, icon: Heart },
+            { id: 'recent' as const, label: 'Terakhir dibaca', count: recentStories.length, icon: History },
+            { id: 'completed' as const, label: 'Selesai', count: completedStoryList.length, icon: CheckCircle2 },
+          ].map(({ id, label, count, icon: Icon }) => (
+            <button
+              key={id}
+              type="button"
+              onClick={() => setLibraryView(id)}
+              aria-pressed={libraryView === id}
+              className={`inline-flex shrink-0 items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-bold transition-all ${
+                libraryView === id
+                  ? 'bg-[var(--story-green)] text-white shadow-sm'
+                  : 'reader-soft-panel text-[var(--muted-ink)] dark:text-blue-100'
+              }`}
+            >
+              <Icon className="h-4 w-4" />
+              <span>{label}</span>
+              <span className={`rounded-md px-1.5 py-0.5 text-[10px] ${libraryView === id ? 'bg-white/20' : 'bg-black/5 dark:bg-white/10'}`}>{count}</span>
+            </button>
+          ))}
+        </nav>
+      </section>
+
       <nav className="flex items-center gap-2 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-none" aria-label="Filter kategori cerita">
         {categories.map((cat) => (
           <button
@@ -213,11 +284,10 @@ export const StorySelector: React.FC<StorySelectorProps> = ({
 
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
         {filteredStories.map((story, index) => {
-          const savedPage = bookmarks[story.id];
-          const isCompleted = completedStories[story.id] || (savedPage !== undefined && savedPage >= story.pages.length - 1);
-          const hasSavedBookmark = !isCompleted && savedPage !== undefined && savedPage > 0;
+          const { savedPage, isCompleted, hasSavedBookmark } = getStoryProgress(story);
           const hasDownloadAccess = isVipUser || paymentStore.isStoryPurchased(story.id);
           const spineColor = spinePalette[index % spinePalette.length];
+          const isFavorite = favoriteStoryIds.includes(story.id);
 
           return (
             <article
@@ -237,18 +307,35 @@ export const StorySelector: React.FC<StorySelectorProps> = ({
                   <div className="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-black/30 to-transparent" />
                   <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/35 to-transparent" />
 
-                  <div className="absolute left-4 top-4 rounded-lg bg-white/88 px-2.5 py-1 text-[10px] font-extrabold text-[var(--ink)] shadow-sm">
-                    {formatDuration(readingTimes[story.id] || 0)}
-                  </div>
+                   <div className="absolute left-4 top-4 rounded-lg bg-white/88 px-2.5 py-1 text-[10px] font-extrabold text-[var(--ink)] shadow-sm">
+                     {formatDuration(readingTimes[story.id] || 0)}
+                   </div>
 
-                  {(isCompleted || hasSavedBookmark) && (
-                    <div className="absolute right-4 top-0 flex flex-col items-center">
-                      <div className="h-16 w-8 rounded-b-md bg-[var(--warm-gold)] shadow-md" />
-                      <span className="mt-1 rounded-md bg-white/90 px-2 py-0.5 text-[10px] font-bold text-[var(--ink)]">
-                        {isCompleted ? 'Selesai' : `Hal ${savedPage + 1}`}
-                      </span>
+                    <div className="absolute right-4 top-0 flex flex-row items-start gap-3">
+                      {(isCompleted || hasSavedBookmark) && (
+                        <div className="flex flex-col items-center">
+                          <div className="h-16 w-8 rounded-b-md bg-[var(--warm-gold)] shadow-md" />
+                          <span className="mt-1 rounded-md bg-white/90 px-2 py-0.5 text-[10px] font-bold text-[var(--ink)]">
+                            {isCompleted ? 'Selesai' : `Hal ${savedPage + 1}`}
+                          </span>
+                        </div>
+                      )}
+
+                      <button
+                        type="button"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          onToggleFavorite(story.id);
+                        }}
+                        aria-label={isFavorite ? `Hapus ${story.title} dari favorit` : `Tambah ${story.title} ke favorit`}
+                        aria-pressed={isFavorite}
+                        className={`mt-4 grid h-10 w-10 place-items-center rounded-xl shadow-sm transition-transform hover:scale-105 active:scale-95 ${
+                          isFavorite ? 'bg-[#d95d6a] text-white' : 'bg-white/88 text-[#8a5e6a]'
+                        }`}
+                      >
+                        <Heart className={`h-5 w-5 ${isFavorite ? 'fill-current' : ''}`} />
+                      </button>
                     </div>
-                  )}
 
                   <div className="absolute bottom-4 left-4 right-4 flex items-end justify-between gap-3 text-white">
                     <BookOpen className="w-10 h-10 drop-shadow" />
@@ -330,6 +417,19 @@ export const StorySelector: React.FC<StorySelectorProps> = ({
           );
         })}
       </div>
+
+      {filteredStories.length === 0 && (
+        <div className={`rounded-2xl border border-dashed p-8 text-center ${isNight ? 'border-blue-800 bg-blue-950/25 text-blue-100' : 'border-[#d8c29f] bg-white/55 text-[var(--ink)]'}`}>
+          <Heart className="mx-auto h-8 w-8 text-[#d95d6a]" />
+          <h2 className="mt-3 text-xl">Belum ada buku di bagian ini</h2>
+          <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-[var(--muted-ink)] dark:text-blue-100/75">
+            Pilih buku dari rak lalu tekan ikon hati untuk menyimpannya, atau lanjutkan cerita yang pernah dibaca.
+          </p>
+          <button type="button" onClick={() => setLibraryView('all')} className="btn-secondary mt-4 px-4 py-2.5 text-xs">
+            Lihat semua buku
+          </button>
+        </div>
+      )}
     </section>
   );
 };
