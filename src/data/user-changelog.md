@@ -11,6 +11,16 @@
 - Tombol Kuis, Rekam, Baca, Tandai, dan navigasi halaman dipindahkan ke luar buku agar tidak menutupi ilustrasi atau teks.
 - Di HP, ilustrasi tampil di atas dan teks berada di bawah agar tetap lega dan mudah dibaca.
 
+### Mode baca makin nyaman di setiap layar
+- Di HP, tombol kontrol tetap menempel di bawah layar meski halaman cerita pendek atau panjang.
+- Saat memilih ID + EN di HP, anak dapat memilih satu bahasa per halaman agar huruf tetap besar dan mudah dibaca.
+- Di komputer, satu buku terbuka dan panel alat baca kini menyesuaikan tinggi layar. Cerita dan alat yang panjang dapat digulir di panelnya masing-masing tanpa menggulir seluruh halaman.
+- Geser halaman di HP dibuat lebih aman agar gerakan saat menggulir teks tidak mudah berpindah halaman.
+
+### Penutup cerita dan kuis lebih jelas
+- Pada halaman tamat, tombol **Kuis kosakata** dan **Selesaikan buku** kini tampil langsung di dalam buku.
+- Buku baru tercatat selesai setelah anak memilih **Selesaikan buku**, sehingga kuis akhir dapat dikerjakan terlebih dahulu.
+
 ### Bahasa Inggris dan kuis lebih baik
 - Terjemahan sekarang mencakup judul buku, judul setiap halaman, dan isi cerita.
 - Saat mode Inggris aktif, tombol Baca menggunakan suara bahasa Inggris.

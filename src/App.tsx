@@ -30,6 +30,7 @@ import { Sparkles, BookOpen, Award, Sun, Moon, Bookmark, BarChart3, Clock, User,
 
 export default function App() {
   const flipbookRef = useRef<FlipbookHandle>(null);
+  const readingViewRef = useRef<HTMLDivElement>(null);
   const [stories, setStories] = useState<Story[]>(() => storyStore.getLocalStories());
   const [selectedStory, setSelectedStory] = useState<Story | null>(null);
   const [currentPageIndex, setCurrentPageIndex] = useState<number>(0);
@@ -336,12 +337,19 @@ export default function App() {
     speechEngine.stop();
     setCurrentPageIndex(newIndex);
 
+    // On phones a story page is taller than the viewport. Begin every newly
+    // selected page at its illustration rather than retaining the old scroll.
+    if (window.matchMedia('(max-width: 1023px)').matches) {
+      window.requestAnimationFrame(() => {
+        readingViewRef.current?.scrollIntoView({ block: 'start', behavior: 'auto' });
+      });
+    }
+
     if (selectedStory) {
       const totalPages = selectedStory.pages.length;
-      // If reached the final page or back cover spread
-      if (newIndex >= totalPages - 1) {
-        markStoryCompleted(selectedStory.id);
-      } else {
+      // Completion is explicit on the back cover so children can take the
+      // vocabulary quiz before the book is marked as finished.
+      if (newIndex < totalPages) {
         handleSaveBookmark(selectedStory.id, newIndex);
       }
     }
@@ -622,7 +630,7 @@ export default function App() {
       )}
 
       {/* Main Content Area */}
-      <main className={`flex-1 w-full flex flex-col items-center ${selectedStory ? 'justify-start py-2 sm:py-3' : 'justify-center py-4'}`}>
+      <main className={`flex-1 w-full flex flex-col items-center ${selectedStory ? 'justify-start py-2 sm:py-3 lg:h-[calc(100dvh-4.5rem)] lg:min-h-0' : 'justify-center py-4'}`}>
         {!selectedStory ? (
           /* Shelf / Story Selector View */
           <StorySelector
@@ -673,18 +681,22 @@ export default function App() {
           />
         ) : (
           /* Interactive Flipbook Reading View */
-          <div className="w-full animate-fade-in flex flex-col lg:flex-row lg:items-start lg:gap-3 lg:px-4 lg:py-2">
+          <div ref={readingViewRef} className="w-full reader-fade-in flex flex-col lg:h-full lg:min-h-0 lg:flex-row lg:items-stretch lg:gap-3 lg:px-4 lg:py-2">
             {/* Flipbook column */}
-            <div className="flex-1 min-w-0 flex flex-col items-center">
+            <div className="flex-1 min-w-0 flex flex-col items-center lg:h-full lg:min-h-0">
               <Flipbook3D
                 ref={flipbookRef}
                 story={selectedStory}
                 currentPageIndex={currentPageIndex}
                 onPageChange={handlePageChange}
                 settings={settings}
+                onCompleteBook={() => {
+                  markStoryCompleted(selectedStory.id);
+                  setShowCompletionModal(true);
+                }}
               />
               {/* Mobile bottom spacer — prevents content hiding behind the fixed bar */}
-              <div className="lg:hidden h-32 w-full shrink-0" />
+              <div className="lg:hidden h-36 max-[380px]:h-48 w-full shrink-0" />
             </div>
 
             {/* Sidebar (desktop) + Bottom bar (mobile) */}
@@ -719,12 +731,6 @@ export default function App() {
               isBackCover={currentPageIndex >= selectedStory.pages.length}
               onReadPage={selectedStory.pages[currentPageIndex] ? () => flipbookRef.current?.readCurrentPage() : undefined}
               onOpenQuiz={selectedStory.pages[currentPageIndex]?.quizQuestion ? () => setActiveQuizPage(selectedStory.pages[currentPageIndex]) : undefined}
-              hasVocabularyQuiz={Boolean(selectedStory.vocabularyQuiz || selectedStory.glossary?.length)}
-              onOpenVocabularyQuiz={() => flipbookRef.current?.openVocabularyQuiz()}
-              onCompleteBook={() => {
-                markStoryCompleted(selectedStory.id);
-                setShowCompletionModal(true);
-              }}
             />
           </div>
         )}

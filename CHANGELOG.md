@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - **Editorial reader spread**: One story page now becomes one book spread, with a full illustration on the left and focused story text on the right. On mobile, the same page stacks illustration above text.
+- **Responsive reader workspace**: Mobile reading now uses safer horizontal-swipe detection, larger text, a compact single-language view for ID+EN, and a bottom bar that stays attached to the viewport. On desktop, the book spread and tool sidebar are sized to the available viewport height; long text scrolls inside the page and long tool lists scroll inside the sidebar.
+- **End-of-book actions**: The back cover now presents Vocabulary Quiz and Complete Book actions directly in the story. Completion is recorded only when the child explicitly selects Complete Book, so they can take the final quiz first.
 - **External reading toolbar**: Moved quiz, recording, read-aloud, bookmark, completion, and vocabulary actions outside the book surface. Page navigation now sits outside the spread as well.
 - **Bilingual narration**: Read-aloud now selects an English voice for English mode and avoids playing Indonesian custom recordings over English text.
 - **Vocabulary quiz choices**: Correct answers are distributed across different option positions and reshuffled when a quiz is restarted, including for existing books.
@@ -30,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Checkout story lookup**: Payment creation now resolves book title and price from the Supabase story table before falling back to bundled stories.
 
 ### Fixed
+- **Reader control anchoring**: Fixed the mobile navigation bar moving with short story pages by replacing the reader entry transform with an opacity-only animation.
 - **Missing storefront artwork**: Fixed published book cards rendering only a color gradient instead of their saved cover image.
 - **Predictable vocabulary answers**: Fixed every generated vocabulary answer appearing in the first option.
 - **Partial English translation**: Fixed translated pages retaining Indonesian page titles.

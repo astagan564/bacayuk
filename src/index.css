@@ -154,6 +154,37 @@
   animation: fade-in 0.28s ease-out both;
 }
 
+/* Reader controls use position: fixed. Keep its entry animation transform-free
+   so the reader never becomes their containing block on mobile. */
+@keyframes reader-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.reader-fade-in {
+  animation: reader-fade-in 0.28s ease-out both;
+}
+
+@media (min-width: 1024px) {
+  /* The desktop reader is a single viewport-sized workspace. Its book is
+     capped by available height so the whole spread is visible at once. */
+  .reader-book-frame {
+    width: min(100%, calc((100dvh - 7rem) * 16 / 11));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-page-turn-next,
+  .animate-page-turn-prev,
+  .animate-fade-in,
+  .reader-fade-in,
+  .animate-bounce,
+  .animate-pulse {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
 /* =========================================
    DARK MODE TOKENS (Tema Gelap)
    ========================================= */

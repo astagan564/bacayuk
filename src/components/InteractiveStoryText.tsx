@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { VOCABULARY_DICTIONARY, VocabDefinition } from '../data/vocabulary';
 import { GlossaryItem } from '../types';
 import { Sparkles, Languages, Volume2 } from 'lucide-react';
@@ -21,6 +21,7 @@ export const InteractiveStoryText: React.FC<InteractiveStoryTextProps> = ({
   onSelectGlossary,
 }) => {
   const activeEnText = textEn?.trim() || '';
+  const [dualLanguage, setDualLanguage] = useState<'id' | 'en'>('id');
   const normalizeMarkdownInput = (content: string): string => {
     return content
       .replace(/(^|\s)([-*+])\s+(?=\*\*[^*]+:\*\*)/g, '\n$2 ')
@@ -251,24 +252,51 @@ export const InteractiveStoryText: React.FC<InteractiveStoryTextProps> = ({
   }
 
   if (languageMode === 'dual') {
+    const activeDualLanguage = activeEnText ? dualLanguage : 'id';
+
     return (
       <div className="flex flex-col gap-2 sm:gap-3">
+        <div className="sm:hidden reader-soft-panel grid grid-cols-2 gap-1 rounded-xl p-1" role="group" aria-label="Pilih bahasa cerita">
+          <button
+            type="button"
+            onClick={() => setDualLanguage('id')}
+            aria-pressed={activeDualLanguage === 'id'}
+            className={`min-h-11 rounded-lg px-3 text-xs font-black transition-colors ${
+              activeDualLanguage === 'id' ? 'bg-[var(--magic-blue)] text-white' : 'text-[var(--muted-ink)] dark:text-slate-300'
+            }`}
+          >
+            Bahasa Indonesia
+          </button>
+          {activeEnText && (
+            <button
+              type="button"
+              onClick={() => setDualLanguage('en')}
+              aria-pressed={activeDualLanguage === 'en'}
+              className={`min-h-11 rounded-lg px-3 text-xs font-black transition-colors ${
+                activeDualLanguage === 'en' ? 'bg-[var(--magic-blue)] text-white' : 'text-[var(--muted-ink)] dark:text-slate-300'
+              }`}
+            >
+              English
+            </button>
+          )}
+        </div>
+
         {/* Indonesian Version */}
-        <div className="reader-language-card p-2.5 sm:p-3 rounded-xl sm:rounded-2xl">
+        <div className={`reader-language-card rounded-xl p-2.5 sm:block sm:rounded-2xl sm:p-3 ${activeDualLanguage === 'id' ? 'block' : 'hidden'}`}>
           <div className="reader-language-label inline-flex items-center gap-1 text-[10px] font-black uppercase mb-1">
             <span>🇮🇩 Bahasa Indonesia</span>
           </div>
-          <div className="text-xs sm:text-base leading-relaxed font-bold">
+          <div className="leading-relaxed font-bold">
             {renderMarkdownBlocks(text, false)}
           </div>
         </div>
 
         {activeEnText && (
-          <div className="reader-language-card p-2.5 sm:p-3 rounded-xl sm:rounded-2xl">
+          <div className={`reader-language-card rounded-xl p-2.5 sm:block sm:rounded-2xl sm:p-3 ${activeDualLanguage === 'en' ? 'block' : 'hidden'}`}>
             <div className="reader-language-label inline-flex items-center gap-1 text-[10px] font-black uppercase mb-1">
               <span>🇬🇧 English Version (Tap words to translate)</span>
             </div>
-            <div className="reader-story-copy text-xs sm:text-base leading-relaxed font-bold">
+            <div className="reader-story-copy leading-relaxed font-bold">
               {renderMarkdownBlocks(activeEnText, true)}
             </div>
           </div>

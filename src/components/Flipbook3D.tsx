@@ -1,5 +1,7 @@
 import React, { useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import {
+  CheckCircle2,
+  Languages,
   Sparkles,
 } from 'lucide-react';
 import { GlossaryItem, InteractiveElement, ReadingSettings, Story, StoryPage } from '../types';
@@ -18,6 +20,7 @@ interface FlipbookProps {
   currentPageIndex: number;
   onPageChange: (newIndex: number) => void;
   settings: ReadingSettings;
+  onCompleteBook?: () => void;
 }
 
 export interface FlipbookHandle {
@@ -51,6 +54,7 @@ export const Flipbook3D = React.forwardRef<FlipbookHandle, FlipbookProps>(({
   currentPageIndex,
   onPageChange,
   settings,
+  onCompleteBook,
 }, ref) => {
   const [isFlipping, setIsFlipping] = useState(false);
   const [activeInteractive, setActiveInteractive] = useState<InteractiveElement | null>(null);
@@ -62,7 +66,9 @@ export const Flipbook3D = React.forwardRef<FlipbookHandle, FlipbookProps>(({
   const activeAudioRef = useRef<HTMLAudioElement | null>(null);
   const activeResolveRef = useRef<(() => void) | null>(null);
   const touchStartX = useRef<number | null>(null);
+  const touchStartY = useRef<number | null>(null);
   const touchEndX = useRef<number | null>(null);
+  const touchEndY = useRef<number | null>(null);
 
   const totalPages = story.pages.length;
   const activePage = story.pages[currentPageIndex];
@@ -73,6 +79,7 @@ export const Flipbook3D = React.forwardRef<FlipbookHandle, FlipbookProps>(({
     () => createFallbackVocabularyQuiz(story.title, story.glossary || []),
     [story.glossary, story.title]
   );
+  const hasVocabularyQuiz = Boolean(story.vocabularyQuiz || story.glossary?.length);
 
   const stopActiveAudio = () => {
     speechEngine.stop();
@@ -221,10 +228,10 @@ export const Flipbook3D = React.forwardRef<FlipbookHandle, FlipbookProps>(({
   }, [activePage, currentPageIndex, settings.autoPlay, settings.autoPlayDelay]);
 
   const fontClasses = {
-    sm: 'text-sm sm:text-base lg:text-[1.05rem] leading-[1.7]',
-    base: 'text-base sm:text-[1.05rem] lg:text-lg leading-[1.72]',
-    lg: 'text-lg sm:text-xl lg:text-[1.3rem] leading-[1.68]',
-    xl: 'text-xl sm:text-[1.35rem] lg:text-2xl leading-[1.64]',
+    sm: 'text-base sm:text-[1.05rem] lg:text-[1.05rem] leading-[1.7]',
+    base: 'text-lg sm:text-[1.125rem] lg:text-lg leading-[1.72]',
+    lg: 'text-xl sm:text-[1.35rem] lg:text-[1.3rem] leading-[1.68]',
+    xl: 'text-2xl sm:text-[1.5rem] lg:text-2xl leading-[1.64]',
   };
 
   const renderInteractiveElements = (page: StoryPage) => (
@@ -329,7 +336,7 @@ export const Flipbook3D = React.forwardRef<FlipbookHandle, FlipbookProps>(({
 
   const renderBackCover = () => (
     <section
-      className={`flex h-full min-h-[30rem] w-full flex-col items-center justify-center px-8 text-center ${
+      className={`flex h-full min-h-[30rem] w-full flex-col items-center justify-center px-8 py-8 text-center ${
         isNight ? 'bg-[#121a28] text-slate-100' : 'bg-[#fffdf7] text-[#30251d]'
       }`}
     >
@@ -341,31 +348,75 @@ export const Flipbook3D = React.forwardRef<FlipbookHandle, FlipbookProps>(({
       <p className={`mt-6 max-w-xl font-serif text-base leading-8 sm:text-lg ${isNight ? 'text-slate-300' : 'text-[#665342]'}`}>
         “{story.moralMessage}”
       </p>
+      <div className="mt-8 grid w-full max-w-md grid-cols-1 gap-3 sm:grid-cols-2">
+        {hasVocabularyQuiz && (
+          <button
+            type="button"
+            onClick={() => setShowVocabQuizModal(true)}
+            className="min-h-14 rounded-2xl bg-[var(--magic-blue)] px-4 py-3 text-sm font-black text-white shadow-sm transition-transform hover:brightness-110 active:scale-[0.98]"
+          >
+            <span className="flex items-center justify-center gap-2">
+              <Languages className="h-5 w-5" />
+              Kuis kosakata
+            </span>
+          </button>
+        )}
+        {onCompleteBook && (
+          <button
+            type="button"
+            onClick={onCompleteBook}
+            className={`min-h-14 rounded-2xl bg-[var(--story-green)] px-4 py-3 text-sm font-black text-white shadow-sm transition-transform hover:brightness-110 active:scale-[0.98] ${
+              hasVocabularyQuiz ? '' : 'sm:col-span-2'
+            }`}
+          >
+            <span className="flex items-center justify-center gap-2">
+              <CheckCircle2 className="h-5 w-5" />
+              Selesaikan buku
+            </span>
+          </button>
+        )}
+      </div>
     </section>
   );
 
   return (
     <section
-      className="mx-auto flex w-full max-w-[90rem] touch-pan-y select-none flex-col items-center px-2 py-2 sm:px-4"
+      className="mx-auto flex w-full max-w-[90rem] touch-pan-y select-none flex-col items-center px-2 py-2 sm:px-4 lg:h-full lg:min-h-0"
       onContextMenu={(event) => event.preventDefault()}
       onCopy={(event) => event.preventDefault()}
       onTouchStart={(event) => {
         touchStartX.current = event.targetTouches[0].clientX;
+        touchStartY.current = event.targetTouches[0].clientY;
         touchEndX.current = null;
+        touchEndY.current = null;
       }}
       onTouchMove={(event) => {
         touchEndX.current = event.targetTouches[0].clientX;
+        touchEndY.current = event.targetTouches[0].clientY;
       }}
-      onTouchEnd={() => {
-        if (touchStartX.current === null || touchEndX.current === null) return;
-        const distance = touchStartX.current - touchEndX.current;
-        if (distance > 50) handleNext();
-        if (distance < -50) handlePrev();
+      onTouchEnd={(event) => {
+        const target = event.target as HTMLElement;
+        if (target.closest('button, a, input, textarea, select, [role="button"]')) return;
+        if (
+          touchStartX.current === null ||
+          touchStartY.current === null ||
+          touchEndX.current === null ||
+          touchEndY.current === null
+        ) return;
+
+        const horizontalDistance = touchStartX.current - touchEndX.current;
+        const verticalDistance = touchStartY.current - touchEndY.current;
+        const isIntentionalHorizontalSwipe =
+          Math.abs(horizontalDistance) > 64 && Math.abs(horizontalDistance) > Math.abs(verticalDistance) * 1.5;
+
+        if (!isIntentionalHorizontalSwipe) return;
+        if (horizontalDistance > 0) handleNext();
+        if (horizontalDistance < 0) handlePrev();
       }}
     >
-      <div className="w-full">
+      <div className="w-full lg:flex lg:min-h-0 lg:flex-1 lg:items-center lg:justify-center">
         <div
-          className={`relative min-h-0 w-full max-w-none overflow-hidden rounded-[1.4rem] border shadow-[0_24px_70px_rgba(54,39,24,0.22)] transition-all duration-300 md:aspect-[16/11] md:min-h-0 ${
+          className={`reader-book-frame relative min-h-0 w-full max-w-none overflow-hidden rounded-[1.4rem] border shadow-[0_24px_70px_rgba(54,39,24,0.22)] transition-all duration-300 md:aspect-[16/11] md:min-h-0 ${
             isNight ? 'border-slate-700 bg-slate-900' : 'border-[#bfae93] bg-[#fffdf7]'
           } ${
             isFlipping ? 'translate-y-1 scale-[0.995] opacity-75' : 'translate-y-0 scale-100 opacity-100'

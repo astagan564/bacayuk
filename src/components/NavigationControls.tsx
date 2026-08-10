@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ReadingSettings } from '../types';
 import { musicPlayer } from '../utils/soundEngine';
 import {
@@ -23,8 +23,6 @@ import {
   ChevronRight,
   Volume2,
   HelpCircle,
-  Languages,
-  CheckCircle2,
 } from 'lucide-react';
 
 interface NavigationControlsProps {
@@ -43,10 +41,7 @@ interface NavigationControlsProps {
   onOpenOfflineDownload?: () => void;
   onReadPage?: () => void;
   onOpenQuiz?: () => void;
-  onOpenVocabularyQuiz?: () => void;
-  onCompleteBook?: () => void;
   isBackCover?: boolean;
-  hasVocabularyQuiz?: boolean;
 }
 
 export const NavigationControls: React.FC<NavigationControlsProps> = ({
@@ -64,14 +59,13 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
   onOpenOfflineDownload,
   onReadPage,
   onOpenQuiz,
-  onOpenVocabularyQuiz,
-  onCompleteBook,
   isBackCover = false,
-  hasVocabularyQuiz = false,
 }) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isMobileToolsOpen, setIsMobileToolsOpen] = useState(false);
   const [isNavHidden, setIsNavHidden] = useState(false);
+  const mobileToolsTriggerRef = useRef<HTMLButtonElement>(null);
+  const mobileToolsDialogRef = useRef<HTMLDivElement>(null);
 
   const isNight = settings.themeMode === 'night';
   const pageStep = 1;
@@ -84,12 +78,56 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
     currentPageIndex === totalPages
       ? 'Sampul belakang'
       : `Hal. ${displayCurrentPage} / ${totalPages}`;
+  const readPageLabel = settings.languageMode === 'en'
+    ? 'Baca English'
+    : settings.languageMode === 'dual'
+      ? 'Baca Bahasa Indonesia'
+      : 'Baca halaman';
 
   useEffect(() => {
     const onFSChange = () => setIsFullscreen(!!document.fullscreenElement);
     document.addEventListener('fullscreenchange', onFSChange);
     return () => document.removeEventListener('fullscreenchange', onFSChange);
   }, []);
+
+  useEffect(() => {
+    if (!isMobileToolsOpen) return;
+
+    const previousOverflow = document.body.style.overflow;
+    const dialog = mobileToolsDialogRef.current;
+    const focusableSelector = 'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+    const focusables = () => Array.from(dialog?.querySelectorAll<HTMLElement>(focusableSelector) ?? []);
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        setIsMobileToolsOpen(false);
+        return;
+      }
+
+      if (event.key !== 'Tab') return;
+      const items = focusables();
+      if (items.length === 0) return;
+      const first = items[0];
+      const last = items[items.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.body.style.overflow = 'hidden';
+    window.requestAnimationFrame(() => focusables()[0]?.focus());
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener('keydown', handleKeyDown);
+      mobileToolsTriggerRef.current?.focus();
+    };
+  }, [isMobileToolsOpen]);
 
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
@@ -156,7 +194,7 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
   );
 
   const desktopSidebar = (
-    <aside className="hidden lg:flex reader-modal flex-col gap-3 w-80 shrink-0 sticky top-20 max-h-[calc(100vh-5.5rem)] overflow-y-auto rounded-[1.1rem] p-5 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-[#d8c29f] dark:[&::-webkit-scrollbar-thumb]:bg-blue-900">
+    <aside className="hidden lg:flex reader-modal flex-col gap-3 w-80 shrink-0 sticky top-0 h-full max-h-none overflow-y-auto rounded-[1.1rem] p-5 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-[#d8c29f] dark:[&::-webkit-scrollbar-thumb]:bg-blue-900">
       <div className="flex flex-col gap-2">
         <button
           onClick={onBackToLibrary}
@@ -268,7 +306,7 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
             className="flex flex-col items-center gap-1.5 px-2 py-3 rounded-xl bg-[var(--magic-blue)] hover:brightness-110 text-white text-xs font-bold shadow-sm transition-all hover:scale-[1.02]"
           >
             <Volume2 className="w-5 h-5" />
-            <span>Baca halaman</span>
+            <span>{readPageLabel}</span>
           </button>
         )}
         {!isBackCover && onOpenQuiz && (
@@ -278,24 +316,6 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
           >
             <HelpCircle className="w-5 h-5" />
             <span>Kuis halaman</span>
-          </button>
-        )}
-        {isBackCover && hasVocabularyQuiz && onOpenVocabularyQuiz && (
-          <button
-            onClick={onOpenVocabularyQuiz}
-            className="col-span-2 flex items-center justify-center gap-2 px-2 py-3 rounded-xl bg-[var(--magic-blue)] text-white text-xs font-bold shadow-sm transition-all hover:scale-[1.02]"
-          >
-            <Languages className="w-5 h-5" />
-            <span>Kuis kosakata</span>
-          </button>
-        )}
-        {isBackCover && onCompleteBook && (
-          <button
-            onClick={onCompleteBook}
-            className="col-span-2 flex items-center justify-center gap-2 px-2 py-3 rounded-xl bg-[var(--story-green)] text-white text-xs font-bold shadow-sm transition-all hover:scale-[1.02]"
-          >
-            <CheckCircle2 className="w-5 h-5" />
-            <span>Selesaikan buku</span>
           </button>
         )}
         {onOpenVoiceRecorder && (
@@ -354,11 +374,11 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
           </button>
         </div>
       ) : (
-        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 border-t backdrop-blur-xl px-3 pt-2 pb-[calc(0.75rem+env(safe-area-inset-bottom))] flex flex-col gap-2 bg-[#fffaf0]/94 dark:bg-[#101923]/94 border-[#eadbc1] dark:border-blue-900/60 shadow-[0_-10px_34px_rgba(0,0,0,0.22)]">
-          <div className="flex items-center justify-between gap-2">
+        <nav aria-label="Navigasi baca" className="lg:hidden fixed bottom-0 left-0 right-0 z-40 border-t backdrop-blur-xl px-3 pt-2 pb-[calc(0.75rem+env(safe-area-inset-bottom))] flex flex-col gap-2 bg-[#fffaf0]/94 dark:bg-[#101923]/94 border-[#eadbc1] dark:border-blue-900/60 shadow-[0_-10px_34px_rgba(0,0,0,0.22)]">
+          <div className="flex items-center justify-between gap-2 max-[380px]:grid max-[380px]:grid-cols-[2.75rem_minmax(0,1fr)_2.75rem] max-[380px]:gap-2">
             <button
               onClick={onBackToLibrary}
-              className="h-11 w-11 rounded-2xl btn-secondary flex items-center justify-center shrink-0"
+              className="h-11 w-11 rounded-2xl btn-secondary flex items-center justify-center shrink-0 max-[380px]:col-start-1 max-[380px]:row-start-1"
               aria-label="Kembali ke koleksi"
             >
               <ArrowLeft className="w-5 h-5" />
@@ -367,13 +387,13 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
             <button
               onClick={goPrev}
               disabled={!canGoPrev}
-              className="h-12 w-14 rounded-2xl bg-[var(--ink)] text-[#fff7e6] dark:bg-blue-100 dark:text-[#101923] disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center transition-transform active:scale-95"
+              className="h-12 w-14 rounded-2xl bg-[var(--ink)] text-[#fff7e6] dark:bg-blue-100 dark:text-[#101923] disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center transition-transform active:scale-95 max-[380px]:col-start-1 max-[380px]:row-start-2 max-[380px]:h-14 max-[380px]:w-full"
               aria-label="Halaman sebelumnya"
             >
               <ChevronLeft className="w-7 h-7" />
             </button>
 
-            <div className="min-w-0 flex-1 flex flex-col items-center gap-1">
+            <div className="min-w-0 flex-1 flex flex-col items-center gap-1 max-[380px]:col-start-2 max-[380px]:row-span-2 max-[380px]:self-stretch max-[380px]:justify-center">
               <p className="w-full truncate text-center text-[11px] font-bold text-[var(--muted-ink)] dark:text-blue-200">
                 {title}
               </p>
@@ -397,15 +417,17 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
             <button
               onClick={goNext}
               disabled={!canGoNext}
-              className="h-12 w-14 rounded-2xl bg-[var(--story-green)] text-white disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center transition-transform active:scale-95"
+              className="h-12 w-14 rounded-2xl bg-[var(--story-green)] text-white disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center transition-transform active:scale-95 max-[380px]:col-start-3 max-[380px]:row-start-2 max-[380px]:h-14 max-[380px]:w-full"
               aria-label="Halaman berikutnya"
             >
               <ChevronRight className="w-7 h-7" />
             </button>
 
             <button
+              ref={mobileToolsTriggerRef}
               onClick={() => setIsMobileToolsOpen(true)}
-              className="h-11 w-11 rounded-2xl btn-secondary flex items-center justify-center shrink-0"
+              aria-expanded={isMobileToolsOpen}
+              className="h-11 w-11 rounded-2xl btn-secondary flex items-center justify-center shrink-0 max-[380px]:col-start-3 max-[380px]:row-start-1"
               aria-label="Buka alat baca"
             >
               <Menu className="w-5 h-5" />
@@ -419,16 +441,16 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
             <EyeOff className="w-3.5 h-3.5" />
             Sembunyikan kontrol
           </button>
-        </div>
+        </nav>
       )}
 
       {isMobileToolsOpen && (
         <div className="lg:hidden fixed inset-0 z-50 flex flex-col justify-end">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsMobileToolsOpen(false)} />
-          <div className="reader-modal relative rounded-t-[1.35rem] p-4 flex flex-col gap-4 max-h-[88vh] overflow-y-auto pb-[calc(1rem+env(safe-area-inset-bottom))]">
+          <div ref={mobileToolsDialogRef} role="dialog" aria-modal="true" aria-labelledby="mobile-tools-title" tabIndex={-1} className="reader-modal relative rounded-t-[1.35rem] p-4 flex flex-col gap-4 max-h-[88vh] overflow-y-auto pb-[calc(1rem+env(safe-area-inset-bottom))]">
             <div className="flex justify-between items-start gap-3">
               <div>
-                <h3 className="text-lg font-black font-sans mb-0">Alat baca</h3>
+                <h3 id="mobile-tools-title" className="text-lg font-black font-sans mb-0">Alat baca</h3>
                 <p className="text-xs text-[var(--muted-ink)] dark:text-slate-300">Atur tampilan, suara, dan halaman.</p>
               </div>
               <button onClick={() => setIsMobileToolsOpen(false)} className="p-2 rounded-xl btn-secondary" aria-label="Tutup alat baca">
@@ -440,25 +462,13 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
               {!isBackCover && onReadPage && (
                 <button onClick={() => { onReadPage(); setIsMobileToolsOpen(false); }} className="min-h-16 rounded-2xl bg-[var(--magic-blue)] text-white p-3 flex items-center gap-3 text-left font-bold shadow-sm">
                   <Volume2 className="w-5 h-5 shrink-0" />
-                  <span className="text-sm leading-tight">Baca halaman</span>
+                  <span className="text-sm leading-tight">{readPageLabel}</span>
                 </button>
               )}
               {!isBackCover && onOpenQuiz && (
                 <button onClick={() => { onOpenQuiz(); setIsMobileToolsOpen(false); }} className="min-h-16 rounded-2xl bg-[var(--warm-gold)] text-[#3a2910] p-3 flex items-center gap-3 text-left font-bold shadow-sm">
                   <HelpCircle className="w-5 h-5 shrink-0" />
                   <span className="text-sm leading-tight">Kuis halaman</span>
-                </button>
-              )}
-              {isBackCover && hasVocabularyQuiz && onOpenVocabularyQuiz && (
-                <button onClick={() => { onOpenVocabularyQuiz(); setIsMobileToolsOpen(false); }} className="col-span-2 min-h-16 rounded-2xl bg-[var(--magic-blue)] text-white p-3 flex items-center justify-center gap-3 font-bold shadow-sm">
-                  <Languages className="w-5 h-5 shrink-0" />
-                  <span className="text-sm leading-tight">Kuis kosakata</span>
-                </button>
-              )}
-              {isBackCover && onCompleteBook && (
-                <button onClick={() => { onCompleteBook(); setIsMobileToolsOpen(false); }} className="col-span-2 min-h-16 rounded-2xl bg-[var(--story-green)] text-white p-3 flex items-center justify-center gap-3 font-bold shadow-sm">
-                  <CheckCircle2 className="w-5 h-5 shrink-0" />
-                  <span className="text-sm leading-tight">Selesaikan buku</span>
                 </button>
               )}
               {onOpenVoiceRecorder && (
@@ -511,11 +521,11 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
               </button>
             </div>
 
-            <div className="reader-soft-panel rounded-2xl p-3 flex items-center justify-between gap-3">
+            <div className="reader-soft-panel rounded-2xl p-3 flex flex-col gap-2">
               <span className="flex items-center gap-2 text-sm font-bold"><Type className="w-4 h-4" /> Ukuran teks</span>
-              <div className="flex gap-1 bg-white/60 dark:bg-slate-900/50 p-1 rounded-xl">
-                {(['sm', 'base', 'lg'] as const).map((sz) => (
-                  <button key={sz} onClick={() => onUpdateSettings({ fontSize: sz })} className={`px-3 py-1.5 rounded-lg font-black uppercase text-[10px] transition-colors ${settings.fontSize === sz ? 'bg-[var(--magic-blue)] text-white' : 'text-[var(--muted-ink)] dark:text-slate-300'}`}>{sz}</button>
+              <div className="grid grid-cols-4 gap-1 bg-white/60 dark:bg-slate-900/50 p-1 rounded-xl">
+                {(['sm', 'base', 'lg', 'xl'] as const).map((sz) => (
+                  <button key={sz} onClick={() => onUpdateSettings({ fontSize: sz })} className={`min-h-10 rounded-lg font-black uppercase text-[10px] transition-colors ${settings.fontSize === sz ? 'bg-[var(--magic-blue)] text-white' : 'text-[var(--muted-ink)] dark:text-slate-300'}`}>{sz}</button>
                 ))}
               </div>
             </div>
