@@ -1,6 +1,22 @@
 import { Story } from '../types';
+import momoStorybookPackage from '../../generated-books/momo-dan-bayangan-yang-takut-gelap/story.json';
+
+export const BUNDLED_CATALOG_STORIES: Story[] = [
+  momoStorybookPackage.story as Story,
+];
+
+export const mergeBundledCatalogStories = (stories: Story[]): Story[] => {
+  const storyById = new Map(stories.map((story) => [story.id, story]));
+  const bundledIds = new Set(BUNDLED_CATALOG_STORIES.map((story) => story.id));
+
+  return [
+    ...BUNDLED_CATALOG_STORIES.map((story) => storyById.get(story.id) || story),
+    ...stories.filter((story) => !bundledIds.has(story.id)),
+  ];
+};
 
 export const INITIAL_STORIES: Story[] = [
+  ...BUNDLED_CATALOG_STORIES,
   {
     id: 'kiko-kelinci',
     title: 'Petualangan Kiko Si Kelinci Cerdas',

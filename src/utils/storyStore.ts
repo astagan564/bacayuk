@@ -1,5 +1,5 @@
 import { Story } from '../types';
-import { INITIAL_STORIES } from '../data/stories';
+import { INITIAL_STORIES, mergeBundledCatalogStories } from '../data/stories';
 
 const STORIES_KEY = 'buku_cerita_admin_stories_v1';
 
@@ -18,7 +18,9 @@ export const storyStore = {
   getLocalStories(): Story[] {
     try {
       const saved = localStorage.getItem(STORIES_KEY);
-      return saved ? normalizeList(JSON.parse(saved)) : normalizeList(INITIAL_STORIES);
+      return saved
+        ? normalizeList(mergeBundledCatalogStories(JSON.parse(saved)))
+        : normalizeList(INITIAL_STORIES);
     } catch {
       return normalizeList(INITIAL_STORIES);
     }
@@ -38,7 +40,9 @@ export const storyStore = {
       }
 
       const data = await response.json();
-      const remoteStories = Array.isArray(data.stories) ? normalizeList(data.stories) : localStories;
+      const remoteStories = Array.isArray(data.stories)
+        ? normalizeList(mergeBundledCatalogStories(data.stories))
+        : localStories;
       this.saveLocalStories(remoteStories);
       return remoteStories;
     } catch (error) {
@@ -62,7 +66,9 @@ export const storyStore = {
       }
 
       const data = await response.json();
-      const remoteStories = Array.isArray(data.stories) ? normalizeList(data.stories) : localStories;
+      const remoteStories = Array.isArray(data.stories)
+        ? normalizeList(mergeBundledCatalogStories(data.stories))
+        : localStories;
       this.saveLocalStories(remoteStories);
       return remoteStories;
     } catch (error) {

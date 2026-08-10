@@ -3,7 +3,7 @@ import express from 'express';
 import path from 'path';
 import { GoogleGenAI } from '@google/genai';
 import midtransClient from 'midtrans-client';
-import { INITIAL_STORIES } from './src/data/stories';
+import { INITIAL_STORIES, BUNDLED_CATALOG_STORIES, mergeBundledCatalogStories } from './src/data/stories';
 import { createClient } from '@supabase/supabase-js';
 import type {
   GlossaryItem,
@@ -610,7 +610,9 @@ async function findStoryForCheckout(storyId: string): Promise<Story | undefined>
       .maybeSingle();
 
     if (error) throw error;
-    return data?.story ? normalizeStory(data.story as Story) : undefined;
+    return data?.story
+      ? normalizeStory(data.story as Story)
+      : BUNDLED_CATALOG_STORIES.find((item) => item.id === storyId);
   } catch (error) {
     console.warn('Failed to load checkout story from Supabase:', error);
     return INITIAL_STORIES.find((item) => item.id === storyId);
@@ -681,7 +683,6 @@ export async function createApp(options: { serveClient?: boolean } = {}) {
       const { data, error } = await supabase
         .from('admin_stories')
         .select('id, story, status, sort_order, updated_at')
-        .eq('status', 'published')
         .order('sort_order', { ascending: true })
         .order('updated_at', { ascending: false });
 
@@ -689,7 +690,12 @@ export async function createApp(options: { serveClient?: boolean } = {}) {
         throw error;
       }
 
-      const stories = (data || []).map((row) => normalizeStory({ ...row.story, id: row.id, status: row.status }));
+      const remoteStories = (data || []).map((row) =>
+        normalizeStory({ ...row.story, id: row.id, status: row.status }),
+      );
+      const stories = mergeBundledCatalogStories(remoteStories)
+        .filter((story) => story.status === 'published')
+        .map(normalizeStory);
 
       res.json({ stories });
     } catch (error) {
@@ -715,7 +721,10 @@ export async function createApp(options: { serveClient?: boolean } = {}) {
         throw error;
       }
 
-      const stories = (data || []).map((row) => normalizeStory({ ...row.story, id: row.id, status: row.status }));
+      const remoteStories = (data || []).map((row) =>
+        normalizeStory({ ...row.story, id: row.id, status: row.status }),
+      );
+      const stories = mergeBundledCatalogStories(remoteStories).map(normalizeStory);
 
       res.json({ stories });
     } catch (error) {
