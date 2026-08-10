@@ -9,7 +9,6 @@ import {
   Minimize2,
   Grid,
   Type,
-  Layout,
   ArrowLeft,
   Sun,
   Moon,
@@ -22,6 +21,10 @@ import {
   EyeOff,
   ChevronLeft,
   ChevronRight,
+  Volume2,
+  HelpCircle,
+  Languages,
+  CheckCircle2,
 } from 'lucide-react';
 
 interface NavigationControlsProps {
@@ -38,6 +41,12 @@ interface NavigationControlsProps {
   onToggleBookmark?: () => void;
   onOpenVoiceRecorder?: () => void;
   onOpenOfflineDownload?: () => void;
+  onReadPage?: () => void;
+  onOpenQuiz?: () => void;
+  onOpenVocabularyQuiz?: () => void;
+  onCompleteBook?: () => void;
+  isBackCover?: boolean;
+  hasVocabularyQuiz?: boolean;
 }
 
 export const NavigationControls: React.FC<NavigationControlsProps> = ({
@@ -53,25 +62,28 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
   onToggleBookmark,
   onOpenVoiceRecorder,
   onOpenOfflineDownload,
+  onReadPage,
+  onOpenQuiz,
+  onOpenVocabularyQuiz,
+  onCompleteBook,
+  isBackCover = false,
+  hasVocabularyQuiz = false,
 }) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isMobileToolsOpen, setIsMobileToolsOpen] = useState(false);
   const [isNavHidden, setIsNavHidden] = useState(false);
 
   const isNight = settings.themeMode === 'night';
-  const isDouble = settings.displayView === 'double';
-  const pageStep = isDouble ? 2 : 1;
+  const pageStep = 1;
   const displayCurrentPage = currentPageIndex + 1;
-  const maxAllowedIndex = isDouble && totalPages % 2 !== 0 ? totalPages - 1 : totalPages;
+  const maxAllowedIndex = totalPages;
   const canGoPrev = currentPageIndex > 0;
   const canGoNext = currentPageIndex + pageStep <= maxAllowedIndex;
 
   const pageLabel =
     currentPageIndex === totalPages
       ? 'Sampul belakang'
-      : isDouble && displayCurrentPage < totalPages
-        ? `Hal. ${displayCurrentPage}-${displayCurrentPage + 1} / ${totalPages}`
-        : `Hal. ${displayCurrentPage} / ${totalPages}`;
+      : `Hal. ${displayCurrentPage} / ${totalPages}`;
 
   useEffect(() => {
     const onFSChange = () => setIsFullscreen(!!document.fullscreenElement);
@@ -227,19 +239,6 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
         </span>
       </button>
 
-      <button
-        onClick={() => onUpdateSettings({ displayView: isDouble ? 'single' : 'double' })}
-        className="reader-soft-panel w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl text-sm font-semibold"
-      >
-        <span className="flex items-center gap-2.5">
-          <Layout className="w-4 h-4 shrink-0" />
-          Tampilan
-        </span>
-        <span className="text-[10px] font-black px-2 py-0.5 rounded-lg bg-black/5 dark:bg-white/10">
-          {isDouble ? '2 Hal.' : '1 Hal.'}
-        </span>
-      </button>
-
       <ToggleRow label="Putar otomatis" icon={settings.autoPlay ? Pause : Play} isOn={settings.autoPlay} onClick={() => onUpdateSettings({ autoPlay: !settings.autoPlay })} />
       <ToggleRow label="Musik latar" icon={Music} isOn={settings.bgMusic} onClick={toggleBgMusic} />
 
@@ -263,6 +262,42 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
 
       <SectionLabel text="Alat" />
       <div className="grid grid-cols-2 gap-2">
+        {!isBackCover && onReadPage && (
+          <button
+            onClick={onReadPage}
+            className="flex flex-col items-center gap-1.5 px-2 py-3 rounded-xl bg-[var(--magic-blue)] hover:brightness-110 text-white text-xs font-bold shadow-sm transition-all hover:scale-[1.02]"
+          >
+            <Volume2 className="w-5 h-5" />
+            <span>Baca halaman</span>
+          </button>
+        )}
+        {!isBackCover && onOpenQuiz && (
+          <button
+            onClick={onOpenQuiz}
+            className="flex flex-col items-center gap-1.5 px-2 py-3 rounded-xl bg-[var(--warm-gold)] text-[#3a2910] text-xs font-bold shadow-sm transition-all hover:scale-[1.02]"
+          >
+            <HelpCircle className="w-5 h-5" />
+            <span>Kuis halaman</span>
+          </button>
+        )}
+        {isBackCover && hasVocabularyQuiz && onOpenVocabularyQuiz && (
+          <button
+            onClick={onOpenVocabularyQuiz}
+            className="col-span-2 flex items-center justify-center gap-2 px-2 py-3 rounded-xl bg-[var(--magic-blue)] text-white text-xs font-bold shadow-sm transition-all hover:scale-[1.02]"
+          >
+            <Languages className="w-5 h-5" />
+            <span>Kuis kosakata</span>
+          </button>
+        )}
+        {isBackCover && onCompleteBook && (
+          <button
+            onClick={onCompleteBook}
+            className="col-span-2 flex items-center justify-center gap-2 px-2 py-3 rounded-xl bg-[var(--story-green)] text-white text-xs font-bold shadow-sm transition-all hover:scale-[1.02]"
+          >
+            <CheckCircle2 className="w-5 h-5" />
+            <span>Selesaikan buku</span>
+          </button>
+        )}
         {onOpenVoiceRecorder && (
           <button
             onClick={onOpenVoiceRecorder}
@@ -402,6 +437,30 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
             </div>
 
             <div className="grid grid-cols-2 gap-2">
+              {!isBackCover && onReadPage && (
+                <button onClick={() => { onReadPage(); setIsMobileToolsOpen(false); }} className="min-h-16 rounded-2xl bg-[var(--magic-blue)] text-white p-3 flex items-center gap-3 text-left font-bold shadow-sm">
+                  <Volume2 className="w-5 h-5 shrink-0" />
+                  <span className="text-sm leading-tight">Baca halaman</span>
+                </button>
+              )}
+              {!isBackCover && onOpenQuiz && (
+                <button onClick={() => { onOpenQuiz(); setIsMobileToolsOpen(false); }} className="min-h-16 rounded-2xl bg-[var(--warm-gold)] text-[#3a2910] p-3 flex items-center gap-3 text-left font-bold shadow-sm">
+                  <HelpCircle className="w-5 h-5 shrink-0" />
+                  <span className="text-sm leading-tight">Kuis halaman</span>
+                </button>
+              )}
+              {isBackCover && hasVocabularyQuiz && onOpenVocabularyQuiz && (
+                <button onClick={() => { onOpenVocabularyQuiz(); setIsMobileToolsOpen(false); }} className="col-span-2 min-h-16 rounded-2xl bg-[var(--magic-blue)] text-white p-3 flex items-center justify-center gap-3 font-bold shadow-sm">
+                  <Languages className="w-5 h-5 shrink-0" />
+                  <span className="text-sm leading-tight">Kuis kosakata</span>
+                </button>
+              )}
+              {isBackCover && onCompleteBook && (
+                <button onClick={() => { onCompleteBook(); setIsMobileToolsOpen(false); }} className="col-span-2 min-h-16 rounded-2xl bg-[var(--story-green)] text-white p-3 flex items-center justify-center gap-3 font-bold shadow-sm">
+                  <CheckCircle2 className="w-5 h-5 shrink-0" />
+                  <span className="text-sm leading-tight">Selesaikan buku</span>
+                </button>
+              )}
               {onOpenVoiceRecorder && (
                 <button onClick={() => { onOpenVoiceRecorder(); setIsMobileToolsOpen(false); }} className="min-h-16 rounded-2xl bg-rose-600 hover:bg-rose-500 text-white p-3 flex items-center gap-3 text-left font-bold shadow-sm">
                   <Mic className="w-5 h-5 shrink-0" />
@@ -446,10 +505,6 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
             <div className="reader-soft-panel rounded-2xl p-3 flex flex-col gap-2">
               <ToggleRow label="Putar otomatis" icon={settings.autoPlay ? Pause : Play} isOn={settings.autoPlay} onClick={() => onUpdateSettings({ autoPlay: !settings.autoPlay })} />
               <ToggleRow label="Musik latar" icon={Music} isOn={settings.bgMusic} onClick={toggleBgMusic} />
-              <button onClick={() => onUpdateSettings({ displayView: isDouble ? 'single' : 'double' })} className="min-h-12 rounded-xl flex items-center justify-between gap-3 text-sm font-bold px-3">
-                <span className="flex items-center gap-2"><Layout className="w-4 h-4" /> Tampilan</span>
-                <span className="text-xs text-[var(--muted-ink)] dark:text-blue-200">{isDouble ? '2 halaman' : '1 halaman'}</span>
-              </button>
               <button onClick={() => onUpdateSettings({ themeMode: isNight ? 'day' : 'night' })} className="min-h-12 rounded-xl flex items-center justify-between gap-3 text-sm font-bold px-3">
                 <span className="flex items-center gap-2">{isNight ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />} Tema</span>
                 <span className="text-xs text-[var(--muted-ink)] dark:text-blue-200">{isNight ? 'Malam' : 'Siang'}</span>

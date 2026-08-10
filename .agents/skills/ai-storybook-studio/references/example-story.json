@@ -199,7 +199,7 @@
     },
     "productionGuide": {
     "visualPreset": "colorful-storybook",
-    "aspectRatio": "4:3",
+    "aspectRatio": "3:4",
     "characterBible": [
       {
         "id": "lila",

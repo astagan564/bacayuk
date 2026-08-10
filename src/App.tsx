@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Story, StoryPage, ReadingSettings } from './types';
-import { Flipbook3D } from './components/Flipbook3D';
+import { Flipbook3D, FlipbookHandle } from './components/Flipbook3D';
 import { NavigationControls } from './components/NavigationControls';
 import { StorySelector } from './components/StorySelector';
 import { ThumbnailGrid } from './components/ThumbnailGrid';
@@ -29,6 +29,7 @@ import confetti from 'canvas-confetti';
 import { Sparkles, BookOpen, Award, Sun, Moon, Bookmark, BarChart3, Clock, User, LogOut, ShieldCheck, Settings, Bell } from 'lucide-react';
 
 export default function App() {
+  const flipbookRef = useRef<FlipbookHandle>(null);
   const [stories, setStories] = useState<Story[]>(() => storyStore.getLocalStories());
   const [selectedStory, setSelectedStory] = useState<Story | null>(null);
   const [currentPageIndex, setCurrentPageIndex] = useState<number>(0);
@@ -286,10 +287,7 @@ export default function App() {
     speechRate: 0.9,
     speechPitch: 1.0,
     fontSize: 'base',
-    displayView:
-      typeof window !== 'undefined' && window.matchMedia('(min-width: 1024px) and (orientation: landscape)').matches
-        ? 'double'
-        : 'single',
+    displayView: 'double',
     themeMode: 'day',
     languageMode: 'id',
   });
@@ -679,22 +677,11 @@ export default function App() {
             {/* Flipbook column */}
             <div className="flex-1 min-w-0 flex flex-col items-center">
               <Flipbook3D
+                ref={flipbookRef}
                 story={selectedStory}
                 currentPageIndex={currentPageIndex}
                 onPageChange={handlePageChange}
-                onCompleteBook={() => {
-                  if (selectedStory) {
-                    markStoryCompleted(selectedStory.id);
-                    setShowCompletionModal(true);
-                  }
-                }}
                 settings={settings}
-                onOpenQuiz={(page) => setActiveQuizPage(page)}
-                isBookmarked={bookmarks[selectedStory.id] === currentPageIndex}
-                onToggleBookmark={handleToggleBookmark}
-                onOpenVoiceRecorder={(pageNum, pageText) => {
-                  setVoiceRecorderTarget({ pageNum, pageText });
-                }}
               />
               {/* Mobile bottom spacer — prevents content hiding behind the fixed bar */}
               <div className="lg:hidden h-24 w-full shrink-0" />
@@ -728,6 +715,15 @@ export default function App() {
                 } else {
                   setPaymentStoryTarget(selectedStory);
                 }
+              }}
+              isBackCover={currentPageIndex >= selectedStory.pages.length}
+              onReadPage={selectedStory.pages[currentPageIndex] ? () => flipbookRef.current?.readCurrentPage() : undefined}
+              onOpenQuiz={selectedStory.pages[currentPageIndex]?.quizQuestion ? () => setActiveQuizPage(selectedStory.pages[currentPageIndex]) : undefined}
+              hasVocabularyQuiz={Boolean(selectedStory.vocabularyQuiz || selectedStory.glossary?.length)}
+              onOpenVocabularyQuiz={() => flipbookRef.current?.openVocabularyQuiz()}
+              onCompleteBook={() => {
+                markStoryCompleted(selectedStory.id);
+                setShowCompletionModal(true);
               }}
             />
           </div>

@@ -141,7 +141,7 @@ export interface CharacterBibleEntry {
 
 export interface StorybookProductionGuide {
   visualPreset: VisualPreset;
-  aspectRatio: '4:3' | '1:1' | '16:9';
+  aspectRatio: '3:4' | '4:3' | '1:1' | '16:9';
   characterBible: CharacterBibleEntry[];
   palette: string[];
   coverPrompt: string;

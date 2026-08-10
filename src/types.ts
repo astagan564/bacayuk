@@ -86,7 +86,7 @@ export interface StoryCharacterBibleEntry {
 
 export interface StoryProductionGuide {
   visualPreset: StoryVisualPreset;
-  aspectRatio: '4:3' | '1:1' | '16:9';
+  aspectRatio: '3:4' | '4:3' | '1:1' | '16:9';
   characterBible: StoryCharacterBibleEntry[];
   palette: string[];
   coverPrompt: string;

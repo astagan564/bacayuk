@@ -30,6 +30,7 @@ Map scenes to the closest built-in type first:
 
 ## Page Visual Rules
 
+- Generate page illustrations in a 3:4 portrait ratio so they fit the illustration half of the desktop open-book reader without aggressive cropping.
 - One clear focal action per page.
 - Keep characters visually consistent across pages.
 - Avoid scary, violent, or overly dark imagery for young readers.

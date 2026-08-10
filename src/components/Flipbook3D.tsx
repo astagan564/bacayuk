@@ -1,15 +1,6 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import {
-  Bookmark,
-  BookOpen,
-  ChevronLeft,
-  ChevronRight,
-  HelpCircle,
-  Languages,
-  Mic,
-  RotateCcw,
   Sparkles,
-  Volume2,
 } from 'lucide-react';
 import { GlossaryItem, InteractiveElement, ReadingSettings, Story, StoryPage } from '../types';
 import { VocabDefinition } from '../data/vocabulary';
@@ -26,12 +17,12 @@ interface FlipbookProps {
   story: Story;
   currentPageIndex: number;
   onPageChange: (newIndex: number) => void;
-  onCompleteBook?: () => void;
   settings: ReadingSettings;
-  onOpenQuiz?: (page: StoryPage) => void;
-  isBookmarked?: boolean;
-  onToggleBookmark?: () => void;
-  onOpenVoiceRecorder?: (pageNum: number, pageText: string) => void;
+}
+
+export interface FlipbookHandle {
+  readCurrentPage: () => void;
+  openVocabularyQuiz: () => void;
 }
 
 const getDisplayedPageTitle = (page: StoryPage, languageMode: ReadingSettings['languageMode']) => {
@@ -55,28 +46,18 @@ const getPageNarration = (page: StoryPage, languageMode: ReadingSettings['langua
   };
 };
 
-const actionButtonClass =
-  'inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border px-3 py-2 text-xs font-bold shadow-sm transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--warm-gold)] focus-visible:ring-offset-2';
-
-export const Flipbook3D: React.FC<FlipbookProps> = ({
+export const Flipbook3D = React.forwardRef<FlipbookHandle, FlipbookProps>(({
   story,
   currentPageIndex,
   onPageChange,
-  onCompleteBook,
   settings,
-  onOpenQuiz,
-  isBookmarked = false,
-  onToggleBookmark,
-  onOpenVoiceRecorder,
-}) => {
+}, ref) => {
   const [isFlipping, setIsFlipping] = useState(false);
   const [activeInteractive, setActiveInteractive] = useState<InteractiveElement | null>(null);
   const [animatedElementId, setAnimatedElementId] = useState<string | null>(null);
-  const [activeSpeechPage, setActiveSpeechPage] = useState<number | null>(null);
   const [selectedVocab, setSelectedVocab] = useState<VocabDefinition | null>(null);
   const [selectedGlossary, setSelectedGlossary] = useState<GlossaryItem | null>(null);
   const [showVocabQuizModal, setShowVocabQuizModal] = useState(false);
-  const [hasCustomRecording, setHasCustomRecording] = useState(false);
 
   const activeAudioRef = useRef<HTMLAudioElement | null>(null);
   const activeResolveRef = useRef<(() => void) | null>(null);
@@ -87,31 +68,11 @@ export const Flipbook3D: React.FC<FlipbookProps> = ({
   const activePage = story.pages[currentPageIndex];
   const isBackCover = currentPageIndex >= totalPages;
   const isNight = settings.themeMode === 'night';
-  const isSpreadView = settings.displayView === 'double';
   const languageMode = settings.languageMode || 'id';
   const fallbackVocabularyQuiz = useMemo(
     () => createFallbackVocabularyQuiz(story.title, story.glossary || []),
     [story.glossary, story.title]
   );
-
-  useEffect(() => {
-    let isMounted = true;
-
-    const checkRecording = async () => {
-      if (!activePage) {
-        if (isMounted) setHasCustomRecording(false);
-        return;
-      }
-
-      const recordingUrl = await voiceRecordingsStore.getRecordingUrl(story.id, activePage.pageNumber);
-      if (isMounted) setHasCustomRecording(Boolean(recordingUrl));
-    };
-
-    checkRecording();
-    return () => {
-      isMounted = false;
-    };
-  }, [activePage, story.id]);
 
   const stopActiveAudio = () => {
     speechEngine.stop();
@@ -119,7 +80,6 @@ export const Flipbook3D: React.FC<FlipbookProps> = ({
       activeAudioRef.current.pause();
       activeAudioRef.current = null;
     }
-    setActiveSpeechPage(null);
     if (activeResolveRef.current) {
       activeResolveRef.current();
       activeResolveRef.current = null;
@@ -146,6 +106,23 @@ export const Flipbook3D: React.FC<FlipbookProps> = ({
       onPageChange(currentPageIndex - 1);
       setIsFlipping(false);
     }, 240);
+  };
+
+  const handlePageClick = (event: React.MouseEvent<HTMLElement>) => {
+    if (isFlipping) return;
+
+    const target = event.target as HTMLElement;
+    if (target.closest('button, a, input, textarea, select, [role="button"]')) return;
+    if (window.getSelection()?.toString().trim()) return;
+
+    const pageBounds = event.currentTarget.getBoundingClientRect();
+    const clickedLeftPage = event.clientX < pageBounds.left + pageBounds.width / 2;
+
+    if (clickedLeftPage) {
+      handlePrev();
+    } else {
+      handleNext();
+    }
   };
 
   useEffect(() => {
@@ -180,10 +157,7 @@ export const Flipbook3D: React.FC<FlipbookProps> = ({
 
       stopActiveAudio();
       activeResolveRef.current = resolve;
-      setActiveSpeechPage(page.pageNumber);
-
       const finish = () => {
-        setActiveSpeechPage(null);
         activeAudioRef.current = null;
         if (activeResolveRef.current === resolve) {
           activeResolveRef.current = null;
@@ -216,6 +190,13 @@ export const Flipbook3D: React.FC<FlipbookProps> = ({
     });
   };
 
+  useImperativeHandle(ref, () => ({
+    readCurrentPage: () => {
+      if (activePage) void handleSpeakPage(activePage);
+    },
+    openVocabularyQuiz: () => setShowVocabQuizModal(true),
+  }), [activePage, languageMode, settings.speechPitch, settings.speechRate, story.id]);
+
   useEffect(() => {
     setActiveInteractive(null);
     let isCancelled = false;
@@ -243,101 +224,6 @@ export const Flipbook3D: React.FC<FlipbookProps> = ({
     lg: 'text-lg sm:text-xl lg:text-[1.3rem] leading-[1.68]',
     xl: 'text-xl sm:text-[1.35rem] lg:text-2xl leading-[1.64]',
   };
-
-  const toolbarSurface = isNight
-    ? 'border-slate-700/80 bg-slate-900/92 text-slate-100 shadow-slate-950/30'
-    : 'border-[#d8c9ad] bg-[#fffaf0]/94 text-[#35291f] shadow-[#6f5635]/10';
-  const quietAction = isNight
-    ? 'border-slate-700 bg-slate-800 text-slate-100 hover:bg-slate-700'
-    : 'border-[#dfd2bd] bg-white/75 text-[#604b38] hover:bg-white';
-  const activeAction = isNight
-    ? 'border-blue-400 bg-blue-500 text-white'
-    : 'border-[#2f8f6b] bg-[#2f8f6b] text-white';
-
-  const renderToolbar = () => (
-    <nav
-      aria-label="Alat bantu membaca"
-      className={`mb-3 flex w-full flex-wrap items-center justify-between gap-3 rounded-2xl border px-3 py-2.5 shadow-lg backdrop-blur-md sm:px-4 ${toolbarSurface}`}
-    >
-      <div className="flex min-w-0 items-center gap-3">
-        <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl ${isNight ? 'bg-slate-800' : 'bg-[#efe4d1]'}`}>
-          <BookOpen className="h-5 w-5" />
-        </span>
-        <div className="min-w-0">
-          <p className="truncate text-xs font-bold sm:text-sm">{story.title}</p>
-          <p className={`text-[10px] font-semibold tracking-wide ${isNight ? 'text-slate-400' : 'text-[#806c58]'}`}>
-            {activePage ? `Halaman ${activePage.pageNumber} dari ${totalPages}` : 'Sampul belakang'}
-          </p>
-        </div>
-      </div>
-
-      <div className="flex flex-wrap items-center justify-end gap-2">
-        {activePage?.quizQuestion && onOpenQuiz && (
-          <button type="button" onClick={() => onOpenQuiz(activePage)} className={`${actionButtonClass} ${quietAction}`}>
-            <HelpCircle className="h-4 w-4" />
-            <span>Kuis</span>
-          </button>
-        )}
-
-        {activePage && onOpenVoiceRecorder && languageMode !== 'en' && (
-          <button
-            type="button"
-            onClick={() => onOpenVoiceRecorder(activePage.pageNumber, activePage.text)}
-            className={`${actionButtonClass} ${hasCustomRecording ? activeAction : quietAction}`}
-            title={hasCustomRecording ? 'Ubah rekaman halaman ini' : 'Rekam suara untuk halaman ini'}
-          >
-            <Mic className={`h-4 w-4 ${hasCustomRecording ? 'fill-current' : ''}`} />
-            <span>{hasCustomRecording ? 'Rekaman' : 'Rekam'}</span>
-          </button>
-        )}
-
-        {activePage && (
-          <button
-            type="button"
-            onClick={() => handleSpeakPage(activePage)}
-            className={`${actionButtonClass} ${activeSpeechPage === activePage.pageNumber ? activeAction : quietAction}`}
-            aria-pressed={activeSpeechPage === activePage.pageNumber}
-          >
-            <Volume2 className="h-4 w-4" />
-            <span>Baca</span>
-          </button>
-        )}
-
-        {activePage && onToggleBookmark && (
-          <button
-            type="button"
-            onClick={onToggleBookmark}
-            className={`${actionButtonClass} ${isBookmarked ? activeAction : quietAction}`}
-            aria-pressed={isBookmarked}
-          >
-            <Bookmark className={`h-4 w-4 ${isBookmarked ? 'fill-current' : ''}`} />
-            <span className="hidden sm:inline">Tandai</span>
-          </button>
-        )}
-
-        {isBackCover && (story.vocabularyQuiz || (story.glossary && story.glossary.length > 0)) && (
-          <button type="button" onClick={() => setShowVocabQuizModal(true)} className={`${actionButtonClass} ${activeAction}`}>
-            <Languages className="h-4 w-4" />
-            <span>Kuis kosakata</span>
-          </button>
-        )}
-
-        {isBackCover && (
-          <button type="button" onClick={() => onPageChange(0)} className={`${actionButtonClass} ${quietAction}`}>
-            <RotateCcw className="h-4 w-4" />
-            <span>Baca dari awal</span>
-          </button>
-        )}
-
-        {isBackCover && onCompleteBook && (
-          <button type="button" onClick={onCompleteBook} className={`${actionButtonClass} ${activeAction}`}>
-            <Sparkles className="h-4 w-4" />
-            <span>Selesaikan</span>
-          </button>
-        )}
-      </div>
-    </nav>
-  );
 
   const renderInteractiveElements = (page: StoryPage) => (
     <>
@@ -385,18 +271,20 @@ export const Flipbook3D: React.FC<FlipbookProps> = ({
     return (
       <article
         key={page.pageNumber}
-        className={`grid h-full min-h-0 w-full ${isSpreadView ? 'md:grid-cols-2' : 'grid-cols-1 md:grid-rows-[minmax(18rem,1fr)_auto]'}`}
+        onClick={handlePageClick}
+        className="grid h-full min-h-0 w-full cursor-pointer grid-cols-1 md:grid-cols-2"
+        aria-label={`Halaman ${page.pageNumber}. Klik sisi kiri untuk kembali atau sisi kanan untuk lanjut.`}
       >
-        <figure className={`relative min-h-[18rem] overflow-hidden ${isSpreadView ? 'md:min-h-0' : 'md:min-h-[24rem]'}`}>
+        <figure className="relative min-h-[18rem] overflow-hidden md:min-h-0">
           <StoryIllustration type={page.illustrationType} imageUrl={page.imageUrl} />
           {renderInteractiveElements(page)}
           <figcaption className="sr-only">Ilustrasi untuk halaman {page.pageNumber}: {pageTitle}</figcaption>
         </figure>
 
         <section
-          className={`relative flex min-h-[20rem] flex-col overflow-y-auto border-t px-6 py-7 sm:px-8 sm:py-8 md:min-h-0 md:px-8 lg:px-10 ${
-            isSpreadView ? 'md:border-l md:border-t-0' : ''
-          } ${isNight ? 'border-slate-700 text-slate-100' : 'border-[#d9cfbd] text-[#251f1a]'}`}
+          className={`relative flex min-h-[20rem] flex-col overflow-y-auto border-t px-6 py-7 sm:px-8 sm:py-8 md:min-h-0 md:border-l md:border-t-0 md:px-8 lg:px-10 ${
+            isNight ? 'border-slate-700 text-slate-100' : 'border-[#d9cfbd] text-[#251f1a]'
+          }`}
           style={paperStyle}
         >
           <header className="flex items-start justify-between gap-4">
@@ -473,55 +361,22 @@ export const Flipbook3D: React.FC<FlipbookProps> = ({
         if (distance < -50) handlePrev();
       }}
     >
-      {renderToolbar()}
-
-      <div className="grid w-full grid-cols-1 items-center gap-3 md:grid-cols-[3rem_minmax(0,1fr)_3rem] lg:gap-5">
-        <button
-          type="button"
-          onClick={handlePrev}
-          disabled={currentPageIndex === 0 || isFlipping}
-          className={`hidden h-12 w-12 items-center justify-center rounded-full border shadow-lg transition-all hover:-translate-x-0.5 active:scale-95 disabled:cursor-not-allowed disabled:opacity-20 md:flex ${quietAction}`}
-          aria-label="Halaman sebelumnya"
-        >
-          <ChevronLeft className="h-6 w-6" />
-        </button>
-
+      <div className="w-full">
         <div
-          className={`relative min-h-[34rem] w-full overflow-hidden rounded-[1.4rem] border shadow-[0_24px_70px_rgba(54,39,24,0.22)] transition-all duration-300 md:aspect-[16/11] md:min-h-0 ${
-            isSpreadView ? 'max-w-none' : 'mx-auto max-w-4xl md:aspect-[4/5]'
-          } ${isNight ? 'border-slate-700 bg-slate-900' : 'border-[#bfae93] bg-[#fffdf7]'} ${
+          className={`relative min-h-[34rem] w-full max-w-none overflow-hidden rounded-[1.4rem] border shadow-[0_24px_70px_rgba(54,39,24,0.22)] transition-all duration-300 md:aspect-[16/11] md:min-h-0 ${
+            isNight ? 'border-slate-700 bg-slate-900' : 'border-[#bfae93] bg-[#fffdf7]'
+          } ${
             isFlipping ? 'translate-y-1 scale-[0.995] opacity-75' : 'translate-y-0 scale-100 opacity-100'
           }`}
           style={{ boxShadow: isNight ? '0 24px 70px rgba(2, 6, 23, 0.58)' : undefined }}
         >
-          {isSpreadView && !isBackCover && (
+          {!isBackCover && (
             <div className="pointer-events-none absolute inset-y-0 left-1/2 z-30 hidden w-8 -translate-x-1/2 bg-gradient-to-r from-black/12 via-black/5 to-transparent md:block" />
           )}
           {activePage ? renderStorySpread(activePage) : renderBackCover()}
         </div>
 
-        <button
-          type="button"
-          onClick={handleNext}
-          disabled={currentPageIndex >= totalPages || isFlipping}
-          className={`hidden h-12 w-12 items-center justify-center rounded-full border shadow-lg transition-all hover:translate-x-0.5 active:scale-95 disabled:cursor-not-allowed disabled:opacity-20 md:flex ${quietAction}`}
-          aria-label="Halaman berikutnya"
-        >
-          <ChevronRight className="h-6 w-6" />
-        </button>
       </div>
-
-      <nav aria-label="Navigasi halaman seluler" className={`mt-3 flex w-full items-center justify-between rounded-2xl border p-2 shadow-sm md:hidden ${toolbarSurface}`}>
-        <button type="button" onClick={handlePrev} disabled={currentPageIndex === 0 || isFlipping} className={`${actionButtonClass} ${quietAction} disabled:opacity-30`}>
-          <ChevronLeft className="h-4 w-4" />
-          <span>Sebelumnya</span>
-        </button>
-        <span className="px-2 text-[11px] font-bold tabular-nums">{Math.min(currentPageIndex + 1, totalPages)} / {totalPages}</span>
-        <button type="button" onClick={handleNext} disabled={currentPageIndex >= totalPages || isFlipping} className={`${actionButtonClass} ${quietAction} disabled:opacity-30`}>
-          <span>Berikutnya</span>
-          <ChevronRight className="h-4 w-4" />
-        </button>
-      </nav>
 
       {selectedVocab && (
         <VocabTooltipModal vocab={selectedVocab} onClose={() => setSelectedVocab(null)} isNight={isNight} />
@@ -538,4 +393,6 @@ export const Flipbook3D: React.FC<FlipbookProps> = ({
       )}
     </section>
   );
-};
+});
+
+Flipbook3D.displayName = 'Flipbook3D';

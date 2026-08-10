@@ -130,7 +130,7 @@ async function generateGeminiJson(ai: GoogleGenAI, contents: string) {
   throw lastError || new Error('No Gemini text models are configured.');
 }
 
-async function generateGeminiImage(ai: GoogleGenAI, prompt: string, aspectRatio: '4:3' | '3:4' = '4:3') {
+async function generateGeminiImage(ai: GoogleGenAI, prompt: string, aspectRatio: '4:3' | '3:4' = '3:4') {
   let lastError: unknown;
 
   for (const model of GEMINI_IMAGE_MODELS) {
@@ -345,9 +345,9 @@ function normalizeProductionGuide(value: unknown, fallbackPreset: StoryVisualPre
 
   return {
     visualPreset,
-    aspectRatio: ['4:3', '1:1', '16:9'].includes(raw.aspectRatio as string)
+    aspectRatio: ['3:4', '4:3', '1:1', '16:9'].includes(raw.aspectRatio as string)
       ? raw.aspectRatio as StoryProductionGuide['aspectRatio']
-      : '4:3',
+      : '3:4',
     characterBible,
     palette: normalizeStringList(raw.palette, 10, 30),
     coverPrompt: cleanAiText(raw.coverPrompt, 700),
@@ -812,7 +812,7 @@ JSON shape:
   "coverPrompt": "Cover scene prompt",
   "productionGuide": {
     "visualPreset": "${visualPreset}",
-    "aspectRatio": "4:3",
+    "aspectRatio": "3:4",
     "characterBible": [
       {
         "id": "character-id",
@@ -1265,7 +1265,7 @@ ${visualContinuityContext}
 FINAL CHECK: The finished artwork must contain no visible written characters of any kind.`;
 
       const ai = new GoogleGenAI({ apiKey });
-      const generatedImage = await generateGeminiImage(ai, prompt, imageKind === 'cover' ? '3:4' : '4:3');
+      const generatedImage = await generateGeminiImage(ai, prompt, '3:4');
       const imageBuffer = Buffer.from(generatedImage.data, 'base64');
       const contentType = generatedImage.mimeType;
       const extension = imageExtensionFromMimeType(contentType);
