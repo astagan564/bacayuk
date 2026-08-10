@@ -60,6 +60,8 @@ const ADMIN_SETTINGS_KEY = 'buku_cerita_admin_settings_v1';
 const COUPONS_KEY = 'buku_cerita_coupons_v1';
 const TRANSACTIONS_KEY = 'buku_cerita_transactions_v1';
 const READING_LOGS_KEY = 'buku_cerita_reading_logs_v1';
+const LEGACY_DEMO_TRANSACTION_IDS = new Set(['TRX-88291', 'TRX-88292', 'TRX-88293', 'TRX-88294']);
+const LEGACY_DEMO_USER_IDS = new Set(['usr_g_8812', 'usr_wa_9941', 'usr_em_1204']);
 
 const DEFAULT_SETTINGS: AdminSettings = {
   eyeRestIntervalMinutes: 20,
@@ -96,97 +98,6 @@ const DEFAULT_COUPONS: DiscountCoupon[] = [
     usageCount: 29,
     maxUsage: 200,
     isActive: true,
-  },
-];
-
-const INITIAL_DEMO_TRANSACTIONS: TransactionRecord[] = [
-  {
-    id: 'TRX-88291',
-    customerName: 'Bunda Sarah',
-    customerEmail: 'sarah.bunda@gmail.com',
-    customerPhone: '081298765432',
-    storyId: '1',
-    storyTitle: 'Petualangan Kiki si Kelinci Cerdik',
-    paymentMethod: 'qris',
-    amount: 15000,
-    status: 'success',
-    createdAt: new Date(Date.now() - 3600000 * 2).toISOString(),
-    paidAt: new Date(Date.now() - 3600000 * 1.9).toISOString(),
-  },
-  {
-    id: 'TRX-88292',
-    customerName: 'Ayah Budi',
-    customerEmail: 'budi.santoso@yahoo.com',
-    customerPhone: '081311223344',
-    storyId: '2',
-    storyTitle: 'Misteri Hutan Berbisik',
-    paymentMethod: 'gopay',
-    amount: 12000,
-    discountAmount: 3000,
-    couponCode: 'BUKUANAK20',
-    status: 'success',
-    createdAt: new Date(Date.now() - 3600000 * 5).toISOString(),
-    paidAt: new Date(Date.now() - 3600000 * 4.8).toISOString(),
-  },
-  {
-    id: 'TRX-88293',
-    customerName: 'Bunda Ratna',
-    customerEmail: 'ratna.dewi@gmail.com',
-    customerPhone: '085712345678',
-    storyId: '3',
-    storyTitle: 'Bintang Kecil yang Ingin Menari',
-    paymentMethod: 'va_bca',
-    amount: 15000,
-    status: 'pending',
-    createdAt: new Date(Date.now() - 3600000 * 12).toISOString(),
-  },
-  {
-    id: 'TRX-88294',
-    customerName: 'Bunda Ani',
-    customerEmail: 'ani.kusuma@gmail.com',
-    customerPhone: '082188776655',
-    storyId: '1',
-    storyTitle: 'Petualangan Kiki si Kelinci Cerdik',
-    paymentMethod: 'ovo',
-    amount: 15000,
-    status: 'expired',
-    createdAt: new Date(Date.now() - 3600000 * 48).toISOString(),
-  },
-];
-
-const INITIAL_DEMO_READING_LOGS: UserReadingActivity[] = [
-  {
-    userId: 'usr_g_8812',
-    userName: 'Bunda Sarah',
-    userEmail: 'sarah.bunda@gmail.com',
-    storyId: '1',
-    storyTitle: 'Petualangan Kiki si Kelinci Cerdik',
-    lastPageRead: 5,
-    totalPages: 8,
-    isCompleted: false,
-    updatedAt: new Date(Date.now() - 3600000 * 1).toISOString(),
-  },
-  {
-    userId: 'usr_wa_9941',
-    userName: 'Ayah Budi',
-    userEmail: 'budi.santoso@yahoo.com',
-    storyId: '2',
-    storyTitle: 'Misteri Hutan Berbisik',
-    lastPageRead: 8,
-    totalPages: 8,
-    isCompleted: true,
-    updatedAt: new Date(Date.now() - 3600000 * 3).toISOString(),
-  },
-  {
-    userId: 'usr_em_1204',
-    userName: 'Bunda Ratna',
-    userEmail: 'ratna.dewi@gmail.com',
-    storyId: '3',
-    storyTitle: 'Bintang Kecil yang Ingin Menari',
-    lastPageRead: 3,
-    totalPages: 8,
-    isCompleted: false,
-    updatedAt: new Date(Date.now() - 3600000 * 10).toISOString(),
   },
 ];
 
@@ -288,9 +199,14 @@ export const adminStore = {
   getTransactions(): TransactionRecord[] {
     try {
       const data = localStorage.getItem(TRANSACTIONS_KEY);
-      return data ? JSON.parse(data) : INITIAL_DEMO_TRANSACTIONS;
+      const transactions: TransactionRecord[] = data ? JSON.parse(data) : [];
+      const cleaned = transactions.filter((transaction) => !LEGACY_DEMO_TRANSACTION_IDS.has(transaction.id));
+      if (cleaned.length !== transactions.length) {
+        localStorage.setItem(TRANSACTIONS_KEY, JSON.stringify(cleaned));
+      }
+      return cleaned;
     } catch {
-      return INITIAL_DEMO_TRANSACTIONS;
+      return [];
     }
   },
 
@@ -342,9 +258,14 @@ export const adminStore = {
   getReadingLogs(): UserReadingActivity[] {
     try {
       const data = localStorage.getItem(READING_LOGS_KEY);
-      return data ? JSON.parse(data) : INITIAL_DEMO_READING_LOGS;
+      const logs: UserReadingActivity[] = data ? JSON.parse(data) : [];
+      const cleaned = logs.filter((log) => !LEGACY_DEMO_USER_IDS.has(log.userId));
+      if (cleaned.length !== logs.length) {
+        localStorage.setItem(READING_LOGS_KEY, JSON.stringify(cleaned));
+      }
+      return cleaned;
     } catch {
-      return INITIAL_DEMO_READING_LOGS;
+      return [];
     }
   },
 

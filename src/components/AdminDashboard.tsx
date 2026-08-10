@@ -108,6 +108,8 @@ interface BookCostEvent {
   created_at: string;
 }
 
+const LEGACY_DEMO_USER_IDS = new Set(['usr_g_8812', 'usr_wa_9941', 'usr_em_1204']);
+
 const DEFAULT_QUICK_CREATE_FORM: QuickCreateForm = {
   storyId: '',
   brief: '',
@@ -153,40 +155,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   // Reading Logs
   const [readingLogs, setReadingLogs] = useState<UserReadingActivity[]>(() => adminStore.getReadingLogs());
 
-  // Demo user accounts list
+  // Show only the actual account currently signed in on this device.
   const [userList, setUserList] = useState<UserAccount[]>(() => {
     const current = userAuthStore.getUser();
-    const demoAccounts: UserAccount[] = [
-      {
-        id: 'usr_g_8812',
-        name: 'Bunda Sarah',
-        email: 'sarah.bunda@gmail.com',
-        phone: '081298765432',
-        loginMethod: 'google',
-        createdAt: '2026-08-01T10:15:00Z',
-      },
-      {
-        id: 'usr_wa_9941',
-        name: 'Ayah Budi',
-        email: 'budi.santoso@yahoo.com',
-        phone: '081311223344',
-        loginMethod: 'whatsapp',
-        createdAt: '2026-08-03T14:22:00Z',
-      },
-      {
-        id: 'usr_em_1204',
-        name: 'Bunda Ratna',
-        email: 'ratna.dewi@gmail.com',
-        phone: '085712345678',
-        loginMethod: 'email',
-        createdAt: '2026-08-05T09:05:00Z',
-      },
-    ];
-
-    if (current && !demoAccounts.some((a) => a.id === current.id || a.email === current.email)) {
-      demoAccounts.unshift(current);
-    }
-    return demoAccounts;
+    return current && !LEGACY_DEMO_USER_IDS.has(current.id) ? [current] : [];
   });
 
   // Story Uploader / Editor Modal State
