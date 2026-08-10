@@ -69,36 +69,6 @@ export const userAuthStore = {
     if (error) throw error;
   },
 
-  async sendWhatsAppOtp(phone: string, parentName?: string): Promise<void> {
-    const { error } = await supabase.auth.signInWithOtp({
-      phone,
-      options: {
-        channel: 'whatsapp',
-        data: { parent_name: parentName?.trim() || undefined },
-      },
-    });
-    if (error) throw error;
-  },
-
-  async verifyWhatsAppOtp(phone: string, token: string): Promise<UserAccount> {
-    const { data, error } = await supabase.auth.verifyOtp({ phone, token, type: 'sms' });
-    if (error) throw error;
-    if (!data.user) throw new Error('Sesi WhatsApp belum berhasil dibuat.');
-    authenticatedUser = accountFromAuthUser(data.user);
-    return authenticatedUser;
-  },
-
-  async sendEmailMagicLink(email: string, parentName?: string): Promise<void> {
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        emailRedirectTo: window.location.origin,
-        data: { parent_name: parentName?.trim() || undefined },
-      },
-    });
-    if (error) throw error;
-  },
-
   async logout(): Promise<void> {
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
