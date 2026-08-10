@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="360" viewBox="0 0 1200 360" fill="none" role="img" aria-labelledby="title desc">
+  <title id="title">BacaYuk logo</title>
+  <desc id="desc">A cheerful open book shaped like a smiling character beside the BacaYuk wordmark.</desc>
+  <defs>
+    <linearGradient id="bookBlue" x1="84" y1="74" x2="267" y2="292" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#35B9F2"/>
+      <stop offset="1" stop-color="#1689DC"/>
+    </linearGradient>
+    <linearGradient id="pageWarm" x1="178" y1="99" x2="238" y2="274" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFF8DA"/>
+      <stop offset="1" stop-color="#FFE69B"/>
+    </linearGradient>
+  </defs>
+  <g>
+    <path d="M180 99C148 74 108 68 73 78C62 81 54 91 54 103V256C54 270 67 280 81 276C117 266 149 273 180 299V99Z" fill="url(#bookBlue)"/>
+    <path d="M180 99C212 74 252 68 287 78C298 81 306 91 306 103V256C306 270 293 280 279 276C243 266 211 273 180 299V99Z" fill="url(#bookBlue)"/>
+    <path d="M180 113C154 92 121 86 89 94C82 96 77 102 77 110V246C77 253 84 258 91 256C124 249 153 257 180 279V113Z" fill="url(#pageWarm)"/>
+    <path d="M180 113C206 92 239 86 271 94C278 96 283 102 283 110V246C283 253 276 258 269 256C236 249 207 257 180 279V113Z" fill="url(#pageWarm)"/>
+    <path d="M180 113V279" stroke="#F7C948" stroke-width="8" stroke-linecap="round"/>
+  </g>
+  <circle cx="139" cy="170" r="9" fill="#164B73"/>
+  <circle cx="221" cy="170" r="9" fill="#164B73"/>
+  <path d="M149 205C158 215 169 220 180 220C191 220 202 215 211 205" stroke="#164B73" stroke-width="8" stroke-linecap="round"/>
+  <circle cx="114" cy="198" r="11" fill="#FF8F87" fill-opacity="0.65"/>
+  <circle cx="246" cy="198" r="11" fill="#FF8F87" fill-opacity="0.65"/>
+  <path d="M286 42L292 59L309 65L292 71L286 88L280 71L263 65L280 59L286 42Z" fill="#F7C948"/>
+  <circle cx="326" cy="104" r="9" fill="#FF7C73"/>
+  <circle cx="65" cy="53" r="8" fill="#8DDA73"/>
+  <g aria-label="BacaYuk">
+    <text x="360" y="224" fill="#164B73" font-family="Nunito, Quicksand, Arial Rounded MT Bold, Arial, sans-serif" font-size="142" font-weight="800" letter-spacing="-5">Baca</text>
+    <text x="685" y="224" fill="#168FDC" font-family="Nunito, Quicksand, Arial Rounded MT Bold, Arial, sans-serif" font-size="142" font-weight="800" letter-spacing="-5">Yuk</text>
+    <path d="M708 253C786 276 892 275 974 246" stroke="#F7C948" stroke-width="13" stroke-linecap="round"/>
+    <path d="M974 246L956 236M974 246L961 263" stroke="#F7C948" stroke-width="13" stroke-linecap="round"/>
+  </g>
+</svg>

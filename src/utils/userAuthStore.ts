@@ -9,41 +9,100 @@ export interface UserAccount {
   aiStoriesUsed?: number;
 }
 
+import type { User } from '@supabase/supabase-js';
 import { supabase } from './supabaseClient';
 
-const AUTH_STORAGE_KEY = 'buku_cerita_parent_auth_v1';
 const FREE_READ_HISTORY_KEY = 'buku_cerita_free_read_history_v1';
+let authenticatedUser: UserAccount | null = null;
+
+function accountFromAuthUser(user: User): UserAccount {
+  const provider = user.app_metadata?.provider;
+  const loginMethod: UserAccount['loginMethod'] = provider === 'google'
+    ? 'google'
+    : user.phone
+      ? 'whatsapp'
+      : 'email';
+  const name = String(
+    user.user_metadata?.full_name ||
+    user.user_metadata?.name ||
+    user.user_metadata?.parent_name ||
+    (user.phone ? `Orang Tua (${user.phone.slice(-4)})` : '') ||
+    user.email?.split('@')[0] ||
+    'Orang Tua'
+  );
+
+  return {
+    id: user.id,
+    name,
+    email: user.email || '',
+    phone: user.phone || undefined,
+    loginMethod,
+    createdAt: user.created_at,
+    vipExpiresAt: typeof user.app_metadata?.vip_expires_at === 'string' ? user.app_metadata.vip_expires_at : undefined,
+    aiStoriesUsed: typeof user.app_metadata?.ai_stories_used === 'number' ? user.app_metadata.ai_stories_used : undefined,
+  };
+}
 
 export const userAuthStore = {
   getUser(): UserAccount | null {
-    try {
-      const data = localStorage.getItem(AUTH_STORAGE_KEY);
-      return data ? JSON.parse(data) : null;
-    } catch {
-      return null;
-    }
+    return authenticatedUser;
   },
 
-  async setUser(user: UserAccount): Promise<void> {
-    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(user));
-    
-    // Sync to Supabase
-    try {
-      await supabase.from('users').upsert({
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        phone: user.phone || null,
-        login_method: user.loginMethod,
-        created_at: user.createdAt
-      });
-    } catch (e) {
-      console.error('Failed to sync user to Supabase', e);
-    }
+  async initialize(): Promise<UserAccount | null> {
+    const { data, error } = await supabase.auth.getUser();
+    authenticatedUser = error || !data.user ? null : accountFromAuthUser(data.user);
+    return authenticatedUser;
   },
 
-  logout(): void {
-    localStorage.removeItem(AUTH_STORAGE_KEY);
+  onAuthStateChange(callback: (user: UserAccount | null) => void) {
+    return supabase.auth.onAuthStateChange((_event, session) => {
+      authenticatedUser = session?.user ? accountFromAuthUser(session.user) : null;
+      callback(authenticatedUser);
+    }).data.subscription;
+  },
+
+  async signInWithGoogle(): Promise<void> {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: window.location.origin },
+    });
+    if (error) throw error;
+  },
+
+  async sendWhatsAppOtp(phone: string, parentName?: string): Promise<void> {
+    const { error } = await supabase.auth.signInWithOtp({
+      phone,
+      options: {
+        channel: 'whatsapp',
+        data: { parent_name: parentName?.trim() || undefined },
+      },
+    });
+    if (error) throw error;
+  },
+
+  async verifyWhatsAppOtp(phone: string, token: string): Promise<UserAccount> {
+    const { data, error } = await supabase.auth.verifyOtp({ phone, token, type: 'sms' });
+    if (error) throw error;
+    if (!data.user) throw new Error('Sesi WhatsApp belum berhasil dibuat.');
+    authenticatedUser = accountFromAuthUser(data.user);
+    return authenticatedUser;
+  },
+
+  async sendEmailMagicLink(email: string, parentName?: string): Promise<void> {
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: {
+        emailRedirectTo: window.location.origin,
+        data: { parent_name: parentName?.trim() || undefined },
+      },
+    });
+    if (error) throw error;
+  },
+
+  async logout(): Promise<void> {
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
+    authenticatedUser = null;
   },
 
   isVip(): boolean {
@@ -62,7 +121,7 @@ export const userAuthStore = {
     user.vipExpiresAt = expires.toISOString();
     user.aiStoriesUsed = 0; // reset quota on payment
     
-    await this.setUser(user);
+    authenticatedUser = user;
   },
 
   async recordAiStoryUsed(): Promise<void> {
@@ -70,7 +129,7 @@ export const userAuthStore = {
     if (!user) return;
     
     user.aiStoriesUsed = (user.aiStoriesUsed || 0) + 1;
-    await this.setUser(user);
+    authenticatedUser = user;
   },
 
   // Returns array of story IDs read as a guest

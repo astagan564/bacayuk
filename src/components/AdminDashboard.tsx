@@ -7,6 +7,8 @@ import {
   StoryVisualPreset,
 } from '../types';
 import pdfWorkerSrc from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
+import bacaYukLogo from '../assets/bacayuk-logo.svg';
+import bacaYukMark from '../assets/bacayuk-mark.svg';
 import {
   adminStore,
   AdminSettings,
@@ -1370,11 +1372,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       }`}>
         <div className="p-4 sm:p-6 border-b border-transparent">
           <div className="flex flex-col gap-2 items-center sm:items-start">
+            <img src={bacaYukMark} alt="BacaYuk" className="h-11 w-11 sm:hidden" />
+            <img src={bacaYukLogo} alt="BacaYuk" className="hidden h-12 w-auto max-w-full sm:block" />
             <div className="inline-flex items-center gap-2 text-[10px] font-bold text-[var(--muted-ink)] dark:text-blue-200">
               <ShieldCheck className="w-4 h-4 text-[var(--magic-blue)] shrink-0" />
               <span className="hidden sm:inline">Ruang pengelola</span>
             </div>
-            <h2 className="hidden sm:block text-xl leading-tight mb-0">BacaYuk</h2>
           </div>
         </div>
 

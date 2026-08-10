@@ -30,33 +30,39 @@ export const ParentLoginModal: React.FC<ParentLoginModalProps> = ({
   const [parentName, setParentName] = useState('');
   const [emailInput, setEmailInput] = useState('');
   const [phoneInput, setPhoneInput] = useState('');
+  const [otpInput, setOtpInput] = useState('');
+  const [whatsAppOtpSent, setWhatsAppOtpSent] = useState(false);
+  const [emailLinkSent, setEmailLinkSent] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const handleTabChange = (newTab: 'google' | 'whatsapp' | 'email') => {
     setTab(newTab);
     setErrorMsg(null);
+    setOtpInput('');
+    setWhatsAppOtpSent(false);
+    setEmailLinkSent(false);
   };
 
-  // Quick Google Sign-In Simulation
-  const handleGoogleSignIn = () => {
+  const handleGoogleSignIn = async () => {
     setIsSubmitting(true);
-    setTimeout(() => {
-      const googleUser: UserAccount = {
-        id: `usr_g_${Math.floor(100000 + Math.random() * 900000)}`,
-        name: parentName.trim() || 'Orang Tua Hebat',
-        email: emailInput.trim() || 'orangtua.bunda@gmail.com',
-        loginMethod: 'google',
-        createdAt: new Date().toISOString(),
-      };
-      userAuthStore.setUser(googleUser);
+    setErrorMsg(null);
+    try {
+      await userAuthStore.signInWithGoogle();
+    } catch (error) {
+      setErrorMsg(error instanceof Error ? error.message : 'Google Sign-In gagal dimulai.');
       setIsSubmitting(false);
-      onLoginSuccess(googleUser);
-    }, 1200);
+    }
   };
 
-  // WhatsApp Login Simulation
-  const handleWhatsAppLogin = (e: React.FormEvent) => {
+  const normalizeIndonesianPhone = (value: string) => {
+    const numeric = value.replace(/\D/g, '');
+    if (numeric.startsWith('62')) return `+${numeric}`;
+    if (numeric.startsWith('0')) return `+62${numeric.slice(1)}`;
+    return `+${numeric}`;
+  };
+
+  const handleWhatsAppLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     const numericPhone = phoneInput.replace(/\D/g, '');
     if (!numericPhone || numericPhone.length < 8) {
@@ -66,23 +72,26 @@ export const ParentLoginModal: React.FC<ParentLoginModalProps> = ({
     setErrorMsg(null);
     setIsSubmitting(true);
 
-    setTimeout(() => {
-      const waUser: UserAccount = {
-        id: `usr_wa_${Math.floor(100000 + Math.random() * 900000)}`,
-        name: parentName.trim() || `Orang Tua (${phoneInput.slice(-4)})`,
-        email: emailInput.trim() || `wa.${phoneInput.replace(/\D/g, '')}@buku-cerita.com`,
-        phone: phoneInput.trim(),
-        loginMethod: 'whatsapp',
-        createdAt: new Date().toISOString(),
-      };
-      userAuthStore.setUser(waUser);
+    try {
+      const phone = normalizeIndonesianPhone(phoneInput);
+      if (!whatsAppOtpSent) {
+        await userAuthStore.sendWhatsAppOtp(phone, parentName);
+        setWhatsAppOtpSent(true);
+      } else {
+        if (!/^\d{6}$/.test(otpInput.trim())) {
+          throw new Error('Masukkan kode OTP 6 digit dari WhatsApp.');
+        }
+        const user = await userAuthStore.verifyWhatsAppOtp(phone, otpInput.trim());
+        onLoginSuccess(user);
+      }
+    } catch (error) {
+      setErrorMsg(error instanceof Error ? error.message : 'Verifikasi WhatsApp gagal.');
+    } finally {
       setIsSubmitting(false);
-      onLoginSuccess(waUser);
-    }, 1200);
+    }
   };
 
-  // Email Login
-  const handleEmailLogin = (e: React.FormEvent) => {
+  const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!parentName.trim()) {
       setErrorMsg('Mohon isi nama Orang Tua/Bunda!');
@@ -95,19 +104,14 @@ export const ParentLoginModal: React.FC<ParentLoginModalProps> = ({
     setErrorMsg(null);
     setIsSubmitting(true);
 
-    setTimeout(() => {
-      const emailUser: UserAccount = {
-        id: `usr_em_${Math.floor(100000 + Math.random() * 900000)}`,
-        name: parentName.trim(),
-        email: emailInput.trim().toLowerCase(),
-        phone: phoneInput.trim() || undefined,
-        loginMethod: 'email',
-        createdAt: new Date().toISOString(),
-      };
-      userAuthStore.setUser(emailUser);
+    try {
+      await userAuthStore.sendEmailMagicLink(emailInput.trim().toLowerCase(), parentName);
+      setEmailLinkSent(true);
+    } catch (error) {
+      setErrorMsg(error instanceof Error ? error.message : 'Tautan masuk belum dapat dikirim.');
+    } finally {
       setIsSubmitting(false);
-      onLoginSuccess(emailUser);
-    }, 1200);
+    }
   };
 
   return (
@@ -287,6 +291,7 @@ export const ParentLoginModal: React.FC<ParentLoginModalProps> = ({
                 </>
               )}
             </button>
+
           </div>
         )}
 
@@ -322,6 +327,24 @@ export const ParentLoginModal: React.FC<ParentLoginModalProps> = ({
               />
             </div>
 
+            {whatsAppOtpSent && (
+              <div>
+                <label className="text-[11px] font-bold text-slate-600 dark:text-slate-300 block mb-1">
+                  Kode OTP WhatsApp
+                </label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  maxLength={6}
+                  value={otpInput}
+                  onChange={(e) => setOtpInput(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  placeholder="6 digit kode OTP"
+                  className="reader-field w-full px-3.5 py-2.5 rounded-xl text-center tracking-[0.35em] text-sm font-black focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+              </div>
+            )}
+
             <button
               type="submit"
               disabled={isSubmitting}
@@ -334,7 +357,7 @@ export const ParentLoginModal: React.FC<ParentLoginModalProps> = ({
                 </>
               ) : (
                 <>
-                  <span>Masuk Dengan WhatsApp</span>
+                  <span>{whatsAppOtpSent ? 'Verifikasi OTP WhatsApp' : 'Kirim OTP WhatsApp'}</span>
                   <ArrowRight className="w-4 h-4" />
                 </>
               )}
@@ -379,15 +402,20 @@ export const ParentLoginModal: React.FC<ParentLoginModalProps> = ({
               {isSubmitting ? (
                 <>
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  <span>Mendaftarkan Akun Orang Tua...</span>
+                  <span>Mengirim Tautan Masuk...</span>
                 </>
               ) : (
                 <>
                   <BookOpen className="w-4 h-4" />
-                  <span>Daftar & Buka Semua Koleksi Buku</span>
+                  <span>Kirim Tautan Masuk</span>
                 </>
               )}
             </button>
+            {emailLinkSent && (
+              <p role="status" className="text-center text-xs font-bold text-[var(--story-green)]">
+                Tautan masuk sudah dikirim. Buka email Anda untuk menyelesaikan login.
+              </p>
+            )}
           </form>
         )}
 
@@ -395,7 +423,7 @@ export const ParentLoginModal: React.FC<ParentLoginModalProps> = ({
         <div className="reader-soft-panel p-3 rounded-xl text-[11px] text-[var(--muted-ink)] dark:text-blue-200 flex items-center gap-2">
           <ShieldCheck className="w-4 h-4 text-[var(--story-green)] shrink-0" />
           <span>
-            Data email/nomor kontak Anda 100% aman dan hanya digunakan untuk mengirimkan kabar rilis cerita baru & tips parenting bersama anak.
+            Login diverifikasi oleh Supabase Auth. Data kontak digunakan untuk autentikasi dan layanan akun BacaYuk.
           </span>
         </div>
       </div>

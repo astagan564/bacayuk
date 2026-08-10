@@ -25,6 +25,8 @@ import { userSettingsStore } from './utils/userSettingsStore';
 import { speechEngine } from './utils/speechEngine';
 import { PersonalLibrary, personalLibraryStore } from './utils/personalLibraryStore';
 import packageJson from '../package.json';
+import bacaYukLogo from './assets/bacayuk-logo.svg';
+import bacaYukMark from './assets/bacayuk-mark.svg';
 import confetti from 'canvas-confetti';
 import { Sparkles, BookOpen, Award, Sun, Moon, Bookmark, BarChart3, Clock, User, LogOut, ShieldCheck, Settings, Bell } from 'lucide-react';
 
@@ -129,6 +131,25 @@ export default function App() {
   useEffect(() => {
     setPersonalLibrary(personalLibraryStore.load(currentUser?.id));
   }, [currentUser?.id]);
+
+  useEffect(() => {
+    let active = true;
+    const applyAuthenticatedUser = (user: UserAccount | null) => {
+      if (!active) return;
+      setCurrentUser(user);
+      if (user?.email) void paymentStore.syncPurchasesFromSupabase(user.email);
+    };
+    const subscription = userAuthStore.onAuthStateChange(applyAuthenticatedUser);
+    void userAuthStore.initialize().then(applyAuthenticatedUser).catch((error) => {
+      console.error('Failed to initialize Supabase Auth session:', error);
+      applyAuthenticatedUser(null);
+    });
+
+    return () => {
+      active = false;
+      subscription.unsubscribe();
+    };
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -472,23 +493,11 @@ export default function App() {
           onClick={handleBackToLibrary}
             className="flex min-w-0 flex-1 items-center gap-2 sm:gap-2.5 cursor-pointer transition-opacity hover:opacity-85"
         >
-          <div
-            className={`shrink-0 p-2 rounded-xl shadow-sm ${isNight
-              ? 'bg-[#233754] text-[#dbeafe]'
-              : 'bg-[#2f8f6b] text-white'
-              }`}
-          >
-            <BookOpen className="w-6 h-6" />
-          </div>
-          <div className="min-w-0 flex flex-col justify-center -space-y-0.5">
-            <h1
-              className={`truncate text-sm sm:text-lg font-extrabold tracking-normal ${isNight ? 'text-blue-100' : 'text-[var(--ink)]'
-                }`}
-            >
-              BacaYuk
-            </h1>
+          <img src={bacaYukMark} alt="BacaYuk" className="h-10 w-10 shrink-0 sm:hidden" />
+          <div className="hidden min-w-0 flex-col justify-center sm:flex">
+            <img src={bacaYukLogo} alt="BacaYuk" className="h-10 w-auto max-w-[150px]" />
             <p
-              className={`text-[10px] font-semibold hidden sm:block ${isNight ? 'text-blue-300' : 'text-[var(--muted-ink)]'
+              className={`ml-[42px] -mt-1 text-[9px] font-semibold ${isNight ? 'text-blue-300' : 'text-[var(--muted-ink)]'
                 }`}
             >
               Perpustakaan cerita keluarga
@@ -503,10 +512,15 @@ export default function App() {
               <User className="w-4 h-4 text-[var(--story-green)] shrink-0" />
               <span className="hidden md:inline truncate max-w-[120px]">{currentUser.name}</span>
               <button
-                onClick={() => {
-                  userAuthStore.logout();
-                  setCurrentUser(null);
-                  showToast('👋 Berhasil keluar dari Akun Orang Tua');
+                onClick={async () => {
+                  try {
+                    await userAuthStore.logout();
+                    setCurrentUser(null);
+                    showToast('👋 Berhasil keluar dari Akun Orang Tua');
+                  } catch (error) {
+                    console.error('Failed to sign out:', error);
+                    showToast('Keluar akun gagal. Coba lagi.');
+                  }
                 }}
                 className="p-1 hover:bg-black/10 rounded-lg text-inherit transition-colors ml-0.5"
                 title="Keluar Akun Orang Tua"
