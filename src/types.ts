@@ -45,6 +45,7 @@ export interface VocabularyQuiz {
 export interface StoryPage {
   pageNumber: number;
   title?: string;
+  titleEn?: string;
   text: string;
   textEn?: string; // English translation for bilingual mode
   illustrationType: 'forest' | 'dragon' | 'space' | 'sea' | 'castle' | 'garden' | 'custom';

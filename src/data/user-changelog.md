@@ -1,3 +1,26 @@
+## Buku AI dan pengalaman membaca baru - 2026-08-10
+
+### Membuat buku kini jauh lebih sederhana
+- Admin cukup menulis ide atau naskah singkat, memilih usia pembaca, dan menentukan bahasa utama.
+- BacaYuk menyiapkan draft yang bisa diperiksa terlebih dahulu, termasuk judul, pembagian halaman, arahan gambar, glosarium, dan calon kuis.
+- Cover dan gambar halaman dapat dibuat berurutan. Jika proses terhenti, gambar yang sudah selesai tetap tersimpan dan proses bisa dilanjutkan.
+- Status buku kini menunjukkan apakah naskah, cover, dan seluruh ilustrasinya benar-benar sudah siap.
+
+### Tampilan membaca seperti buku cerita
+- Satu halaman cerita sekarang tampil sebagai satu buku terbuka: ilustrasi penuh di kiri dan naskah di kanan.
+- Tombol Kuis, Rekam, Baca, Tandai, dan navigasi halaman dipindahkan ke luar buku agar tidak menutupi ilustrasi atau teks.
+- Di HP, ilustrasi tampil di atas dan teks berada di bawah agar tetap lega dan mudah dibaca.
+
+### Bahasa Inggris dan kuis lebih baik
+- Terjemahan sekarang mencakup judul buku, judul setiap halaman, dan isi cerita.
+- Saat mode Inggris aktif, tombol Baca menggunakan suara bahasa Inggris.
+- Jawaban benar pada kuis kosakata tidak lagi selalu berada di pilihan pertama dan akan disusun ulang saat kuis dicoba kembali.
+
+### Cover dan ilustrasi lebih bersih
+- Cover buku yang tersimpan sekarang tampil pada kartu buku di halaman depan.
+- Generator ilustrasi tidak lagi menerima judul dan naskah mentah, sehingga risiko tulisan yang tidak diperlukan muncul di dalam gambar menjadi jauh lebih kecil.
+- Larangan huruf, angka, caption, balon percakapan, label, logo, dan watermark kini selalu disertakan saat membuat gambar.
+
 ## Pembaruan UI - 2026-08-08
 
 ### Admin tambah buku sudah lebih lengkap

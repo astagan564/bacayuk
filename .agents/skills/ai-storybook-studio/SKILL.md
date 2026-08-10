@@ -31,7 +31,7 @@ Use this skill for BacaYuk features that generate or refine children's books wit
 
 - Treat **page** as the main authoring unit, not database fields.
 - Prefer progressive disclosure: Quick Create -> Book Studio -> Advanced.
-- Keep generated English translation empty unless it is real translation output from an AI/service.
+- Keep generated English page titles and text empty unless they are real translation output from an AI/service.
 - Keep interactive X/Y controls hidden behind advanced UI; normal authors should click the visual canvas.
 - Keep glossary/quiz suggestions as candidates for approval.
 - Do not publish AI output automatically.
@@ -43,7 +43,9 @@ Use this skill for BacaYuk features that generate or refine children's books wit
 - Use short, read-aloud sentences for ages 3-6; use slightly denser paragraphs for ages 7-10.
 - One page should carry one beat: setup, problem, discovery, attempt, consequence, resolution, reflection.
 - Visual scenes must describe what appears in the illustration, not camera jargon only.
+- Keep raw titles, narration, and dialogue out of image-model requests; send only the visual scene and continuity guide.
 - Quiz questions should test comprehension or moral reasoning, not trivia.
+- Distribute correct answers across option positions; never make the first choice consistently correct.
 - Glossary should include useful English learning words, not every noun.
 
 ## Implementation Notes

@@ -44,6 +44,33 @@ const categories = [
 
 const spinePalette = ['#2f8f6b', '#4a6fa5', '#e7a93b', '#d95d6a'];
 
+const StoryCoverImage: React.FC<{ story: Story }> = ({ story }) => {
+  const [failedToLoad, setFailedToLoad] = useState(false);
+  const coverImage = story.coverImage?.trim();
+
+  if (!coverImage || failedToLoad) return null;
+
+  return (
+    <>
+      <img
+        src={coverImage}
+        alt=""
+        aria-hidden="true"
+        className="absolute inset-0 h-full w-full scale-110 object-cover opacity-55 blur-xl"
+        onError={() => setFailedToLoad(true)}
+      />
+      <img
+        src={coverImage}
+        alt={`Sampul buku ${story.title}`}
+        loading="lazy"
+        decoding="async"
+        className="absolute inset-0 h-full w-full object-contain"
+        onError={() => setFailedToLoad(true)}
+      />
+    </>
+  );
+};
+
 export const StorySelector: React.FC<StorySelectorProps> = ({
   stories,
   bookmarks = {},
@@ -206,6 +233,8 @@ export const StorySelector: React.FC<StorySelectorProps> = ({
               <div className="flex h-full flex-col pl-3">
                 <div className="relative aspect-[4/3] overflow-hidden bg-[#f1dfbd]">
                   <div className={`absolute inset-0 bg-gradient-to-br ${story.coverBg} opacity-90`} />
+                  <StoryCoverImage key={story.coverImage} story={story} />
+                  <div className="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-black/30 to-transparent" />
                   <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/35 to-transparent" />
 
                   <div className="absolute left-4 top-4 rounded-lg bg-white/88 px-2.5 py-1 text-[10px] font-extrabold text-[var(--ink)] shadow-sm">

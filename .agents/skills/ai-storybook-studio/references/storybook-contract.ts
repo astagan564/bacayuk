@@ -48,6 +48,7 @@ export interface StoryPageColors {
 export interface StoryPage {
   pageNumber: number;
   title?: string;
+  titleEn?: string;
   text: string;
   textEn?: string;
   illustrationType: 'forest' | 'dragon' | 'space' | 'sea' | 'castle' | 'garden' | 'custom';

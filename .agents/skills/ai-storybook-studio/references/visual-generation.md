@@ -34,6 +34,9 @@ Map scenes to the closest built-in type first:
 - Keep characters visually consistent across pages.
 - Avoid scary, violent, or overly dark imagery for young readers.
 - Do not include readable text inside generated images unless the user asks; render text in the app.
+- Send only the visual scene description to the image model. Never pass raw book titles, page titles, narration, or dialogue as image context.
+- Exclude all typography, letters, numbers, captions, speech bubbles, labels, signs, text panels, logos, signatures, and watermarks.
+- Fill the image edge to edge; do not ask the model to reserve a caption box or text panel.
 - Prefer bright but not oversaturated palettes.
 - Use culturally appropriate names, settings, clothing, and objects when the story is Indonesian.
 

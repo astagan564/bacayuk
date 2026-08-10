@@ -71,6 +71,7 @@ interface PageDraft {
 
 interface AiBookDraftPage {
   title?: string;
+  titleEn?: string;
   text?: string;
   textEn?: string;
   illustrationType?: StoryPage['illustrationType'];
@@ -203,6 +204,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const createBlankPage = (pageNumber: number): StoryPage => ({
     pageNumber,
     title: `Halaman ${pageNumber}`,
+    titleEn: '',
     text: '',
     textEn: '',
     illustrationType: 'forest',
@@ -476,12 +478,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
       const translations = Array.isArray(data.translations) ? data.translations : [];
       const translatedPages = editingStory.pages.map((page) => {
-        const match = translations.find((item: { pageNumber?: number }) => item.pageNumber === page.pageNumber);
-        return match?.textEn ? { ...page, textEn: match.textEn } : page;
+        const match = translations.find((item: { pageNumber?: number; titleEn?: string; textEn?: string }) => item.pageNumber === page.pageNumber);
+        return match?.textEn
+          ? { ...page, titleEn: match.titleEn || page.titleEn, textEn: match.textEn }
+          : page;
       });
 
       setEditingStory({
         ...editingStory,
+        titleEn: data.titleEn || editingStory.titleEn,
         pages: translatedPages,
         pipelineStatus: 'enhanced',
       });
@@ -779,10 +784,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       return {
         ...basePage,
         title: draft.title,
+        titleEn: '',
         text: draft.text,
         textEn: '',
         illustrationType,
-        illustrationPrompt: `${illustrationType} scene for "${draft.title}"`,
+        illustrationPrompt: `A clear ${illustrationType} story scene with one focal action and expressive child-friendly characters.`,
         interactiveElements: generatedElements,
         quizQuestion: index === pageDrafts.length - 1
           ? {
@@ -831,12 +837,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       return {
         ...basePage,
         title,
+        titleEn: page.titleEn?.trim() || '',
         text,
         textEn: page.textEn?.trim() || '',
         illustrationType,
         illustrationPrompt:
           page.illustrationPrompt?.trim() ||
-          `${title}: ${text.slice(0, 180)} Child-safe colorful storybook illustration.`,
+          `A clear ${illustrationType} story scene with one focal action, expressive characters, and a child-safe colorful illustration style.`,
         interactiveElements: page.interactiveElements || [],
         quizQuestion: page.quizQuestion,
       };
@@ -958,6 +965,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       ...page,
       pageNumber: index + 1,
       title: page.title?.trim() || `Halaman ${index + 1}`,
+      titleEn: page.titleEn?.trim(),
       text: page.text.trim(),
       textEn: page.textEn?.trim(),
       imageUrl: page.imageUrl?.trim(),
@@ -968,7 +976,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       story.title,
       story.description,
       story.moralMessage,
-      ...pages.flatMap((page) => [page.title, page.text, page.textEn || '']),
+      ...pages.flatMap((page) => [page.title, page.titleEn || '', page.text, page.textEn || '']),
     ].join('\n');
 
     return {
@@ -2632,6 +2640,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                 {isGeneratingTranslation ? 'Generating...' : 'Generate'}
                               </button>
                             </div>
+                            <input
+                              type="text"
+                              value={page.titleEn || ''}
+                              onChange={(e) => updatePage({ ...page, titleEn: e.target.value })}
+                              className="reader-field mb-2 w-full p-2 text-[11px] rounded-lg"
+                              placeholder="English page title"
+                            />
                             <textarea
                               value={page.textEn || ''}
                               onChange={(e) => updatePage({ ...page, textEn: e.target.value })}
@@ -3110,6 +3125,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                             <label className="block text-[10px] font-bold text-indigo-900 dark:text-indigo-200">
                               🇬🇧 English Translation (Edisi Belajar)
                             </label>
+                            <input
+                              type="text"
+                              value={pg.titleEn || ''}
+                              placeholder="English page title"
+                              onChange={(e) => {
+                                const newPages = [...editingStory.pages];
+                                newPages[idx] = { ...newPages[idx], titleEn: e.target.value };
+                                setEditingStory({ ...editingStory, pages: newPages });
+                              }}
+                              className="reader-field mb-2 w-full p-2 text-[11px] rounded-lg"
+                            />
                             <textarea
                               rows={2}
                               value={pg.textEn || ''}

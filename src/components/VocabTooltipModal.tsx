@@ -29,7 +29,7 @@ export const VocabTooltipModal: React.FC<VocabTooltipModalProps> = ({
 
   const handlePronounce = () => {
     if (isGlossary) {
-      speechEngine.speak(`${glossaryItem.wordEn}`, 0.95, 1.0);
+      speechEngine.speak(`${glossaryItem.wordEn}`, 0.95, 1.0, { language: 'en-US' });
     } else if (vocab) {
       speechEngine.speak(`${vocab.word}. ${vocab.definition}`, 0.9, 1.1);
     }

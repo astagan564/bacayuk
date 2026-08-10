@@ -4,6 +4,7 @@ export interface SpeechCallbacks {
   onStart?: () => void;
   onEnd?: () => void;
   onError?: (err: unknown) => void;
+  language?: 'id-ID' | 'en-US';
 }
 
 class SpeechEngine {
@@ -37,15 +38,17 @@ class SpeechEngine {
     const utterance = new SpeechSynthesisUtterance(cleanedText);
     utterance.rate = Math.max(0.5, Math.min(1.5, rate));
     utterance.pitch = Math.max(0.5, Math.min(1.5, pitch));
-    utterance.lang = 'id-ID'; // Indonesian
+    const language = callbacks?.language || 'id-ID';
+    utterance.lang = language;
 
-    // Try to find an Indonesian voice
+    // Prefer a voice matching the language currently displayed in the reader.
     const voices = this.synth.getVoices();
-    const idVoice = voices.find(
-      (v) => v.lang.includes('id') || v.lang.includes('ID') || v.name.toLowerCase().includes('indonesia')
+    const languagePrefix = language.slice(0, 2).toLowerCase();
+    const matchingVoice = voices.find(
+      (voice) => voice.lang.toLowerCase().startsWith(languagePrefix)
     );
-    if (idVoice) {
-      utterance.voice = idVoice;
+    if (matchingVoice) {
+      utterance.voice = matchingVoice;
     }
 
     utterance.onstart = () => {

@@ -215,6 +215,15 @@ function cleanOneLine(value: unknown, maxLength: number, fallback = '') {
   return cleanAiText(value, maxLength, fallback).replace(/\s+/g, ' ').trim();
 }
 
+function removeLiteralPhrases(value: string, phrases: string[], fallback: string) {
+  const cleaned = phrases.reduce((result, phrase) => {
+    const literal = phrase.trim();
+    return literal ? result.split(literal).join(' ') : result;
+  }, value);
+
+  return cleanAiText(cleaned.replace(/^[\s:;,.\-–—]+/, ''), 700) || fallback;
+}
+
 function asRecord(value: unknown): Record<string, unknown> {
   return value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {};
 }
@@ -343,11 +352,10 @@ function normalizeProductionGuide(value: unknown, fallbackPreset: StoryVisualPre
     palette: normalizeStringList(raw.palette, 10, 30),
     coverPrompt: cleanAiText(raw.coverPrompt, 700),
     continuityRules: normalizeStringList(raw.continuityRules, 12, 180),
-    negativePrompt: cleanAiText(
-      raw.negativePrompt,
-      700,
-      'photorealistic, horror, violence, readable text, watermark, logo, extra limbs, duplicate character, changed outfit, changed colors'
-    ),
+    negativePrompt: [
+      cleanAiText(raw.negativePrompt, 420),
+      'photorealistic, horror, violence, typography, letters, numbers, words, sentences, captions, speech bubbles, text panels, signs, watermark, logo, extra limbs, duplicate character, changed outfit, changed colors',
+    ].filter(Boolean).join(', ').slice(0, 700),
   };
 }
 
@@ -384,7 +392,7 @@ function normalizeVocabularyQuiz(value: unknown): VocabularyQuiz | undefined {
   const raw = asRecord(value);
   const questions = Array.isArray(raw.questions)
     ? raw.questions
-        .map((item): VocabularyQuizQuestion | null => {
+        .map((item, questionIndex): VocabularyQuizQuestion | null => {
           const question = asRecord(item);
           const wordEn = cleanOneLine(question.wordEn, 50);
           const correctTranslationId = cleanOneLine(question.correctTranslationId, 70);
@@ -394,9 +402,10 @@ function normalizeVocabularyQuiz(value: unknown): VocabularyQuiz | undefined {
 
           if (!wordEn || !correctTranslationId || optionsId.length < 2) return null;
 
-          const options = optionsId.includes(correctTranslationId)
-            ? optionsId
-            : [correctTranslationId, ...optionsId].slice(0, 4);
+          const distractors = Array.from(new Set(optionsId.filter((option) => option !== correctTranslationId))).slice(0, 3);
+          const options = [...distractors];
+          const answerPosition = (questionIndex + 1) % (options.length + 1);
+          options.splice(answerPosition, 0, correctTranslationId);
 
           return {
             wordEn,
@@ -786,8 +795,10 @@ Rules:
 - Keep page text in the requested primary language and leave textEn empty.
 - Do not invent a fake English translation.
 - Create glossary candidates only from useful words that appear in the story.
-- Create quiz/interactions as suggestions only. Keep them simple and stable.
+- Create quiz/interactions as suggestions only. Keep them simple and child-friendly.
+- Vary the correct vocabulary answer position across questions; never place every correct answer first.
 - Visual prompts must describe subject + action + setting + mood + important object + child-safe illustration style.
+- Illustration and cover prompts are visual descriptions only. Never quote or repeat the book title, page title, narration, dialogue, captions, signs, letters, or numbers.
 - Define the character bible before scene prompts. Repeat immutable character traits in every relevant scene prompt.
 - Keep the same visual preset, character design, outfit, colors, proportions, and recurring setting details across all pages.
 - Avoid photorealism, violence, frightening imagery, readable text, logos, watermarks, extra limbs, and duplicate characters.
@@ -868,7 +879,7 @@ JSON shape:
       {
         "wordEn": "Forest",
         "correctTranslationId": "Hutan",
-        "optionsId": ["Hutan", "Laut", "Istana", "Bintang"],
+        "optionsId": ["Laut", "Hutan", "Istana", "Bintang"],
         "emoji": "🌲",
         "phonetic": "for-est"
       }
@@ -891,13 +902,14 @@ JSON shape:
           return {
             pageNumber: index + 1,
             title: pageTitle,
+            titleEn: cleanOneLine(page.titleEn, 100),
             text,
             textEn: cleanAiText(page.textEn, 1800),
             illustrationType,
             illustrationPrompt: cleanAiText(
               page.illustrationPrompt,
               500,
-              `${pageTitle}: ${text.slice(0, 180)} Child-safe colorful storybook illustration.`
+              `A clear ${illustrationType} story scene with one focal action, expressive characters, and a child-safe colorful illustration style.`
             ),
             interactiveElements: normalizeInteractiveElements(page.interactiveElements, index + 1),
             quizQuestion: normalizeQuizQuestion(page.quizQuestion),
@@ -922,7 +934,7 @@ JSON shape:
           coverPrompt: cleanAiText(
             parsed.coverPrompt,
             500,
-            productionGuide.coverPrompt || `${requestedTitle || 'BacaYuk story'}, main character in the main setting, warm child-safe storybook cover illustration.`
+            productionGuide.coverPrompt || 'Main character in the main setting with the key story object, warm child-safe cover artwork without text.'
           ),
           productionGuide,
           pages,
@@ -999,7 +1011,8 @@ Rules:
 - illustrationType must be one of: forest, dragon, space, sea, castle, garden, custom.
 - Prompt shape: subject + action + setting + mood + important object + child-safe storybook style.
 - Repeat the relevant immutable character traits in every prompt.
-- Do not include readable text inside images.
+- Prompts must describe visible scenery only; do not copy page titles, narration, or dialogue into them.
+- Do not request typography, letters, numbers, captions, speech bubbles, signs, labels, logos, or watermarks.
 
 Visual continuity guide:
 ${visualContinuityContext}
@@ -1028,7 +1041,7 @@ Return only valid JSON:
       {
         "wordEn": "Forest",
         "correctTranslationId": "Hutan",
-        "optionsId": ["Hutan", "Laut", "Istana", "Bintang"],
+        "optionsId": ["Laut", "Hutan", "Istana", "Bintang"],
         "emoji": "🌲",
         "phonetic": "for-est"
       }
@@ -1040,7 +1053,8 @@ Rules:
 - Only include words that are relevant to the story.
 - Prefer 6 to 10 useful child-friendly vocabulary items.
 - Do not include generic words that are not in the story context.
-- Quiz options must be stable and include the correct answer.
+- Quiz options must include the correct answer exactly once.
+- Vary the correct answer position across questions; never place every correct answer first.
 
 Title: ${title}
 Target age: ${targetAge}
@@ -1174,8 +1188,23 @@ ${pageContext}`,
       const coverPrompt = cleanAiText(
         req.body?.coverPrompt,
         700,
-        productionGuide.coverPrompt || `${storyTitle}, main character in the main setting, warm child-safe storybook cover.`
+        productionGuide.coverPrompt || 'Main character in the main setting, warm child-safe storybook cover artwork.'
       );
+      const visualCoverPrompt = removeLiteralPhrases(
+        coverPrompt,
+        [storyTitle],
+        'Main character in the main setting, warm child-safe storybook cover artwork.'
+      );
+      const visualIllustrationPrompt = removeLiteralPhrases(
+        illustrationPrompt,
+        [storyTitle, pageTitle, pageText],
+        `A clear child-safe ${illustrationType} scene with one focal action and expressive characters.`
+      );
+      const ageArtDirection = /3\s*[-–]\s*5/.test(targetAge)
+        ? 'simple friendly shapes, gentle expressions, and an uncluttered composition'
+        : /9\s*[-–]\s*12/.test(targetAge)
+          ? 'richer environmental detail while keeping the focal action clear'
+          : 'clear expressive characters with balanced storybook detail';
       const visualContinuityContext = JSON.stringify({
         visualPreset: productionGuide.visualPreset,
         characterBible: productionGuide.characterBible,
@@ -1184,8 +1213,8 @@ ${pageContext}`,
         negativePrompt: productionGuide.negativePrompt,
       }).slice(0, 7000);
 
-      if (imageKind === 'page' && !pageText && !illustrationPrompt) {
-        return res.status(400).json({ error: 'Teks halaman atau prompt ilustrasi diperlukan.' });
+      if (imageKind === 'page' && !illustrationPrompt) {
+        return res.status(400).json({ error: 'Prompt adegan visual diperlukan sebelum membuat gambar.' });
       }
 
       const apiKey = process.env.GEMINI_API_KEY;
@@ -1194,30 +1223,31 @@ ${pageContext}`,
       }
 
       const prompt = imageKind === 'cover'
-        ? `Create one polished portrait cover illustration for a children's storybook.
+        ? `NON-NEGOTIABLE OUTPUT RULE: Create artwork containing zero text or typography. Do not reproduce any words from this prompt in the image.
 
-Book: ${storyTitle}
-Target age: ${targetAge}
-Cover scene: ${coverPrompt}
+Create one polished portrait cover artwork for a children's storybook.
+Visual scene description: ${visualCoverPrompt}
+Age-appropriate style: ${ageArtDirection}
 
 Art direction:
 - Use the visual preset and character bible below as the source of truth.
 - Show the main character, main setting, key story object, and emotional promise.
 - Preserve every immutable character trait, outfit, color, accessory, and proportion.
-- Use a clear portrait book-cover composition with one focal scene, not a collage.
+- Use a clear portrait composition with one focal scene, not a collage.
 - Avoid scary, violent, dark, or photorealistic adult styling.
-- No readable title, captions, speech bubbles, logos, or watermark inside the image.
+- Edge-to-edge illustration only. No title, typography, letters, numbers, words, sentences, captions, speech bubbles, labels, signs, text panels, logos, signatures, or watermarks.
+- Do not create blank title boxes, caption areas, banners, placards, pages, or UI elements.
 
 Visual continuity guide:
-${visualContinuityContext}`
-        : `Create one polished illustration for a children's storybook page.
+${visualContinuityContext}
 
-Book: ${storyTitle}
-Target age: ${targetAge}
-Page ${pageNumber}: ${pageTitle}
-Scene type: ${illustrationType}
-Scene prompt: ${illustrationPrompt || `${pageTitle}. ${pageText}`}
-Story text context: ${pageText}
+FINAL CHECK: The finished artwork must contain no visible written characters of any kind.`
+        : `NON-NEGOTIABLE OUTPUT RULE: Create artwork containing zero text or typography. Do not reproduce any words from this prompt in the image.
+
+Create one polished edge-to-edge illustration for a children's storybook page.
+Visual scene description: ${visualIllustrationPrompt}
+Visual environment category: ${illustrationType}
+Age-appropriate style: ${ageArtDirection}
 
 Art direction:
 - Use the visual preset and character bible below as the source of truth.
@@ -1225,11 +1255,14 @@ Art direction:
 - One clear focal action.
 - Preserve every immutable character trait, outfit, color, accessory, and proportion.
 - Avoid scary, violent, dark, or photorealistic adult styling.
-- No readable text, captions, speech bubbles, logos, or watermark inside the image.
-- Leave clean room for app-rendered story text outside the image.
+- No typography, letters, numbers, words, sentences, captions, speech bubbles, labels, signs, text panels, logos, signatures, or watermarks.
+- Do not create blank caption boxes, banners, placards, pages, or UI elements.
+- Fill the entire frame with illustration; the app renders story text separately outside this image.
 
 Visual continuity guide:
-${visualContinuityContext}`;
+${visualContinuityContext}
+
+FINAL CHECK: The finished artwork must contain no visible written characters of any kind.`;
 
       const ai = new GoogleGenAI({ apiKey });
       const generatedImage = await generateGeminiImage(ai, prompt, imageKind === 'cover' ? '3:4' : '4:3');
@@ -1298,12 +1331,14 @@ ${visualContinuityContext}`;
 
       const ai = new GoogleGenAI({ apiKey });
       const prompt = `Translate this Indonesian children's storybook into natural, simple English for children.
-Keep the same number of pages. Keep the meaning warm and child-safe. Do not add markdown.
+Translate the book title, every page title, and every page text. Keep the same number of pages.
+Keep the meaning warm and child-safe. Do not add markdown.
 
 Return only valid JSON with this shape:
 {
+  "titleEn": "English book title",
   "translations": [
-    { "pageNumber": 1, "textEn": "English translation..." }
+    { "pageNumber": 1, "titleEn": "English page title", "textEn": "English translation..." }
   ]
 }
 
@@ -1313,23 +1348,25 @@ ${pages.map((page) => `Page ${page.pageNumber}${page.title ? ` - ${page.title}` 
 
       const response = await generateGeminiJson(ai, prompt);
       const parsedJson = JSON.parse(response.text || '{}');
+      const titleEn = cleanOneLine(parsedJson.titleEn, 120);
       const translations = Array.isArray(parsedJson.translations)
         ? parsedJson.translations
             .map((item: unknown) => {
               const row = item as Record<string, unknown>;
               return {
                 pageNumber: Number(row.pageNumber),
+                titleEn: cleanOneLine(row.titleEn, 120),
                 textEn: typeof row.textEn === 'string' ? row.textEn.trim() : '',
               };
             })
-            .filter((item: { pageNumber: number; textEn: string }) => item.pageNumber && item.textEn)
+            .filter((item: { pageNumber: number; titleEn: string; textEn: string }) => item.pageNumber && item.textEn)
         : [];
 
       if (translations.length === 0) {
         return res.status(502).json({ error: 'AI tidak mengembalikan hasil terjemahan yang valid.' });
       }
 
-      res.json({ translations, model: response.model });
+      res.json({ titleEn, translations, model: response.model });
     } catch (error) {
       console.error('Error translating story:', error);
       res.status(500).json({ error: 'Gagal membuat terjemahan cerita.' });

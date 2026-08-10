@@ -67,7 +67,7 @@ Do not ask for fields the system can generate.
 | `illustrationPrompt` | Yes for generated books | Describe subject, action, setting, mood, key object, and child-safe style. |
 | `colors` | Yes | Include all five current UI color fields. |
 
-`textEn`, `imageUrl`, `customSvgPath`, interactions, and page quiz are optional. If `illustrationType` is `custom`, require at least one of `illustrationPrompt`, `customSvgPath`, or `imageUrl`.
+`titleEn`, `textEn`, `imageUrl`, `customSvgPath`, interactions, and page quiz are optional. Generate `titleEn` and `textEn` together when adding an English translation. If `illustrationType` is `custom`, require at least one of `illustrationPrompt`, `customSvgPath`, or `imageUrl`.
 
 ## Persistence mapping
 
@@ -81,5 +81,6 @@ The Supabase `admin_stories` table stores `id`, `title`, `category`, `status`, a
 - Keep `pipelineStatus: "story_complete"` while only prompts exist. Use `illustrated` only after the cover and every page contain non-placeholder image URLs.
 - Use one visual preset and the same character traits across every prompt.
 - Make quiz answer indexes valid for their option arrays.
-- Leave `textEn` empty until a real translation exists.
+- Include each vocabulary answer exactly once and vary its position across questions.
+- Leave `titleEn` and `textEn` empty until a real translation exists; generate both together.
 - Keep glossary terms relevant to words or concepts in the story.

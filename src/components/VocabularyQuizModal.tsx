@@ -3,12 +3,28 @@ import { VocabularyQuiz } from '../types';
 import confetti from 'canvas-confetti';
 import { Award, CheckCircle2, XCircle, Volume2, Sparkles, X, Languages, RotateCcw } from 'lucide-react';
 import { speechEngine } from '../utils/speechEngine';
+import { arrangeQuizOptions } from '../utils/quizOptions';
 
 interface VocabularyQuizModalProps {
   quiz: VocabularyQuiz;
   onClose: () => void;
   isNight?: boolean;
 }
+
+const createOptionOrders = (quiz: VocabularyQuiz) => {
+  const maximumOptionCount = Math.max(1, ...quiz.questions.map((question) => question.optionsId.length));
+  const startingPosition = maximumOptionCount > 1
+    ? 1 + Math.floor(Math.random() * (maximumOptionCount - 1))
+    : 0;
+
+  return quiz.questions.map((question, questionIndex) =>
+    arrangeQuizOptions(
+      question.optionsId,
+      question.correctTranslationId,
+      startingPosition + questionIndex
+    )
+  );
+};
 
 export const VocabularyQuizModal: React.FC<VocabularyQuizModalProps> = ({
   quiz,
@@ -19,8 +35,10 @@ export const VocabularyQuizModal: React.FC<VocabularyQuizModalProps> = ({
   const [isAnswered, setIsAnswered] = useState(false);
   const [score, setScore] = useState(0);
   const [isFinished, setIsFinished] = useState(false);
+  const [optionOrders, setOptionOrders] = useState(() => createOptionOrders(quiz));
 
   const question = quiz.questions[currentQuestionIndex];
+  const displayedOptions = optionOrders[currentQuestionIndex] || question.optionsId;
 
   const handleOptionClick = (opt: string) => {
     if (isAnswered) return;
@@ -35,9 +53,9 @@ export const VocabularyQuizModal: React.FC<VocabularyQuizModalProps> = ({
         spread: 60,
         origin: { y: 0.6 },
       });
-      speechEngine.speak(`Great job! ${question.wordEn} means ${question.correctTranslationId}`, 0.95, 1.0);
+      speechEngine.speak(`Great job! ${question.wordEn} means ${question.correctTranslationId}`, 0.95, 1.0, { language: 'en-US' });
     } else {
-      speechEngine.speak(`Try again next time!`, 0.95, 1.0);
+      speechEngine.speak(`Try again next time!`, 0.95, 1.0, { language: 'en-US' });
     }
   };
 
@@ -57,7 +75,7 @@ export const VocabularyQuizModal: React.FC<VocabularyQuizModalProps> = ({
   };
 
   const handleSpeakWord = () => {
-    speechEngine.speak(question.wordEn, 0.9, 1.0);
+    speechEngine.speak(question.wordEn, 0.9, 1.0, { language: 'en-US' });
   };
 
   const handleRestart = () => {
@@ -66,6 +84,7 @@ export const VocabularyQuizModal: React.FC<VocabularyQuizModalProps> = ({
     setIsAnswered(false);
     setScore(0);
     setIsFinished(false);
+    setOptionOrders(createOptionOrders(quiz));
   };
 
   return (
@@ -140,7 +159,7 @@ export const VocabularyQuizModal: React.FC<VocabularyQuizModalProps> = ({
 
             {/* Answer Options */}
             <div className="grid grid-cols-2 gap-3">
-              {question.optionsId.map((opt, idx) => {
+              {displayedOptions.map((opt, idx) => {
                 let btnStyle = 'reader-field hover:border-[var(--magic-blue)] text-slate-800 dark:text-slate-100';
                 if (isAnswered) {
                   if (opt === question.correctTranslationId) {

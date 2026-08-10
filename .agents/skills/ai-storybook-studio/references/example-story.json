@@ -191,7 +191,7 @@
         {
           "wordEn": "Brave",
           "correctTranslationId": "Berani",
-          "optionsId": ["Berani", "Sedih", "Lapar", "Sepi"],
+          "optionsId": ["Sedih", "Berani", "Lapar", "Sepi"],
           "emoji": "🌟",
           "phonetic": "breiv"
         }

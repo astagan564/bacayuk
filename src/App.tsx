@@ -526,9 +526,9 @@ export default function App() {
                   </div>
                   <div className={`p-3 sm:p-4 text-xs sm:text-sm space-y-2 ${isNight ? 'text-slate-300' : 'text-slate-600'}`}>
                     <ul className="list-disc pl-4 space-y-1">
-                      <li><strong>Admin tambah buku</strong> kini tersimpan ke Supabase.</li>
-                      <li><strong>Draft/Published</strong> membantu menyiapkan buku sebelum tampil.</li>
-                      <li><strong>Editor halaman</strong> kini punya validasi, preview, interaksi, dan kuis.</li>
+                      <li><strong>Buat buku lebih cepat</strong> dari ide atau naskah singkat.</li>
+                      <li><strong>Mode baca baru</strong> menampilkan gambar kiri dan teks kanan.</li>
+                      <li><strong>Terjemahan, suara, kuis, dan ilustrasi</strong> kini lebih akurat.</li>
                     </ul>
                   </div>
                   <div className={`p-3 border-t ${isNight ? 'border-slate-700 bg-slate-800/50' : 'border-slate-100 bg-slate-50'}`}>

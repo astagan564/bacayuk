@@ -5,9 +5,22 @@ All notable changes to the **BacaYuk** project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased] - 2026-08-08
+## [0.1.0] - 2026-08-10
+
+### Added
+- **AI Storybook Studio**: Added a reusable storybook generation contract, example payload, visual production guide, character bible, review checklist, and illustration continuity rules.
+- **Brief-first Quick Create**: Admins can now start from a short idea or manuscript using only a brief, target age, and primary language; title, structure, page beats, glossary, quiz candidates, and visual direction are generated as a reviewable draft.
+- **Sequential illustration workflow**: Added resumable cover-first and page-by-page image generation with progress feedback. Completed images are preserved when a later request fails.
+- **English page titles**: Added `titleEn` to each story page and to the translation/editor workflow.
 
 ### Changed
+- **Editorial reader spread**: One story page now becomes one book spread, with a full illustration on the left and focused story text on the right. On mobile, the same page stacks illustration above text.
+- **External reading toolbar**: Moved quiz, recording, read-aloud, bookmark, completion, and vocabulary actions outside the book surface. Page navigation now sits outside the spread as well.
+- **Bilingual narration**: Read-aloud now selects an English voice for English mode and avoids playing Indonesian custom recordings over English text.
+- **Vocabulary quiz choices**: Correct answers are distributed across different option positions and reshuffled when a quiz is restarted, including for existing books.
+- **Illustration prompt safety**: Image generation now sends only visual scene descriptions and character continuity context, not raw titles or manuscript text, and applies mandatory no-typography exclusions.
+- **Storefront covers**: Homepage book cards now display the stored cover artwork with a full-cover treatment and gradient fallback.
+- **Story pipeline states**: Illustration and publishing states now reflect whether a real cover and all page images are complete.
 - **Dark mode surfaces**: Unified promo, hero, modal, quiz, stats, recorder, rest reminder, changelog, and admin editor panels with shared reader surface tokens.
 - **Reader UI polish**: Replaced older amber/purple gradient-heavy modal treatments with calmer book-inspired surfaces, consistent borders, and clearer dark-mode contrast.
 - **Admin editor styling**: Updated story editor inputs and nested panels to use the same reader field and soft-panel styles as the public reading flows.
@@ -17,6 +30,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Checkout story lookup**: Payment creation now resolves book title and price from the Supabase story table before falling back to bundled stories.
 
 ### Fixed
+- **Missing storefront artwork**: Fixed published book cards rendering only a color gradient instead of their saved cover image.
+- **Predictable vocabulary answers**: Fixed every generated vocabulary answer appearing in the first option.
+- **Partial English translation**: Fixed translated pages retaining Indonesian page titles.
+- **Wrong read-aloud language**: Fixed English story text being pronounced with the Indonesian speech voice.
+- **Unwanted text in illustrations**: Removed raw story context that caused generated images to reproduce titles, narration, captions, and other text artifacts.
 - **Dark mode mismatch**: Fixed light cards and low-contrast text appearing inside dark mode by aligning reusable CSS selectors with the app's `.dark` class strategy.
 - **Invalid Tailwind class**: Removed remaining `slate-850` usages that could be ignored during build and cause inconsistent dark surfaces.
 - **Modal readability**: Improved text, divider, field, and button contrast across parent login, parental gate, vocabulary, reading stats, voice recorder, rest reminder, completion, and changelog modals.

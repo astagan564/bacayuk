@@ -1,15 +1,26 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { Story, StoryPage, ReadingSettings, InteractiveElement, GlossaryItem } from '../types';
-import { StoryIllustration } from './Illustrations';
-import { playPageFlipSound, playInteractionSound } from '../utils/soundEngine';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import {
+  Bookmark,
+  BookOpen,
+  ChevronLeft,
+  ChevronRight,
+  HelpCircle,
+  Languages,
+  Mic,
+  RotateCcw,
+  Sparkles,
+  Volume2,
+} from 'lucide-react';
+import { GlossaryItem, InteractiveElement, ReadingSettings, Story, StoryPage } from '../types';
+import { VocabDefinition } from '../data/vocabulary';
+import { playInteractionSound, playPageFlipSound } from '../utils/soundEngine';
 import { speechEngine } from '../utils/speechEngine';
-import { ChevronLeft, ChevronRight, Volume2, Sparkles, HelpCircle, Bookmark, BookOpen, Mic, Languages } from 'lucide-react';
+import { voiceRecordingsStore } from '../utils/voiceRecordings';
+import { createFallbackVocabularyQuiz } from '../utils/quizOptions';
+import { StoryIllustration } from './Illustrations';
 import { InteractiveStoryText } from './InteractiveStoryText';
 import { VocabTooltipModal } from './VocabTooltipModal';
 import { VocabularyQuizModal } from './VocabularyQuizModal';
-import { VocabDefinition } from '../data/vocabulary';
-import { voiceRecordingsStore } from '../utils/voiceRecordings';
-import { createFallbackVocabularyQuiz } from '../utils/quizOptions';
 
 interface FlipbookProps {
   story: Story;
@@ -23,40 +34,29 @@ interface FlipbookProps {
   onOpenVoiceRecorder?: (pageNum: number, pageText: string) => void;
 }
 
-const GRADIENT_COLOR_MAP: Record<string, string> = {
-  'from-emerald-100': '#d1fae5',
-  'to-emerald-100': '#d1fae5',
-  'from-amber-100': '#fef3c7',
-  'to-amber-100': '#fef3c7',
-  'from-blue-100': '#dbeafe',
-  'to-blue-100': '#dbeafe',
-  'from-indigo-100': '#e0e7ff',
-  'to-indigo-100': '#e0e7ff',
-  'from-purple-100': '#f3e8ff',
-  'to-purple-100': '#f3e8ff',
-  'from-pink-100': '#fce7f3',
-  'to-pink-100': '#fce7f3',
-  'from-rose-100': '#ffe4e6',
-  'to-rose-100': '#ffe4e6',
-  'from-orange-100': '#ffedd5',
-  'to-orange-100': '#ffedd5',
-  'from-yellow-100': '#fef9c3',
-  'to-yellow-100': '#fef9c3',
-  'from-cyan-100': '#cffafe',
-  'to-cyan-100': '#cffafe',
-  'from-sky-100': '#e0f2fe',
-  'to-sky-100': '#e0f2fe',
-  'from-teal-100': '#ccfbf1',
-  'to-teal-100': '#ccfbf1',
+const getDisplayedPageTitle = (page: StoryPage, languageMode: ReadingSettings['languageMode']) => {
+  const title = page.title?.trim() || '';
+  const titleEn = page.titleEn?.trim() || '';
+
+  if (languageMode === 'en') return titleEn || title;
+  if (languageMode === 'dual' && titleEn) return title ? `${title} / ${titleEn}` : titleEn;
+  return title;
 };
 
-const resolveStoryColor = (colorToken?: string, fallback = '#fef3c7') => {
-  if (!colorToken) return fallback;
-  if (colorToken.startsWith('#') || colorToken.startsWith('rgb') || colorToken.startsWith('hsl')) {
-    return colorToken;
-  }
-  return GRADIENT_COLOR_MAP[colorToken] || fallback;
+const getPageNarration = (page: StoryPage, languageMode: ReadingSettings['languageMode']) => {
+  const useEnglish = languageMode === 'en';
+  const title = useEnglish ? page.titleEn?.trim() : page.title?.trim();
+  const text = useEnglish ? page.textEn?.trim() || '' : page.text;
+
+  return {
+    text: [title, text].filter(Boolean).join('. '),
+    language: useEnglish ? 'en-US' as const : 'id-ID' as const,
+    allowCustomRecording: !useEnglish,
+  };
 };
+
+const actionButtonClass =
+  'inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border px-3 py-2 text-xs font-bold shadow-sm transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--warm-gold)] focus-visible:ring-offset-2';
 
 export const Flipbook3D: React.FC<FlipbookProps> = ({
   story,
@@ -69,7 +69,6 @@ export const Flipbook3D: React.FC<FlipbookProps> = ({
   onToggleBookmark,
   onOpenVoiceRecorder,
 }) => {
-  const [turningDirection, setTurningDirection] = useState<'next' | 'prev' | null>(null);
   const [isFlipping, setIsFlipping] = useState(false);
   const [activeInteractive, setActiveInteractive] = useState<InteractiveElement | null>(null);
   const [animatedElementId, setAnimatedElementId] = useState<string | null>(null);
@@ -77,716 +76,459 @@ export const Flipbook3D: React.FC<FlipbookProps> = ({
   const [selectedVocab, setSelectedVocab] = useState<VocabDefinition | null>(null);
   const [selectedGlossary, setSelectedGlossary] = useState<GlossaryItem | null>(null);
   const [showVocabQuizModal, setShowVocabQuizModal] = useState(false);
-  const [hasCustomRecordings, setHasCustomRecordings] = useState<Record<number, boolean>>({});
+  const [hasCustomRecording, setHasCustomRecording] = useState(false);
 
-  const containerRef = useRef<HTMLDivElement>(null);
   const activeAudioRef = useRef<HTMLAudioElement | null>(null);
   const activeResolveRef = useRef<(() => void) | null>(null);
   const touchStartX = useRef<number | null>(null);
   const touchEndX = useRef<number | null>(null);
 
   const totalPages = story.pages.length;
-  const isDoubleView = settings.displayView === 'double';
+  const activePage = story.pages[currentPageIndex];
+  const isBackCover = currentPageIndex >= totalPages;
   const isNight = settings.themeMode === 'night';
-  const fallbackVocabularyQuiz = useMemo(() => {
-    return createFallbackVocabularyQuiz(story.title, story.glossary || []);
-  }, [story.glossary, story.title]);
+  const isSpreadView = settings.displayView === 'double';
+  const languageMode = settings.languageMode || 'id';
+  const fallbackVocabularyQuiz = useMemo(
+    () => createFallbackVocabularyQuiz(story.title, story.glossary || []),
+    [story.glossary, story.title]
+  );
 
-  // Calculate max allowed index to include back cover
-  const maxAllowedIndex = isDoubleView && totalPages % 2 !== 0 ? totalPages - 1 : totalPages;
-
-  // For double view, ensure left page index is even (0, 2, 4, etc.)
-  const currentSpreadLeft = isDoubleView ? Math.floor(currentPageIndex / 2) * 2 : currentPageIndex;
-  const leftPageObj = story.pages[currentSpreadLeft];
-  const rightPageObj = isDoubleView && currentSpreadLeft + 1 < totalPages ? story.pages[currentSpreadLeft + 1] : null;
-
-  // Check custom voice recordings availability for left and right pages
   useEffect(() => {
     let isMounted = true;
-    const checkRecordings = async () => {
-      const records: Record<number, boolean> = {};
-      if (leftPageObj) {
-        const url = await voiceRecordingsStore.getRecordingUrl(story.id, leftPageObj.pageNumber);
-        records[leftPageObj.pageNumber] = !!url;
+
+    const checkRecording = async () => {
+      if (!activePage) {
+        if (isMounted) setHasCustomRecording(false);
+        return;
       }
-      if (rightPageObj) {
-        const url = await voiceRecordingsStore.getRecordingUrl(story.id, rightPageObj.pageNumber);
-        records[rightPageObj.pageNumber] = !!url;
-      }
-      if (isMounted) {
-        setHasCustomRecordings(records);
-      }
+
+      const recordingUrl = await voiceRecordingsStore.getRecordingUrl(story.id, activePage.pageNumber);
+      if (isMounted) setHasCustomRecording(Boolean(recordingUrl));
     };
-    checkRecordings();
+
+    checkRecording();
     return () => {
       isMounted = false;
     };
-  }, [story.id, currentPageIndex, leftPageObj, rightPageObj]);
+  }, [activePage, story.id]);
 
-  // Handle keyboard page turn
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowRight' || e.key === 'PageDown') {
-        handleNext();
-      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
-        handlePrev();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [currentPageIndex, totalPages, isDoubleView, settings.pageAudioFx]);
-
-  // Read aloud automatically when page changes if autoPlay
-  useEffect(() => {
-    setActiveInteractive(null);
-    let isCancelled = false;
-
-    const playSequence = async () => {
-      if (!settings.autoPlay) return;
-
-      if (leftPageObj) {
-        await handleSpeakPage(leftPageObj.text, leftPageObj.pageNumber);
-      }
-      if (isCancelled || !settings.autoPlay) return;
-
-      if (isDoubleView && rightPageObj) {
-        // Small pause between pages
-        await new Promise(res => setTimeout(res, 500));
-        if (isCancelled || !settings.autoPlay) return;
-        await handleSpeakPage(rightPageObj.text, rightPageObj.pageNumber);
-      }
-
-      if (isCancelled || !settings.autoPlay) return;
-
-      // Wait for delay before turning page
-      await new Promise(res => setTimeout(res, (settings.autoPlayDelay || 3) * 1000));
-      
-      if (!isCancelled && settings.autoPlay) {
-        const step = isDoubleView ? 2 : 1;
-        if (currentPageIndex + step <= maxAllowedIndex) {
-          handleNext();
-        }
-      }
-    };
-
-    if (settings.autoPlay && currentPageIndex < maxAllowedIndex) {
-      playSequence();
-    } else if (!settings.autoPlay) {
-      // If autoPlay is turned off, stop any ongoing speech
-      speechEngine.stop();
-      if (activeAudioRef.current) {
-        activeAudioRef.current.pause();
-        activeAudioRef.current = null;
-      }
-      setActiveSpeechPage(null);
-      if (activeResolveRef.current) {
-        activeResolveRef.current();
-        activeResolveRef.current = null;
-      }
+  const stopActiveAudio = () => {
+    speechEngine.stop();
+    if (activeAudioRef.current) {
+      activeAudioRef.current.pause();
+      activeAudioRef.current = null;
     }
-
-    return () => {
-      isCancelled = true;
-    };
-  }, [currentPageIndex, settings.autoPlay, isDoubleView, leftPageObj, rightPageObj, maxAllowedIndex, settings.autoPlayDelay]);
+    setActiveSpeechPage(null);
+    if (activeResolveRef.current) {
+      activeResolveRef.current();
+      activeResolveRef.current = null;
+    }
+  };
 
   const handleNext = () => {
-    if (isFlipping) return;
-    const step = isDoubleView ? 2 : 1;
-    if (currentPageIndex + step <= maxAllowedIndex) {
-      setTurningDirection('next');
-      setIsFlipping(true);
-      playPageFlipSound(settings.pageAudioFx);
-
-      setTimeout(() => {
-        onPageChange(currentPageIndex + step);
-        setIsFlipping(false);
-        setTurningDirection(null);
-      }, 450);
-    }
+    if (isFlipping || currentPageIndex >= totalPages) return;
+    setIsFlipping(true);
+    playPageFlipSound(settings.pageAudioFx);
+    stopActiveAudio();
+    window.setTimeout(() => {
+      onPageChange(currentPageIndex + 1);
+      setIsFlipping(false);
+    }, 240);
   };
 
   const handlePrev = () => {
-    if (isFlipping) return;
-    const step = isDoubleView ? 2 : 1;
-    if (currentPageIndex - step >= 0) {
-      setTurningDirection('prev');
-      setIsFlipping(true);
-      playPageFlipSound(settings.pageAudioFx);
-
-      setTimeout(() => {
-        onPageChange(Math.max(0, currentPageIndex - step));
-        setIsFlipping(false);
-        setTurningDirection(null);
-      }, 450);
-    }
+    if (isFlipping || currentPageIndex <= 0) return;
+    setIsFlipping(true);
+    playPageFlipSound(settings.pageAudioFx);
+    stopActiveAudio();
+    window.setTimeout(() => {
+      onPageChange(currentPageIndex - 1);
+      setIsFlipping(false);
+    }, 240);
   };
 
-  const handleInteractiveTap = (elem: InteractiveElement) => {
-    setActiveInteractive(elem);
-    setAnimatedElementId(elem.id);
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'ArrowRight' || event.key === 'PageDown') handleNext();
+      if (event.key === 'ArrowLeft' || event.key === 'PageUp') handlePrev();
+    };
 
-    playInteractionSound(elem.soundType || 'pop', settings.soundFx);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [currentPageIndex, isFlipping, settings.pageAudioFx, totalPages]);
 
-    if (elem.dialogue) {
-      speechEngine.speak(elem.dialogue, settings.speechRate, settings.speechPitch);
+  const handleInteractiveTap = (element: InteractiveElement) => {
+    setActiveInteractive(element);
+    setAnimatedElementId(element.id);
+    playInteractionSound(element.soundType || 'pop', settings.soundFx);
+
+    if (element.dialogue) {
+      speechEngine.speak(element.dialogue, settings.speechRate, settings.speechPitch);
     }
 
-    setTimeout(() => {
-      setAnimatedElementId(null);
-    }, 1200);
+    window.setTimeout(() => setAnimatedElementId(null), 1200);
   };
 
-  const handleSpeakPage = (text: string, pageNum?: number): Promise<void> => {
+  const handleSpeakPage = (page: StoryPage): Promise<void> => {
     return new Promise(async (resolve) => {
-      if (pageNum === undefined) {
+      const narration = getPageNarration(page, languageMode);
+      if (!narration.text) {
         resolve();
         return;
       }
 
-      // Resolve the previous one if it exists to unblock any pending awaits
-      if (activeResolveRef.current) {
-        activeResolveRef.current();
-        activeResolveRef.current = null;
-      }
+      stopActiveAudio();
       activeResolveRef.current = resolve;
+      setActiveSpeechPage(page.pageNumber);
 
       const finish = () => {
         setActiveSpeechPage(null);
-        if (activeAudioRef.current) {
-          activeAudioRef.current = null;
-        }
+        activeAudioRef.current = null;
         if (activeResolveRef.current === resolve) {
           activeResolveRef.current = null;
           resolve();
         }
       };
 
-      speechEngine.stop();
-      if (activeAudioRef.current) {
-        activeAudioRef.current.pause();
-        activeAudioRef.current = null;
-      }
-
-      setActiveSpeechPage(pageNum);
-
-      // Check if custom voice recording exists
-      const customAudioUrl = await voiceRecordingsStore.getRecordingUrl(story.id, pageNum);
+      const customAudioUrl = narration.allowCustomRecording
+        ? await voiceRecordingsStore.getRecordingUrl(story.id, page.pageNumber)
+        : null;
 
       if (customAudioUrl) {
         const audio = new Audio(customAudioUrl);
         activeAudioRef.current = audio;
-
         audio.onended = finish;
-
         audio.onerror = () => {
-          // Fallback to text-to-speech if audio fails to load
-          speechEngine.speak(text, settings.speechRate, settings.speechPitch, {
+          speechEngine.speak(narration.text, settings.speechRate, settings.speechPitch, {
             onEnd: finish,
+            language: narration.language,
           });
         };
-
         audio.play().catch(finish);
-      } else {
-        speechEngine.speak(text, settings.speechRate, settings.speechPitch, {
-          onEnd: finish,
-        });
+        return;
       }
+
+      speechEngine.speak(narration.text, settings.speechRate, settings.speechPitch, {
+        onEnd: finish,
+        language: narration.language,
+      });
     });
   };
 
-  const renderBackCover = () => (
-    <div
-      className={`h-full flex flex-col items-center justify-center text-center p-6 rounded-xl border-2 ${
-        isNight
-          ? 'bg-gradient-to-br from-slate-900 to-indigo-950 border-indigo-700 text-indigo-100'
-          : 'bg-gradient-to-br from-amber-100 to-amber-200 border-amber-300 text-amber-950'
-      }`}
-    >
-      <span className="text-6xl mb-3 animate-bounce">🌟</span>
-      <h3 className={`text-2xl font-black mb-1 ${isNight ? 'text-indigo-100' : 'text-amber-950'}`}>Tamat!</h3>
-      <p className={`text-xs sm:text-sm max-w-xs mb-4 font-medium ${isNight ? 'text-indigo-200' : 'text-amber-800'}`}>
-        "{story.moralMessage}"
-      </p>
+  useEffect(() => {
+    setActiveInteractive(null);
+    let isCancelled = false;
 
-      {/* Vocabulary Quiz trigger if available */}
-      {(story.vocabularyQuiz || (story.glossary && story.glossary.length > 0)) && (
-        <button
-          onClick={() => setShowVocabQuizModal(true)}
-          className="mb-4 px-5 py-3 font-black text-xs sm:text-sm rounded-2xl shadow-xl transition-all hover:scale-105 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white flex items-center gap-2 border border-indigo-300"
-        >
-          <Languages className="w-5 h-5 text-amber-300" />
-          <span>Mainkan Kuis Kosakata Bahasa Inggris 🎮</span>
-        </button>
-      )}
+    const playSequence = async () => {
+      if (!settings.autoPlay || !activePage) return;
+      await handleSpeakPage(activePage);
+      if (isCancelled || !settings.autoPlay) return;
 
-      <div className="flex flex-col sm:flex-row items-center gap-2">
-        {onCompleteBook && (
-          <button
-            onClick={onCompleteBook}
-            className="px-5 py-2.5 font-black text-xs sm:text-sm rounded-full shadow-lg transition-transform hover:scale-105 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-amber-950 flex items-center gap-1.5"
-          >
-            <Sparkles className="w-4 h-4 text-amber-950" />
-            <span>Rayakan Tamat Cerita 🌟</span>
-          </button>
-        )}
-        <button
-          onClick={() => onPageChange(0)}
-          className={`px-5 py-2.5 font-bold text-xs sm:text-sm rounded-full shadow-md transition-transform hover:scale-105 ${
-            isNight ? 'bg-indigo-700 hover:bg-indigo-600 text-white' : 'bg-amber-700 hover:bg-amber-600 text-white'
-          }`}
-        >
-          Baca Dari Awal
-        </button>
-      </div>
-    </div>
-  );
+      await new Promise((resolve) => window.setTimeout(resolve, (settings.autoPlayDelay || 3) * 1000));
+      if (!isCancelled && settings.autoPlay && currentPageIndex < totalPages) handleNext();
+    };
+
+    if (settings.autoPlay && activePage) playSequence();
+    if (!settings.autoPlay) stopActiveAudio();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [activePage, currentPageIndex, settings.autoPlay, settings.autoPlayDelay]);
 
   const fontClasses = {
-    sm: 'text-sm sm:text-base leading-relaxed',
-    base: 'text-base sm:text-lg leading-relaxed',
-    lg: 'text-lg sm:text-xl leading-relaxed',
-    xl: 'text-xl sm:text-2xl leading-relaxed',
+    sm: 'text-sm sm:text-base lg:text-[1.05rem] leading-[1.7]',
+    base: 'text-base sm:text-[1.05rem] lg:text-lg leading-[1.72]',
+    lg: 'text-lg sm:text-xl lg:text-[1.3rem] leading-[1.68]',
+    xl: 'text-xl sm:text-[1.35rem] lg:text-2xl leading-[1.64]',
   };
 
+  const toolbarSurface = isNight
+    ? 'border-slate-700/80 bg-slate-900/92 text-slate-100 shadow-slate-950/30'
+    : 'border-[#d8c9ad] bg-[#fffaf0]/94 text-[#35291f] shadow-[#6f5635]/10';
+  const quietAction = isNight
+    ? 'border-slate-700 bg-slate-800 text-slate-100 hover:bg-slate-700'
+    : 'border-[#dfd2bd] bg-white/75 text-[#604b38] hover:bg-white';
+  const activeAction = isNight
+    ? 'border-blue-400 bg-blue-500 text-white'
+    : 'border-[#2f8f6b] bg-[#2f8f6b] text-white';
+
+  const renderToolbar = () => (
+    <nav
+      aria-label="Alat bantu membaca"
+      className={`mb-3 flex w-full flex-wrap items-center justify-between gap-3 rounded-2xl border px-3 py-2.5 shadow-lg backdrop-blur-md sm:px-4 ${toolbarSurface}`}
+    >
+      <div className="flex min-w-0 items-center gap-3">
+        <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl ${isNight ? 'bg-slate-800' : 'bg-[#efe4d1]'}`}>
+          <BookOpen className="h-5 w-5" />
+        </span>
+        <div className="min-w-0">
+          <p className="truncate text-xs font-bold sm:text-sm">{story.title}</p>
+          <p className={`text-[10px] font-semibold tracking-wide ${isNight ? 'text-slate-400' : 'text-[#806c58]'}`}>
+            {activePage ? `Halaman ${activePage.pageNumber} dari ${totalPages}` : 'Sampul belakang'}
+          </p>
+        </div>
+      </div>
+
+      <div className="flex flex-wrap items-center justify-end gap-2">
+        {activePage?.quizQuestion && onOpenQuiz && (
+          <button type="button" onClick={() => onOpenQuiz(activePage)} className={`${actionButtonClass} ${quietAction}`}>
+            <HelpCircle className="h-4 w-4" />
+            <span>Kuis</span>
+          </button>
+        )}
+
+        {activePage && onOpenVoiceRecorder && languageMode !== 'en' && (
+          <button
+            type="button"
+            onClick={() => onOpenVoiceRecorder(activePage.pageNumber, activePage.text)}
+            className={`${actionButtonClass} ${hasCustomRecording ? activeAction : quietAction}`}
+            title={hasCustomRecording ? 'Ubah rekaman halaman ini' : 'Rekam suara untuk halaman ini'}
+          >
+            <Mic className={`h-4 w-4 ${hasCustomRecording ? 'fill-current' : ''}`} />
+            <span>{hasCustomRecording ? 'Rekaman' : 'Rekam'}</span>
+          </button>
+        )}
+
+        {activePage && (
+          <button
+            type="button"
+            onClick={() => handleSpeakPage(activePage)}
+            className={`${actionButtonClass} ${activeSpeechPage === activePage.pageNumber ? activeAction : quietAction}`}
+            aria-pressed={activeSpeechPage === activePage.pageNumber}
+          >
+            <Volume2 className="h-4 w-4" />
+            <span>Baca</span>
+          </button>
+        )}
+
+        {activePage && onToggleBookmark && (
+          <button
+            type="button"
+            onClick={onToggleBookmark}
+            className={`${actionButtonClass} ${isBookmarked ? activeAction : quietAction}`}
+            aria-pressed={isBookmarked}
+          >
+            <Bookmark className={`h-4 w-4 ${isBookmarked ? 'fill-current' : ''}`} />
+            <span className="hidden sm:inline">Tandai</span>
+          </button>
+        )}
+
+        {isBackCover && (story.vocabularyQuiz || (story.glossary && story.glossary.length > 0)) && (
+          <button type="button" onClick={() => setShowVocabQuizModal(true)} className={`${actionButtonClass} ${activeAction}`}>
+            <Languages className="h-4 w-4" />
+            <span>Kuis kosakata</span>
+          </button>
+        )}
+
+        {isBackCover && (
+          <button type="button" onClick={() => onPageChange(0)} className={`${actionButtonClass} ${quietAction}`}>
+            <RotateCcw className="h-4 w-4" />
+            <span>Baca dari awal</span>
+          </button>
+        )}
+
+        {isBackCover && onCompleteBook && (
+          <button type="button" onClick={onCompleteBook} className={`${actionButtonClass} ${activeAction}`}>
+            <Sparkles className="h-4 w-4" />
+            <span>Selesaikan</span>
+          </button>
+        )}
+      </div>
+    </nav>
+  );
+
+  const renderInteractiveElements = (page: StoryPage) => (
+    <>
+      {page.interactiveElements?.map((element) => {
+        const isAnimated = animatedElementId === element.id;
+        return (
+          <button
+            type="button"
+            key={element.id}
+            onClick={() => handleInteractiveTap(element)}
+            className={`group absolute z-20 grid min-h-11 min-w-11 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border border-white/80 bg-white/75 p-1.5 text-2xl shadow-lg backdrop-blur-sm transition-transform duration-300 hover:scale-110 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/80 sm:text-3xl ${
+              isAnimated ? 'scale-110 animate-bounce' : ''
+            }`}
+            style={{ left: `${element.x}%`, top: `${element.y}%` }}
+            aria-label={element.label}
+          >
+            <span>{element.emoji || '✨'}</span>
+            <span className="pointer-events-none absolute bottom-full mb-2 hidden whitespace-nowrap rounded-lg bg-[#2f241c]/90 px-2 py-1 text-[10px] font-bold text-white shadow-md group-hover:block sm:block sm:opacity-0 sm:transition-opacity sm:group-hover:opacity-100">
+              {element.label}
+            </span>
+          </button>
+        );
+      })}
+
+      {activeInteractive && page.interactiveElements?.some((element) => element.id === activeInteractive.id) && (
+        <div className="absolute inset-x-4 bottom-4 z-30 mx-auto flex max-w-md items-center justify-center gap-2 rounded-xl border border-white/70 bg-white/92 px-4 py-2.5 text-center text-xs font-semibold text-[#3f3025] shadow-xl backdrop-blur-md sm:text-sm">
+          <span>{activeInteractive.emoji}</span>
+          <span>“{activeInteractive.dialogue || activeInteractive.label}”</span>
+        </div>
+      )}
+    </>
+  );
+
+  const renderStorySpread = (page: StoryPage) => {
+    const pageTitle = getDisplayedPageTitle(page, languageMode);
+    const paperStyle = isNight
+      ? { background: 'radial-gradient(circle at 20% 10%, #202b3d 0, #121a28 58%, #0d1420 100%)' }
+      : {
+          backgroundColor: '#fffdf8',
+          backgroundImage:
+            'radial-gradient(circle at 20% 15%, rgba(130,102,68,0.055) 0 0.7px, transparent 0.9px), radial-gradient(circle at 70% 65%, rgba(130,102,68,0.04) 0 0.6px, transparent 0.8px)',
+          backgroundSize: '13px 13px, 17px 17px',
+        };
+
+    return (
+      <article
+        key={page.pageNumber}
+        className={`grid h-full min-h-0 w-full ${isSpreadView ? 'md:grid-cols-2' : 'grid-cols-1 md:grid-rows-[minmax(18rem,1fr)_auto]'}`}
+      >
+        <figure className={`relative min-h-[18rem] overflow-hidden ${isSpreadView ? 'md:min-h-0' : 'md:min-h-[24rem]'}`}>
+          <StoryIllustration type={page.illustrationType} imageUrl={page.imageUrl} />
+          {renderInteractiveElements(page)}
+          <figcaption className="sr-only">Ilustrasi untuk halaman {page.pageNumber}: {pageTitle}</figcaption>
+        </figure>
+
+        <section
+          className={`relative flex min-h-[20rem] flex-col overflow-y-auto border-t px-6 py-7 sm:px-8 sm:py-8 md:min-h-0 md:px-8 lg:px-10 ${
+            isSpreadView ? 'md:border-l md:border-t-0' : ''
+          } ${isNight ? 'border-slate-700 text-slate-100' : 'border-[#d9cfbd] text-[#251f1a]'}`}
+          style={paperStyle}
+        >
+          <header className="flex items-start justify-between gap-4">
+            <p className={`text-[10px] font-semibold tracking-[0.18em] ${isNight ? 'text-slate-400' : 'text-[#8a7968]'}`}>
+              {story.author}
+            </p>
+            <p className={`text-[10px] font-semibold tabular-nums ${isNight ? 'text-slate-400' : 'text-[#8a7968]'}`}>
+              {String(page.pageNumber).padStart(2, '0')}
+            </p>
+          </header>
+
+          <div className="flex flex-1 items-center py-8 sm:py-10">
+            <div className="mx-auto w-full max-w-[34rem]">
+              {pageTitle && (
+                <h2 className={`mb-4 text-balance font-serif text-xl font-semibold leading-[1.18] sm:text-2xl lg:text-[1.7rem] ${isNight ? 'text-slate-50' : 'text-[#2c241e]'}`}>
+                  {pageTitle}
+                </h2>
+              )}
+              <div className={`reader-editorial-copy max-w-[62ch] font-serif font-medium ${fontClasses[settings.fontSize]}`}>
+                <InteractiveStoryText
+                  text={page.text}
+                  textEn={page.textEn}
+                  languageMode={languageMode}
+                  glossary={story.glossary || []}
+                  onSelectVocab={setSelectedVocab}
+                  onSelectGlossary={setSelectedGlossary}
+                />
+              </div>
+            </div>
+          </div>
+
+          <footer className={`flex items-end justify-between text-[10px] font-semibold ${isNight ? 'text-slate-500' : 'text-[#958472]'}`}>
+            <span>{story.title}</span>
+            <span className="tabular-nums">{page.pageNumber}</span>
+          </footer>
+        </section>
+      </article>
+    );
+  };
+
+  const renderBackCover = () => (
+    <section
+      className={`flex h-full min-h-[30rem] w-full flex-col items-center justify-center px-8 text-center ${
+        isNight ? 'bg-[#121a28] text-slate-100' : 'bg-[#fffdf7] text-[#30251d]'
+      }`}
+    >
+      <span className={`mb-6 grid h-20 w-20 place-items-center rounded-full ${isNight ? 'bg-slate-800' : 'bg-[#efe3cc]'}`}>
+        <Sparkles className="h-9 w-9 text-[var(--warm-gold)]" />
+      </span>
+      <p className={`mb-2 text-xs font-semibold tracking-[0.2em] ${isNight ? 'text-slate-400' : 'text-[#8b7259]'}`}>TAMAT</p>
+      <h2 className="max-w-2xl font-serif text-3xl font-semibold leading-tight sm:text-5xl">Cerita selesai, pesannya tetap tinggal.</h2>
+      <p className={`mt-6 max-w-xl font-serif text-base leading-8 sm:text-lg ${isNight ? 'text-slate-300' : 'text-[#665342]'}`}>
+        “{story.moralMessage}”
+      </p>
+    </section>
+  );
+
   return (
-    <div
-      className="relative w-full max-w-6xl mx-auto flex flex-col items-center justify-center p-2 sm:p-3 lg:p-4 select-none"
-      onContextMenu={(e) => e.preventDefault()}
-      onCopy={(e) => {
-        e.preventDefault();
-        return false;
-      }}
-      onTouchStart={(e) => {
-        touchStartX.current = e.targetTouches[0].clientX;
+    <section
+      className="mx-auto flex w-full max-w-[90rem] select-none flex-col items-center px-2 py-2 sm:px-4"
+      onContextMenu={(event) => event.preventDefault()}
+      onCopy={(event) => event.preventDefault()}
+      onTouchStart={(event) => {
+        touchStartX.current = event.targetTouches[0].clientX;
         touchEndX.current = null;
       }}
-      onTouchMove={(e) => {
-        touchEndX.current = e.targetTouches[0].clientX;
+      onTouchMove={(event) => {
+        touchEndX.current = event.targetTouches[0].clientX;
       }}
       onTouchEnd={() => {
-        if (!touchStartX.current || !touchEndX.current) return;
+        if (touchStartX.current === null || touchEndX.current === null) return;
         const distance = touchStartX.current - touchEndX.current;
         if (distance > 50) handleNext();
         if (distance < -50) handlePrev();
       }}
     >
-      {/* 3D Book Container */}
-      <div
-        ref={containerRef}
-        className={`relative w-full aspect-[3/4] md:aspect-[4/5] lg:aspect-[16/10] max-h-[calc(100dvh-9.5rem)] md:max-h-[calc(100dvh-8.5rem)] lg:max-h-[75vh] flex rounded-2xl shadow-2xl overflow-hidden border-2 lg:border-4 transition-colors duration-500 ${
-          isNight
-            ? 'bg-slate-900 border-indigo-900/80 shadow-indigo-950/80'
-            : 'bg-amber-50 border-amber-900/30 shadow-2xl'
-        }`}
-        style={{ perspective: '1600px' }}
-      >
-        {/* Book Central Spine Shadow */}
-        {isDoubleView && (
-          <div className="absolute inset-y-0 left-1/2 -translate-x-1/2 w-8 bg-gradient-to-r from-black/20 via-black/5 to-black/20 z-30 pointer-events-none hidden sm:block" />
-        )}
+      {renderToolbar()}
 
-        {/* Physical Bookmark Ribbon Badge hanging on top right */}
-        {isBookmarked && (
-          <div
-            onClick={onToggleBookmark}
-            className="absolute top-0 right-6 sm:right-10 z-40 cursor-pointer group flex flex-col items-center"
-            title="Halaman ini ditandai! Klik untuk melepas penanda."
-          >
-            <div className="w-7 h-9 sm:w-9 sm:h-12 bg-gradient-to-b from-yellow-400 via-amber-500 to-red-500 rounded-b-md shadow-2xl border-x border-b border-amber-200/60 flex flex-col items-center justify-end pb-1 transition-transform group-hover:scale-110">
-              <Bookmark className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white fill-white drop-shadow-md" />
-            </div>
-          </div>
-        )}
-
-        {/* --- LEFT PAGE / SINGLE PAGE --- */}
-        <div
-          className={`relative h-full transition-all duration-300 ${
-            isDoubleView ? 'w-1/2 border-r border-amber-900/10' : 'w-full'
-          } flex flex-col justify-between p-3 sm:p-5 lg:p-8 overflow-hidden ${
-            isFlipping && turningDirection === 'prev' ? 'animate-page-turn-prev' : ''
-          } ${
-            isFlipping && !isDoubleView && turningDirection === 'next' ? 'animate-page-turn-next' : ''
-          }`}
-          style={{
-            transformOrigin: isDoubleView ? 'right center' : turningDirection === 'next' ? 'left center' : 'right center',
-            background: isNight
-              ? 'linear-gradient(135deg, #1e1b2e 0%, #0f172a 100%)'
-              : `linear-gradient(135deg, ${resolveStoryColor(leftPageObj?.colors?.bgGradFrom, '#ffffff')}, ${resolveStoryColor(leftPageObj?.colors?.bgGradTo, '#fef3c7')})`,
-          }}
+      <div className="grid w-full grid-cols-1 items-center gap-3 md:grid-cols-[3rem_minmax(0,1fr)_3rem] lg:gap-5">
+        <button
+          type="button"
+          onClick={handlePrev}
+          disabled={currentPageIndex === 0 || isFlipping}
+          className={`hidden h-12 w-12 items-center justify-center rounded-full border shadow-lg transition-all hover:-translate-x-0.5 active:scale-95 disabled:cursor-not-allowed disabled:opacity-20 md:flex ${quietAction}`}
+          aria-label="Halaman sebelumnya"
         >
-          {leftPageObj ? (
-            <>
-          {/* Page Top Header */}
-          <div className="flex flex-wrap items-center justify-between gap-2 z-10 mb-2">
-            <span
-              className="reader-page-label text-xs font-bold uppercase tracking-wider flex items-center gap-1"
-            >
-              <Sparkles className="w-3.5 h-3.5" /> Halaman {leftPageObj?.pageNumber}
-            </span>
+          <ChevronLeft className="h-6 w-6" />
+        </button>
 
-            <div className="flex items-center gap-1.5">
-              {leftPageObj?.quizQuestion && onOpenQuiz && (
-                <button
-                  onClick={() => onOpenQuiz(leftPageObj)}
-                  className="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded-full text-xs font-bold flex items-center gap-1 shadow-sm transition-transform hover:scale-105"
-                >
-                  <HelpCircle className="w-3.5 h-3.5" />
-                  <span>Kuis</span>
-                </button>
-              )}
-
-              {onOpenVoiceRecorder && leftPageObj && (
-                <button
-                  onClick={() => onOpenVoiceRecorder(leftPageObj.pageNumber, leftPageObj.text)}
-                  className={`p-1.5 sm:p-2 rounded-full transition-all duration-200 flex items-center gap-1 text-xs font-semibold shadow-sm ${
-                    hasCustomRecordings[leftPageObj.pageNumber]
-                      ? 'bg-rose-500 text-white shadow-md ring-2 ring-rose-300'
-                      : isNight
-                      ? 'bg-slate-800 hover:bg-slate-700 text-indigo-200 border border-indigo-700'
-                      : 'bg-white/80 hover:bg-white text-amber-900 border border-amber-200'
-                  }`}
-                  title={
-                    hasCustomRecordings[leftPageObj.pageNumber]
-                      ? 'Suara Rekaman Tersedia (Klik untuk ubah/rekam ulang)'
-                      : 'Rekam Suara Sendiri Untuk Halaman Ini'
-                  }
-                >
-                  <Mic className={`w-3.5 h-3.5 ${hasCustomRecordings[leftPageObj.pageNumber] ? 'fill-white' : ''}`} />
-                  <span className="hidden sm:inline">
-                    {hasCustomRecordings[leftPageObj.pageNumber] ? 'Suara Kustom' : 'Rekam'}
-                  </span>
-                </button>
-              )}
-
-              <button
-                onClick={() => handleSpeakPage(leftPageObj.text, leftPageObj.pageNumber)}
-                className={`p-1.5 sm:p-2 rounded-full transition-all duration-200 flex items-center gap-1.5 text-xs font-semibold shadow-sm ${
-                  activeSpeechPage === leftPageObj?.pageNumber
-                    ? 'bg-amber-600 text-white scale-105 ring-2 ring-amber-400'
-                    : isNight
-                    ? 'bg-slate-800 hover:bg-slate-700 text-indigo-200 border border-indigo-700'
-                    : 'bg-white/80 hover:bg-white text-amber-900 border border-amber-200'
-                }`}
-                title="Baca Halaman Ini"
-              >
-                <Volume2 className="w-4 h-4" />
-                <span className="hidden sm:inline">Baca</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Illustration Stage */}
-          <div className={`relative flex-1 w-full rounded-xl overflow-hidden border-2 shadow-inner my-2 ${isNight ? 'border-indigo-900/60' : 'border-white/60'}`}>
-            <StoryIllustration
-              type={leftPageObj?.illustrationType || 'forest'}
-              imageUrl={leftPageObj?.imageUrl}
-            />
-
-            {/* Interactive Tap Elements Overlay */}
-            {leftPageObj?.interactiveElements?.map((elem) => {
-              const isAnimated = animatedElementId === elem.id;
-              return (
-                <div
-                  key={elem.id}
-                  onClick={() => handleInteractiveTap(elem)}
-                  className="absolute cursor-pointer transition-transform duration-300 hover:scale-125 z-20 group"
-                  style={{ left: `${elem.x}%`, top: `${elem.y}%` }}
-                >
-                  <div
-                    className={`min-h-11 min-w-11 text-2xl sm:text-4xl p-1.5 rounded-full bg-white/80 shadow-md backdrop-blur-xs flex items-center justify-center border border-white/80 ring-2 ring-white/60 sm:ring-0 animate-pulse sm:animate-none ${
-                      isAnimated
-                        ? elem.animation === 'hop'
-                          ? 'animate-bounce text-amber-600 scale-125 ring-4 ring-amber-300'
-                          : elem.animation === 'spin'
-                          ? 'animate-spin'
-                          : elem.animation === 'bounce'
-                          ? 'animate-bounce'
-                          : 'animate-pulse scale-125 ring-4 ring-pink-300'
-                        : 'hover:animate-pulse'
-                    }`}
-                  >
-                    {elem.emoji || '✨'}
-                  </div>
-                  {/* Tooltip Label */}
-                  <span className="absolute left-1/2 -translate-x-1/2 bottom-full mb-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity bg-amber-950 text-white text-[10px] sm:text-xs px-2 py-0.5 rounded-md whitespace-nowrap shadow-lg pointer-events-none">
-                    {elem.label}
-                  </span>
-                </div>
-              );
-            })}
-
-            {/* Dialogue Bubble Popup */}
-            {activeInteractive && leftPageObj?.interactiveElements?.some((e) => e.id === activeInteractive.id) && (
-              <div className="absolute bottom-3 left-1/2 -translate-x-1/2 max-w-[90%] bg-white/95 backdrop-blur-md px-4 py-2 rounded-2xl shadow-xl border-2 border-amber-400 text-amber-950 text-xs sm:text-sm font-semibold animate-bounce z-30 flex items-center gap-2">
-                <span>{activeInteractive.emoji}</span>
-                <span>"{activeInteractive.dialogue}"</span>
-              </div>
-            )}
-          </div>
-
-          {/* Story Text Box */}
-          <div
-            className={`reader-story-box mt-2 p-3 sm:p-4 rounded-xl backdrop-blur-md shadow-sm font-medium ${fontClasses[settings.fontSize]} overflow-y-auto min-h-[80px] sm:min-h-0 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-black/20 [&::-webkit-scrollbar-thumb]:rounded-full`}
-          >
-            {leftPageObj?.title && (
-              <h3 className="reader-story-title font-bold mb-1 text-sm sm:text-base">
-                {leftPageObj.title}
-              </h3>
-            )}
-            <p className="reader-story-copy leading-relaxed">
-              <InteractiveStoryText
-                text={leftPageObj?.text || ''}
-                textEn={leftPageObj?.textEn}
-                languageMode={settings.languageMode || 'id'}
-                glossary={story.glossary || []}
-                onSelectVocab={setSelectedVocab}
-                onSelectGlossary={setSelectedGlossary}
-              />
-            </p>
-          </div>
-            </>
-          ) : (
-            renderBackCover()
+        <div
+          className={`relative min-h-[34rem] w-full overflow-hidden rounded-[1.4rem] border shadow-[0_24px_70px_rgba(54,39,24,0.22)] transition-all duration-300 md:aspect-[16/11] md:min-h-0 ${
+            isSpreadView ? 'max-w-none' : 'mx-auto max-w-4xl md:aspect-[4/5]'
+          } ${isNight ? 'border-slate-700 bg-slate-900' : 'border-[#bfae93] bg-[#fffdf7]'} ${
+            isFlipping ? 'translate-y-1 scale-[0.995] opacity-75' : 'translate-y-0 scale-100 opacity-100'
+          }`}
+          style={{ boxShadow: isNight ? '0 24px 70px rgba(2, 6, 23, 0.58)' : undefined }}
+        >
+          {isSpreadView && !isBackCover && (
+            <div className="pointer-events-none absolute inset-y-0 left-1/2 z-30 hidden w-8 -translate-x-1/2 bg-gradient-to-r from-black/12 via-black/5 to-transparent md:block" />
           )}
-
-          {/* Page Corner Turn Flip Handle Left */}
-          {currentPageIndex > 0 && (
-            <div
-              onClick={handlePrev}
-              className="absolute left-0 top-0 bottom-0 w-8 sm:w-12 bg-gradient-to-r from-amber-900/10 to-transparent opacity-0 hover:opacity-100 transition-opacity cursor-pointer flex items-center justify-start pl-1 z-40"
-              title="Halaman Sebelumnya"
-            >
-              <div className="p-1.5 bg-amber-900 text-white rounded-r-lg shadow-md">
-                <ChevronLeft className="w-5 h-5" />
-              </div>
-            </div>
-          )}
+          {activePage ? renderStorySpread(activePage) : renderBackCover()}
         </div>
 
-        {/* --- RIGHT PAGE (For Double Page Spread) --- */}
-        {isDoubleView && (
-          <div
-            className={`relative w-1/2 h-full flex flex-col justify-between p-4 sm:p-5 lg:p-8 overflow-hidden ${
-              isFlipping && turningDirection === 'next' ? 'animate-page-turn-next' : ''
-            }`}
-            style={{
-              transformOrigin: 'left center',
-              background: isNight
-                ? 'linear-gradient(135deg, #0f172a 0%, #1e1b2e 100%)'
-                : `linear-gradient(135deg, ${resolveStoryColor(rightPageObj?.colors?.bgGradFrom, '#fef3c7')}, ${resolveStoryColor(rightPageObj?.colors?.bgGradTo, '#ffffff')})`,
-            }}
-          >
-            {rightPageObj ? (
-              <>
-                {/* Right Page Header */}
-                <div className="flex flex-wrap items-center justify-between gap-2 z-10 mb-2">
-                  <span
-                    className="reader-page-label text-xs font-bold uppercase tracking-wider flex items-center gap-1"
-                  >
-                    <Sparkles className="w-3.5 h-3.5" /> Halaman {rightPageObj.pageNumber}
-                  </span>
-                  <div className="flex items-center gap-1.5">
-                    {rightPageObj.quizQuestion && onOpenQuiz && (
-                      <button
-                        onClick={() => onOpenQuiz(rightPageObj)}
-                        className="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded-full text-xs font-bold flex items-center gap-1 shadow-sm transition-transform hover:scale-105"
-                      >
-                        <HelpCircle className="w-3.5 h-3.5" />
-                        <span>Kuis</span>
-                      </button>
-                    )}
-
-                    {onOpenVoiceRecorder && (
-                      <button
-                        onClick={() => onOpenVoiceRecorder(rightPageObj.pageNumber, rightPageObj.text)}
-                        className={`p-1.5 sm:p-2 rounded-full transition-all duration-200 flex items-center gap-1 text-xs font-semibold shadow-sm ${
-                          hasCustomRecordings[rightPageObj.pageNumber]
-                            ? 'bg-rose-500 text-white shadow-md ring-2 ring-rose-300'
-                            : isNight
-                            ? 'bg-slate-800 hover:bg-slate-700 text-indigo-200 border border-indigo-700'
-                            : 'bg-white/80 hover:bg-white text-amber-900 border border-amber-200'
-                        }`}
-                        title={
-                          hasCustomRecordings[rightPageObj.pageNumber]
-                            ? 'Suara Rekaman Tersedia (Klik untuk ubah/rekam ulang)'
-                            : 'Rekam Suara Sendiri Untuk Halaman Ini'
-                        }
-                      >
-                        <Mic className={`w-3.5 h-3.5 ${hasCustomRecordings[rightPageObj.pageNumber] ? 'fill-white' : ''}`} />
-                        <span className="hidden sm:inline">
-                          {hasCustomRecordings[rightPageObj.pageNumber] ? 'Suara Kustom' : 'Rekam'}
-                        </span>
-                      </button>
-                    )}
-
-                    <button
-                      onClick={() => handleSpeakPage(rightPageObj.text, rightPageObj.pageNumber)}
-                      className={`p-1.5 sm:p-2 rounded-full transition-all duration-200 flex items-center gap-1.5 text-xs font-semibold shadow-sm ${
-                        activeSpeechPage === rightPageObj.pageNumber
-                          ? 'bg-amber-600 text-white scale-105 ring-2 ring-amber-400'
-                          : isNight
-                          ? 'bg-slate-800 hover:bg-slate-700 text-indigo-200 border border-indigo-700'
-                          : 'bg-white/80 hover:bg-white text-amber-900 border border-amber-200'
-                      }`}
-                    >
-                      <Volume2 className="w-4 h-4" />
-                      <span className="hidden sm:inline">Baca</span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Right Page Illustration */}
-                <div className={`relative flex-1 w-full rounded-xl overflow-hidden border-2 shadow-inner my-2 ${isNight ? 'border-indigo-900/60' : 'border-white/60'}`}>
-                  <StoryIllustration
-                    type={rightPageObj.illustrationType}
-                    imageUrl={rightPageObj.imageUrl}
-                  />
-
-                  {/* Interactive Tap Elements */}
-                  {rightPageObj.interactiveElements?.map((elem) => {
-                    const isAnimated = animatedElementId === elem.id;
-                    return (
-                      <div
-                        key={elem.id}
-                        onClick={() => handleInteractiveTap(elem)}
-                        className="absolute cursor-pointer transition-transform duration-300 hover:scale-125 z-20 group"
-                        style={{ left: `${elem.x}%`, top: `${elem.y}%` }}
-                      >
-                        <div
-                          className={`min-h-11 min-w-11 text-2xl sm:text-4xl p-1.5 rounded-full bg-white/80 shadow-md backdrop-blur-xs flex items-center justify-center border border-white/80 ring-2 ring-white/60 sm:ring-0 animate-pulse sm:animate-none ${
-                            isAnimated
-                              ? elem.animation === 'hop'
-                                ? 'animate-bounce text-amber-600 scale-125 ring-4 ring-amber-300'
-                                : elem.animation === 'spin'
-                                ? 'animate-spin'
-                                : 'animate-pulse scale-125 ring-4 ring-pink-300'
-                              : 'hover:animate-pulse'
-                          }`}
-                        >
-                          {elem.emoji || '✨'}
-                        </div>
-                        <span className="absolute left-1/2 -translate-x-1/2 bottom-full mb-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity bg-amber-950 text-white text-[10px] sm:text-xs px-2 py-0.5 rounded-md whitespace-nowrap shadow-lg pointer-events-none">
-                          {elem.label}
-                        </span>
-                      </div>
-                    );
-                  })}
-
-                  {activeInteractive && rightPageObj.interactiveElements?.some((e) => e.id === activeInteractive.id) && (
-                    <div className="absolute bottom-3 left-1/2 -translate-x-1/2 max-w-[90%] bg-white/95 backdrop-blur-md px-4 py-2 rounded-2xl shadow-xl border-2 border-amber-400 text-amber-950 text-xs sm:text-sm font-semibold animate-bounce z-30 flex items-center gap-2">
-                      <span>{activeInteractive.emoji}</span>
-                      <span>"{activeInteractive.dialogue}"</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Story Text Box Right */}
-                <div
-                  className={`reader-story-box mt-2 p-3 sm:p-4 rounded-xl backdrop-blur-md shadow-sm font-medium ${fontClasses[settings.fontSize]} overflow-y-auto min-h-[80px] sm:min-h-0 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-black/20 [&::-webkit-scrollbar-thumb]:rounded-full`}
-                >
-                  {rightPageObj.title && (
-                    <h3 className="reader-story-title font-bold mb-1 text-sm sm:text-base">
-                      {rightPageObj.title}
-                    </h3>
-                  )}
-                  <p className="reader-story-copy leading-relaxed">
-                    <InteractiveStoryText
-                      text={rightPageObj.text || ''}
-                      textEn={rightPageObj.textEn}
-                      languageMode={settings.languageMode || 'id'}
-                      glossary={story.glossary || []}
-                      onSelectVocab={setSelectedVocab}
-                      onSelectGlossary={setSelectedGlossary}
-                    />
-                  </p>
-                </div>
-              </>
-            ) : leftPageObj ? (
-              renderBackCover()
-            ) : (
-              <div className="h-full flex flex-col items-center justify-center opacity-50 font-bold text-amber-900/40">
-                Sampul Belakang
-              </div>
-            )}
-
-            {/* Page Corner Turn Flip Handle Right */}
-            {currentPageIndex + (isDoubleView ? 2 : 1) < totalPages && (
-              <div
-                onClick={handleNext}
-                className="absolute right-0 top-0 bottom-0 w-8 sm:w-12 bg-gradient-to-l from-amber-900/10 to-transparent opacity-0 hover:opacity-100 transition-opacity cursor-pointer flex items-center justify-end pr-1 z-40"
-                title="Halaman Selanjutnya"
-              >
-                <div className="p-1.5 bg-amber-900 text-white rounded-l-lg shadow-md">
-                  <ChevronRight className="w-5 h-5" />
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* 3D Animated Page Turn Overlay Simulation */}
-        {isFlipping && (
-          <div
-            className={`absolute top-0 bottom-0 w-1/2 bg-amber-100 border border-amber-300 shadow-2xl z-50 transition-all duration-500 ease-in-out ${
-              turningDirection === 'next'
-                ? 'right-0 origin-left -rotate-y-180 opacity-90'
-                : 'left-0 origin-right rotate-y-180 opacity-90'
-            }`}
-            style={{
-              transformStyle: 'preserve-3d',
-              background: 'linear-gradient(90deg, #fef3c7 0%, #ffffff 50%, #fde68a 100%)',
-            }}
-          />
-        )}
+        <button
+          type="button"
+          onClick={handleNext}
+          disabled={currentPageIndex >= totalPages || isFlipping}
+          className={`hidden h-12 w-12 items-center justify-center rounded-full border shadow-lg transition-all hover:translate-x-0.5 active:scale-95 disabled:cursor-not-allowed disabled:opacity-20 md:flex ${quietAction}`}
+          aria-label="Halaman berikutnya"
+        >
+          <ChevronRight className="h-6 w-6" />
+        </button>
       </div>
 
-      {/* Floating Navigation Arrows On Sides */}
-      <button
-        onClick={handlePrev}
-        disabled={currentPageIndex === 0}
-        className={`hidden lg:block absolute left-1 sm:left-2 top-1/2 -translate-y-1/2 p-3 rounded-full shadow-2xl disabled:opacity-20 disabled:cursor-not-allowed transition-all hover:scale-110 z-40 ${
-          isNight
-            ? 'bg-indigo-900/90 hover:bg-indigo-800 text-yellow-300 ring-2 ring-indigo-500/50'
-            : 'bg-amber-900/80 hover:bg-amber-900 text-white'
-        }`}
-        title="Halaman Sebelumnya"
-      >
-        <ChevronLeft className="w-6 h-6 sm:w-8 sm:h-8" />
-      </button>
+      <nav aria-label="Navigasi halaman seluler" className={`mt-3 flex w-full items-center justify-between rounded-2xl border p-2 shadow-sm md:hidden ${toolbarSurface}`}>
+        <button type="button" onClick={handlePrev} disabled={currentPageIndex === 0 || isFlipping} className={`${actionButtonClass} ${quietAction} disabled:opacity-30`}>
+          <ChevronLeft className="h-4 w-4" />
+          <span>Sebelumnya</span>
+        </button>
+        <span className="px-2 text-[11px] font-bold tabular-nums">{Math.min(currentPageIndex + 1, totalPages)} / {totalPages}</span>
+        <button type="button" onClick={handleNext} disabled={currentPageIndex >= totalPages || isFlipping} className={`${actionButtonClass} ${quietAction} disabled:opacity-30`}>
+          <span>Berikutnya</span>
+          <ChevronRight className="h-4 w-4" />
+        </button>
+      </nav>
 
-      <button
-        onClick={handleNext}
-        disabled={currentPageIndex + (isDoubleView ? 2 : 1) > maxAllowedIndex}
-        className={`hidden lg:block absolute right-1 sm:right-2 top-1/2 -translate-y-1/2 p-3 rounded-full shadow-2xl disabled:opacity-20 disabled:cursor-not-allowed transition-all hover:scale-110 z-40 ${
-          isNight
-            ? 'bg-indigo-900/90 hover:bg-indigo-800 text-yellow-300 ring-2 ring-indigo-500/50'
-            : 'bg-amber-900/80 hover:bg-amber-900 text-white'
-        }`}
-        title="Halaman Selanjutnya"
-      >
-        <ChevronRight className="w-6 h-6 sm:w-8 sm:h-8" />
-      </button>
-
-      {/* Vocabulary Tooltip Modal */}
       {selectedVocab && (
-        <VocabTooltipModal
-          vocab={selectedVocab}
-          onClose={() => setSelectedVocab(null)}
-          isNight={isNight}
-        />
+        <VocabTooltipModal vocab={selectedVocab} onClose={() => setSelectedVocab(null)} isNight={isNight} />
       )}
-
-      {/* Tap-to-Translate Glossary Modal */}
       {selectedGlossary && (
-        <VocabTooltipModal
-          glossaryItem={selectedGlossary}
-          onClose={() => setSelectedGlossary(null)}
-          isNight={isNight}
-        />
+        <VocabTooltipModal glossaryItem={selectedGlossary} onClose={() => setSelectedGlossary(null)} isNight={isNight} />
       )}
-
-      {/* Vocabulary Quiz Modal */}
       {showVocabQuizModal && (story.vocabularyQuiz || story.glossary) && (
         <VocabularyQuizModal
           quiz={story.vocabularyQuiz || fallbackVocabularyQuiz}
@@ -794,6 +536,6 @@ export const Flipbook3D: React.FC<FlipbookProps> = ({
           isNight={isNight}
         />
       )}
-    </div>
+    </section>
   );
 };
