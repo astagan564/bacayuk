@@ -29,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Reader session boundary**: Moved story selection, direct reader-route synchronization, saved-page restoration, page navigation, mobile scroll reset, and AI-created story opening into a dedicated Reader controller.
 - **Reader settings boundary**: Moved reading preferences, theme derivation, and document dark-mode synchronization out of the application shell into a focused settings controller.
 - **Reader overlay composition**: Moved thumbnail, Story Maker, quiz, rest reminder, parental gate, statistics, voice recorder, and completion modal state and rendering behind the Reader feature boundary.
+- **Reader navigation composition**: Replaced the monolithic reader navigation component with a focused controller, desktop sidebar, mobile navigation and tools sheet, plus shared accessible control primitives under the Reader feature.
 - **Account session boundary**: Moved authentication initialization, purchase synchronization, login/logout state, pending-story access, favorites, and recently-read persistence into a dedicated Account feature.
 - **Commerce flow state machine**: Replaced separate VIP, parental-gate, book-payment, and download modal booleans with one typed purchase flow and a dedicated Commerce modal composer.
 

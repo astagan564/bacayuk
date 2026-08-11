@@ -2,8 +2,8 @@ import type { RefObject } from 'react';
 import type { PersonalLibrary } from '@/features/account';
 import type { ReadingSettings, Story } from '../../../types';
 import { Flipbook3D, type FlipbookHandle } from '../../../components/Flipbook3D';
-import { NavigationControls } from '../../../components/NavigationControls';
 import { StorySelector } from '../../../components/StorySelector';
+import { ReaderNavigationControls } from '@/features/reader/components/navigation/ReaderNavigationControls';
 
 interface LibraryWorkspaceProps {
   bookmarks: Record<string, number>;
@@ -97,7 +97,7 @@ export function LibraryWorkspace({
             <div className="lg:hidden h-36 max-[380px]:h-48 w-full shrink-0" />
           </div>
 
-          <NavigationControls
+          <ReaderNavigationControls
             title={selectedStory.title}
             currentPageIndex={currentPageIndex}
             totalPages={selectedStory.pages.length}
@@ -107,7 +107,6 @@ export function LibraryWorkspace({
             onToggleThumbnails={onToggleThumbnails}
             onBackToLibrary={onBackToLibrary}
             isBookmarked={bookmarks[selectedStory.id] === currentPageIndex}
-            savedBookmarkPage={bookmarks[selectedStory.id]}
             onToggleBookmark={onToggleBookmark}
             onOpenVoiceRecorder={() => onOpenVoiceRecorder(selectedStory, currentPageIndex)}
             onOpenOfflineDownload={() => onOpenOfflineDownload(selectedStory)}
