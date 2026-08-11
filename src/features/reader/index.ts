@@ -13,6 +13,7 @@ export { useVoiceRecorderController } from './hooks/useVoiceRecorderController';
 export type { VoiceRecorderController } from './hooks/useVoiceRecorderController';
 export { useReadingProgressController } from './hooks/useReadingProgressController';
 export { useReaderSettingsController } from './hooks/useReaderSettingsController';
+export type { ReaderSettingsController } from './hooks/useReaderSettingsController';
 export { useReaderSessionController } from './hooks/useReaderSessionController';
 export type { ReaderSessionController } from './hooks/useReaderSessionController';
 export { useReaderOverlayController } from './hooks/useReaderOverlayController';

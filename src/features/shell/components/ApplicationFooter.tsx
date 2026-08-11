@@ -1,0 +1,24 @@
+import packageJson from '../../../../package.json';
+
+interface ApplicationFooterProps {
+  onOpenChangelog: () => void;
+}
+
+export function ApplicationFooter({ onOpenChangelog }: ApplicationFooterProps) {
+  return (
+    <footer className="w-full text-xs py-3 px-4 text-center border-t z-30 transition-colors duration-500 flex flex-col items-center gap-1 bg-surface border-default text-secondary">
+      <p>Buku Cerita Anak Interaktif • Dilengkapi Efek Flipbook 3D, Narasi Suara & Mode Siang/Malam</p>
+      <div className="flex items-center justify-center gap-1.5 opacity-80 hover:opacity-100 transition-opacity text-[10px]">
+        <span>v{packageJson.version}</span>
+        <span>•</span>
+        <button
+          type="button"
+          onClick={onOpenChangelog}
+          className="underline hover:text-action-secondary transition-colors"
+        >
+          Changelog
+        </button>
+      </div>
+    </footer>
+  );
+}

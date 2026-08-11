@@ -41,3 +41,5 @@ export function useReaderSettingsController() {
     toggleTheme,
   };
 }
+
+export type ReaderSettingsController = ReturnType<typeof useReaderSettingsController>;

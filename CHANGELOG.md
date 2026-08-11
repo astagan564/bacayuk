@@ -40,6 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Offline download boundary**: Split offline-license state, token renewal, file-save handling, PDF/EPUB generation orchestration, and format presentation into focused Commerce modules while retaining the original modal compatibility export.
 - **Interactive story-text boundary**: Split bilingual presentation, Markdown parsing, inline formatting, and vocabulary/glossary highlighting into focused Reader modules while retaining the original component compatibility export.
 - **Voice recorder boundary**: Split microphone capture, preview playback, IndexedDB mutations, recording status, duration formatting, and action controls into focused Reader modules while retaining the original modal compatibility export.
+- **Application route composition**: Replaced the remaining monolithic application root with focused Admin, Settings, Reader, modal, footer, story-bootstrap, toast, changelog, and copy-protection boundaries so route-specific controllers only mount for the active workspace.
 
 ### Fixed
 - **Duplicate story maker dialog**: Removed a duplicate `StoryMakerModal` render that could mount the same AI story creation interface twice.
@@ -56,6 +57,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Offline download lifecycle**: Closing the download modal now prevents pending generation and notice callbacks from updating unmounted UI, and PDF/EPUB generation can no longer run concurrently for the same modal.
 - **Mixed story lists**: Adjacent numbered and bulleted Markdown lists now retain both groups instead of silently dropping the preceding list.
 - **Voice recorder resource cleanup**: Recording timers, microphone tracks, preview and narration audio, pending permission requests, and Blob URLs are now released safely when recording or playback ends, the recorder closes, or the page changes; duplicate permission/save/delete actions are also blocked while work is running.
+- **Application toast lifecycle**: Repeated notifications now replace their pending dismissal timer, and the timer is cleared when the application unmounts instead of leaving a delayed state callback behind.
 
 ## [0.1.0] - 2026-08-10
 

@@ -1,4 +1,5 @@
 export { AdminSettingsTab } from './components/AdminSettingsTab';
+export { AdminApplicationRoute } from './components/AdminApplicationRoute';
 export { AdminSidebar } from './components/AdminSidebar';
 export { AdminRouteWorkspace } from './components/AdminRouteWorkspace';
 export { AdminPinDialog } from './components/AdminPinDialog';
