@@ -77,6 +77,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Vocabulary quiz input lifecycle**: Synchronous answer and navigation locks prevent rapid taps from scoring or advancing twice, and active pronunciation now stops when the quiz advances, restarts, closes, or unmounts.
 - **Duplicate and stale checkout callbacks**: Payment creation now uses a synchronous single-session lock, aborts pending verification when the modal unmounts, and ignores repeated or stale Midtrans terminal callbacks before granting access.
 - **Supabase catalog source**: Removed stale build-time imports for two generated books that now live in Supabase, restoring TypeScript and production builds after their local packages were intentionally removed.
+- **GenerateBook package compatibility**: Normalized the completed `Kiko Tidak Mau Berbagi` package to the supported custom-illustration type and integrated it into the Supabase catalog with all 12 page images.
 
 ## [0.1.0] - 2026-08-10
 
