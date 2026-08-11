@@ -156,11 +156,11 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
 
   const SectionLabel = ({ text }: { text: string }) => (
     <div className="flex items-center gap-2 pt-1">
-      <div className={`flex-1 h-px ${isNight ? 'bg-blue-900/50' : 'bg-[#eadbc1]'}`} />
-      <span className={`text-[10px] font-black uppercase ${isNight ? 'text-blue-300' : 'text-[var(--muted-ink)]'}`}>
+      <div className="flex-1 h-px border-t border-default" />
+      <span className="text-[10px] font-black uppercase text-secondary">
         {text}
       </span>
-      <div className={`flex-1 h-px ${isNight ? 'bg-blue-900/50' : 'bg-[#eadbc1]'}`} />
+      <div className="flex-1 h-px border-t border-default" />
     </div>
   );
 
@@ -179,15 +179,15 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
       onClick={onClick}
       className={`w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${
         isOn
-          ? 'bg-[var(--story-green)] text-white'
-          : 'reader-soft-panel text-[var(--ink)] dark:text-slate-200'
+          ? 'bg-brand-green text-white'
+          : 'reader-soft-panel text-primary'
       }`}
     >
       <span className="flex items-center gap-2.5">
         <Icon className="w-4 h-4 shrink-0" />
         {label}
       </span>
-      <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-lg ${isOn ? 'bg-white/20' : 'bg-black/5 dark:bg-white/10'}`}>
+      <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-lg ${isOn ? 'bg-white/20' : 'bg-surface-hover'}`}>
         {isOn ? 'ON' : 'OFF'}
       </span>
     </button>
@@ -198,7 +198,7 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
       <div className="flex flex-col gap-2">
         <button
           onClick={onBackToLibrary}
-          className="btn-secondary w-full flex items-center gap-2 px-3 py-2 text-xs"
+          className="btn-secondary bg-surface text-secondary w-full flex items-center gap-2 px-3 py-2 text-xs"
         >
           <ArrowLeft className="w-3.5 h-3.5 shrink-0" />
           Koleksi buku
@@ -215,7 +215,7 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
           max={maxAllowedIndex}
           value={currentPageIndex}
           onChange={(e) => onPageChange(parseInt(e.target.value, 10))}
-          className="w-full accent-[var(--story-green)] h-2 cursor-pointer rounded-lg"
+          className="w-full accent-brand-green h-2 cursor-pointer rounded-lg"
           aria-label="Pilih halaman"
         />
         <div className="flex items-center justify-between gap-1">
@@ -227,7 +227,7 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
-          <span className="text-[11px] font-bold text-center flex-1 text-[var(--magic-blue)] dark:text-blue-200">
+          <span className="text-[11px] font-bold text-center flex-1 text-info">
             {pageLabel}
           </span>
           <button
@@ -254,7 +254,7 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
               key={mode}
               onClick={() => onUpdateSettings({ languageMode: mode })}
               className={`py-2 rounded-lg text-xs font-black transition-all ${
-                isActive ? 'bg-[var(--magic-blue)] text-white' : 'text-[var(--muted-ink)] dark:text-slate-300'
+                isActive ? 'bg-brand-blue text-white' : 'text-secondary'
               }`}
             >
               {label}
@@ -272,7 +272,7 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
           {isNight ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
           Tema
         </span>
-        <span className="text-[10px] font-black px-2 py-0.5 rounded-lg bg-black/5 dark:bg-white/10">
+        <span className="text-[10px] font-black px-2 py-0.5 rounded-lg bg-surface-hover">
           {isNight ? 'Malam' : 'Siang'}
         </span>
       </button>
@@ -285,12 +285,12 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
           <Type className="w-4 h-4 shrink-0" />
           Ukuran teks
         </span>
-        <div className="flex items-center gap-0.5 rounded-lg p-0.5 bg-white/60 dark:bg-slate-950/40">
+        <div className="flex items-center gap-0.5 rounded-lg p-0.5 bg-surface-hover">
           {(['sm', 'base', 'lg'] as const).map((sz) => (
             <button
               key={sz}
               onClick={() => onUpdateSettings({ fontSize: sz })}
-              className={`px-2 py-1 rounded font-black uppercase text-[10px] transition-colors ${settings.fontSize === sz ? 'bg-[var(--magic-blue)] text-white' : 'text-[var(--muted-ink)] dark:text-slate-300'}`}
+              className={`px-2 py-1 rounded-lg font-black uppercase text-[10px] transition-colors ${settings.fontSize === sz ? 'bg-brand-blue text-white' : 'text-secondary'}`}
             >
               {sz}
             </button>
@@ -303,7 +303,7 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
         {!isBackCover && onReadPage && (
           <button
             onClick={onReadPage}
-            className="flex flex-col items-center gap-1.5 px-2 py-3 rounded-xl bg-[var(--magic-blue)] hover:brightness-110 text-white text-xs font-bold shadow-sm transition-all hover:scale-[1.02]"
+            className="flex flex-col items-center gap-1.5 px-2 py-3 rounded-xl bg-brand-blue hover:brightness-110 text-white text-xs font-bold shadow-sm transition-all hover:scale-[1.02]"
           >
             <Volume2 className="w-5 h-5" />
             <span>{readPageLabel}</span>
@@ -312,7 +312,7 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
         {!isBackCover && onOpenQuiz && (
           <button
             onClick={onOpenQuiz}
-            className="flex flex-col items-center gap-1.5 px-2 py-3 rounded-xl bg-[var(--warm-gold)] text-[#3a2910] text-xs font-bold shadow-sm transition-all hover:scale-[1.02]"
+            className="flex flex-col items-center gap-1.5 px-2 py-3 rounded-xl bg-surface-secondary text-primary border border-default text-xs font-bold shadow-sm transition-all hover:scale-[1.02]"
           >
             <HelpCircle className="w-5 h-5" />
             <span>Kuis halaman</span>
@@ -321,7 +321,7 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
         {onOpenVoiceRecorder && (
           <button
             onClick={onOpenVoiceRecorder}
-            className="flex flex-col items-center gap-1.5 px-2 py-3 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold shadow-sm transition-all hover:scale-[1.02]"
+            className="flex flex-col items-center gap-1.5 px-2 py-3 rounded-xl bg-brand-rose hover:brightness-110 text-white text-xs font-bold shadow-sm transition-all hover:scale-[1.02]"
           >
             <Mic className="w-5 h-5" />
             <span className="text-center leading-tight">Rekam suara</span>
@@ -330,7 +330,7 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
         {onOpenOfflineDownload && (
           <button
             onClick={onOpenOfflineDownload}
-            className="flex flex-col items-center gap-1.5 px-2 py-3 rounded-xl bg-[var(--story-green)] hover:bg-[#27795b] text-white text-xs font-bold shadow-sm transition-all hover:scale-[1.02]"
+            className="flex flex-col items-center gap-1.5 px-2 py-3 rounded-xl bg-brand-green hover:brightness-110 text-white text-xs font-bold shadow-sm transition-all hover:scale-[1.02]"
           >
             <Download className="w-5 h-5" />
             <span className="text-center leading-tight">Unduh offline</span>
@@ -338,9 +338,9 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
         )}
         <button
           onClick={onToggleBookmark}
-          className={`flex flex-col items-center gap-1.5 px-2 py-3 rounded-xl text-xs font-bold shadow-sm transition-all hover:scale-[1.02] ${isBookmarked ? 'bg-[var(--warm-gold)] text-[#3a2910]' : 'reader-soft-panel'}`}
+          className={`flex flex-col items-center gap-1.5 px-2 py-3 rounded-xl text-xs font-bold shadow-sm transition-all hover:scale-[1.02] ${isBookmarked ? 'bg-brand-gold text-white' : 'reader-soft-panel'}`}
         >
-          <Bookmark className={`w-5 h-5 ${isBookmarked ? 'fill-[#3a2910]' : ''}`} />
+          <Bookmark className={`w-5 h-5 ${isBookmarked ? 'fill-white' : ''}`} />
           <span>{isBookmarked ? 'Ditandai' : 'Tandai'}</span>
         </button>
         <button
@@ -374,7 +374,7 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
           </button>
         </div>
       ) : (
-        <nav aria-label="Navigasi baca" className="lg:hidden fixed bottom-0 left-0 right-0 z-40 border-t backdrop-blur-xl px-3 pt-2 pb-[calc(0.75rem+env(safe-area-inset-bottom))] flex flex-col gap-2 bg-[#fffaf0]/94 dark:bg-[#101923]/94 border-[#eadbc1] dark:border-blue-900/60 shadow-[0_-10px_34px_rgba(0,0,0,0.22)]">
+        <nav aria-label="Navigasi baca" className="lg:hidden fixed bottom-0 left-0 right-0 z-40 border-t backdrop-blur-xl px-3 pt-2 pb-[calc(0.75rem+env(safe-area-inset-bottom))] flex flex-col gap-2 bg-card/95 border-default shadow-[0_-10px_34px_rgba(0,0,0,0.22)]">
           <div className="flex items-center justify-between gap-2 max-[380px]:grid max-[380px]:grid-cols-[2.75rem_minmax(0,1fr)_2.75rem] max-[380px]:gap-2">
             <button
               onClick={onBackToLibrary}
@@ -387,19 +387,19 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
             <button
               onClick={goPrev}
               disabled={!canGoPrev}
-              className="h-12 w-14 rounded-2xl bg-[var(--ink)] text-[#fff7e6] dark:bg-blue-100 dark:text-[#101923] disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center transition-transform active:scale-95 max-[380px]:col-start-1 max-[380px]:row-start-2 max-[380px]:h-14 max-[380px]:w-full"
+              className="h-12 w-14 rounded-2xl bg-primary text-inverse disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center transition-transform active:scale-95 max-[380px]:col-start-1 max-[380px]:row-start-2 max-[380px]:h-14 max-[380px]:w-full"
               aria-label="Halaman sebelumnya"
             >
               <ChevronLeft className="w-7 h-7" />
             </button>
 
             <div className="min-w-0 flex-1 flex flex-col items-center gap-1 max-[380px]:col-start-2 max-[380px]:row-span-2 max-[380px]:self-stretch max-[380px]:justify-center">
-              <p className="w-full truncate text-center text-[11px] font-bold text-[var(--muted-ink)] dark:text-blue-200">
+              <p className="w-full truncate text-center text-[11px] font-bold text-secondary">
                 {title}
               </p>
               <button
                 onClick={onToggleThumbnails}
-                className="w-full rounded-xl bg-white/70 dark:bg-blue-950/45 border border-[#eadbc1] dark:border-blue-900/60 px-3 py-2 text-xs font-extrabold text-[var(--ink)] dark:text-slate-100 shadow-sm"
+                className="w-full rounded-xl reader-soft-panel border border-default px-3 py-2 text-xs font-extrabold text-primary shadow-sm"
               >
                 {pageLabel}
               </button>
@@ -409,7 +409,7 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
                 max={maxAllowedIndex}
                 value={currentPageIndex}
                 onChange={(e) => onPageChange(parseInt(e.target.value, 10))}
-                className="w-full accent-[var(--story-green)] h-1.5 cursor-pointer"
+                className="w-full accent-brand-green h-1.5 cursor-pointer"
                 aria-label="Pilih halaman"
               />
             </div>
@@ -417,7 +417,7 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
             <button
               onClick={goNext}
               disabled={!canGoNext}
-              className="h-12 w-14 rounded-2xl bg-[var(--story-green)] text-white disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center transition-transform active:scale-95 max-[380px]:col-start-3 max-[380px]:row-start-2 max-[380px]:h-14 max-[380px]:w-full"
+              className="h-12 w-14 rounded-2xl bg-brand-green text-white disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center transition-transform active:scale-95 max-[380px]:col-start-3 max-[380px]:row-start-2 max-[380px]:h-14 max-[380px]:w-full"
               aria-label="Halaman berikutnya"
             >
               <ChevronRight className="w-7 h-7" />
@@ -436,7 +436,7 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
 
           <button
             onClick={() => setIsNavHidden(true)}
-            className="self-center inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[10px] font-bold text-[var(--muted-ink)] dark:text-slate-400"
+            className="self-center inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[10px] font-bold text-secondary"
           >
             <EyeOff className="w-3.5 h-3.5" />
             Sembunyikan kontrol
@@ -451,7 +451,7 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
             <div className="flex justify-between items-start gap-3">
               <div>
                 <h3 id="mobile-tools-title" className="text-lg font-black font-sans mb-0">Alat baca</h3>
-                <p className="text-xs text-[var(--muted-ink)] dark:text-slate-300">Atur tampilan, suara, dan halaman.</p>
+                <p className="text-xs text-secondary">Atur tampilan, suara, dan halaman.</p>
               </div>
               <button onClick={() => setIsMobileToolsOpen(false)} className="p-2 rounded-xl btn-secondary" aria-label="Tutup alat baca">
                 <X className="w-5 h-5" />
@@ -460,41 +460,41 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
 
             <div className="grid grid-cols-2 gap-2">
               {!isBackCover && onReadPage && (
-                <button onClick={() => { onReadPage(); setIsMobileToolsOpen(false); }} className="min-h-16 rounded-2xl bg-[var(--magic-blue)] text-white p-3 flex items-center gap-3 text-left font-bold shadow-sm">
+                <button onClick={() => { onReadPage(); setIsMobileToolsOpen(false); }} className="min-h-16 rounded-2xl bg-brand-blue text-white p-3 flex items-center gap-3 text-left font-bold shadow-sm">
                   <Volume2 className="w-5 h-5 shrink-0" />
                   <span className="text-sm leading-tight">{readPageLabel}</span>
                 </button>
               )}
               {!isBackCover && onOpenQuiz && (
-                <button onClick={() => { onOpenQuiz(); setIsMobileToolsOpen(false); }} className="min-h-16 rounded-2xl bg-[var(--warm-gold)] text-[#3a2910] p-3 flex items-center gap-3 text-left font-bold shadow-sm">
+                <button onClick={() => { onOpenQuiz(); setIsMobileToolsOpen(false); }} className="min-h-16 rounded-2xl bg-brand-gold text-[#3a2910] p-3 flex items-center gap-3 text-left font-bold shadow-sm">
                   <HelpCircle className="w-5 h-5 shrink-0" />
                   <span className="text-sm leading-tight">Kuis halaman</span>
                 </button>
               )}
               {onOpenVoiceRecorder && (
-                <button onClick={() => { onOpenVoiceRecorder(); setIsMobileToolsOpen(false); }} className="min-h-16 rounded-2xl bg-rose-600 hover:bg-rose-500 text-white p-3 flex items-center gap-3 text-left font-bold shadow-sm">
+                <button onClick={() => { onOpenVoiceRecorder(); setIsMobileToolsOpen(false); }} className="min-h-16 rounded-2xl bg-brand-rose hover:brightness-110 text-white p-3 flex items-center gap-3 text-left font-bold shadow-sm">
                   <Mic className="w-5 h-5 shrink-0" />
                   <span className="text-sm leading-tight">Rekam suara</span>
                 </button>
               )}
               {onOpenOfflineDownload && (
-                <button onClick={() => { onOpenOfflineDownload(); setIsMobileToolsOpen(false); }} className="min-h-16 rounded-2xl bg-[var(--story-green)] hover:bg-[#27795b] text-white p-3 flex items-center gap-3 text-left font-bold shadow-sm">
+                <button onClick={() => { onOpenOfflineDownload(); setIsMobileToolsOpen(false); }} className="min-h-16 rounded-2xl bg-brand-green hover:brightness-110 text-white p-3 flex items-center gap-3 text-left font-bold shadow-sm">
                   <Download className="w-5 h-5 shrink-0" />
                   <span className="text-sm leading-tight">Unduh offline</span>
                 </button>
               )}
-              <button onClick={onToggleBookmark} className={`min-h-16 rounded-2xl p-3 flex items-center gap-3 text-left font-bold shadow-sm ${isBookmarked ? 'bg-[var(--warm-gold)] text-[#3a2910]' : 'reader-soft-panel text-[var(--ink)] dark:text-slate-100'}`}>
+              <button onClick={onToggleBookmark} className={`min-h-16 rounded-2xl p-3 flex items-center gap-3 text-left font-bold shadow-sm ${isBookmarked ? 'bg-brand-gold text-[#3a2910]' : 'reader-soft-panel text-primary'}`}>
                 <Bookmark className={`w-5 h-5 shrink-0 ${isBookmarked ? 'fill-[#3a2910]' : ''}`} />
                 <span className="text-sm leading-tight">{isBookmarked ? 'Ditandai' : 'Tandai halaman'}</span>
               </button>
-              <button onClick={() => { onToggleThumbnails(); setIsMobileToolsOpen(false); }} className="reader-soft-panel min-h-16 rounded-2xl p-3 flex items-center gap-3 text-left font-bold text-[var(--ink)] dark:text-slate-100">
-                <Grid className="w-5 h-5 shrink-0 text-[var(--magic-blue)]" />
+              <button onClick={() => { onToggleThumbnails(); setIsMobileToolsOpen(false); }} className="reader-soft-panel min-h-16 rounded-2xl p-3 flex items-center gap-3 text-left font-bold text-primary">
+                <Grid className="w-5 h-5 shrink-0 text-brand-blue" />
                 <span className="text-sm leading-tight">Daftar halaman</span>
               </button>
             </div>
 
             <div className="reader-soft-panel rounded-2xl p-3 flex flex-col gap-3">
-              <span className="text-xs font-black text-[var(--muted-ink)] dark:text-blue-200">Bahasa cerita</span>
+              <span className="text-xs font-black text-secondary">Bahasa cerita</span>
               <div className="grid grid-cols-3 gap-2">
                 {([{ m: 'id' as const, l: 'ID' }, { m: 'en' as const, l: 'EN' }, { m: 'dual' as const, l: 'ID + EN' }]).map(({ m, l }) => (
                   <button
@@ -502,8 +502,8 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
                     onClick={() => onUpdateSettings({ languageMode: m })}
                     className={`h-10 rounded-xl text-xs font-black transition-colors ${
                       settings.languageMode === m || (!settings.languageMode && m === 'id')
-                        ? 'bg-[var(--magic-blue)] text-white'
-                        : 'bg-white/60 dark:bg-slate-900/50 text-[var(--muted-ink)] dark:text-slate-300'
+                        ? 'bg-brand-blue text-white'
+                        : 'bg-surface-hover text-secondary'
                     }`}
                   >
                     {l}
@@ -517,15 +517,15 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
               <ToggleRow label="Musik latar" icon={Music} isOn={settings.bgMusic} onClick={toggleBgMusic} />
               <button onClick={() => onUpdateSettings({ themeMode: isNight ? 'day' : 'night' })} className="min-h-12 rounded-xl flex items-center justify-between gap-3 text-sm font-bold px-3">
                 <span className="flex items-center gap-2">{isNight ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />} Tema</span>
-                <span className="text-xs text-[var(--muted-ink)] dark:text-blue-200">{isNight ? 'Malam' : 'Siang'}</span>
+                <span className="text-xs text-secondary">{isNight ? 'Malam' : 'Siang'}</span>
               </button>
             </div>
 
             <div className="reader-soft-panel rounded-2xl p-3 flex flex-col gap-2">
               <span className="flex items-center gap-2 text-sm font-bold"><Type className="w-4 h-4" /> Ukuran teks</span>
-              <div className="grid grid-cols-4 gap-1 bg-white/60 dark:bg-slate-900/50 p-1 rounded-xl">
+              <div className="grid grid-cols-4 gap-1 bg-surface-hover p-1 rounded-xl">
                 {(['sm', 'base', 'lg', 'xl'] as const).map((sz) => (
-                  <button key={sz} onClick={() => onUpdateSettings({ fontSize: sz })} className={`min-h-10 rounded-lg font-black uppercase text-[10px] transition-colors ${settings.fontSize === sz ? 'bg-[var(--magic-blue)] text-white' : 'text-[var(--muted-ink)] dark:text-slate-300'}`}>{sz}</button>
+                  <button key={sz} onClick={() => onUpdateSettings({ fontSize: sz })} className={`min-h-10 rounded-lg font-black uppercase text-[10px] transition-colors ${settings.fontSize === sz ? 'bg-brand-blue text-white' : 'text-secondary'}`}>{sz}</button>
                 ))}
               </div>
             </div>

@@ -116,42 +116,42 @@ export const StoryMakerModal: React.FC<StoryMakerModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-amber-950/80 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in">
-      <div className="bg-amber-900 border-2 border-amber-500 rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col">
+    <div className="fixed inset-0 z-50 bg-[var(--color-overlay)] backdrop-blur-md flex items-center justify-center p-4 animate-fade-in">
+      <div className="reader-modal border-2 border-brand-gold rounded-[1.35rem] w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col">
         {/* Header */}
-        <div className="p-6 bg-amber-950/70 border-b border-amber-800 flex items-center justify-between text-amber-100">
+        <div className="p-6 border-b reader-divider flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-2xl bg-amber-600 text-white shadow-md">
+            <div className="p-2 rounded-2xl bg-brand-gold text-white shadow-md">
               <Wand2 className="w-6 h-6" />
             </div>
             <div>
-              <h3 className="text-xl font-black text-amber-200">Buat Buku Cerita AI</h3>
-              <p className="text-xs text-amber-300/80">Rancang tokoh, petualangan, dan pesan moral sendiri!</p>
+              <h3 className="text-xl font-black text-primary">Buat Buku Cerita AI</h3>
+              <p className="text-xs text-secondary">Rancang tokoh, petualangan, dan pesan moral sendiri!</p>
             </div>
           </div>
           <div className="flex flex-col items-end mr-4">
-            <span className="text-[10px] uppercase font-bold text-amber-400">Kuota VIP</span>
-            <span className="text-sm font-black text-white">{quotaRemaining} <span className="text-amber-500">/ {maxQuota}</span></span>
+            <span className="text-[10px] uppercase font-bold text-brand-gold">Kuota VIP</span>
+            <span className="text-sm font-black text-primary">{quotaRemaining} <span className="text-brand-gold">/ {maxQuota}</span></span>
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-full bg-amber-800 hover:bg-amber-700 text-amber-200 transition-colors"
+            className="p-2 rounded-full hover:bg-surface-hover transition-colors"
           >
             <X className="w-6 h-6" />
           </button>
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleGenerate} className="p-6 flex flex-col gap-5 max-h-[75vh] overflow-y-auto text-amber-100">
+        <form onSubmit={handleGenerate} className="p-6 flex flex-col gap-5 max-h-[75vh] overflow-y-auto">
           {errorMessage && (
-            <div className="p-3 bg-red-900/80 border border-red-500 rounded-2xl text-xs text-red-200">
+            <div className="p-3 bg-error/10 border border-error rounded-2xl text-xs text-error">
               {errorMessage}
             </div>
           )}
 
           {/* Character Name */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-bold uppercase tracking-wider text-amber-300">
+            <label className="text-xs font-bold uppercase tracking-wider text-primary">
               Nama Tokoh Utama
             </label>
             <input
@@ -160,13 +160,13 @@ export const StoryMakerModal: React.FC<StoryMakerModalProps> = ({
               onChange={(e) => setCharacterName(e.target.value)}
               required
               placeholder="Contoh: Kiko, Milo, Loli"
-              className="px-4 py-2.5 rounded-2xl bg-amber-950/70 border border-amber-700 text-amber-100 font-bold focus:outline-none focus:ring-2 focus:ring-amber-400"
+              className="px-4 py-2.5 rounded-2xl reader-soft-panel border border-default text-primary font-bold focus:outline-none focus:ring-2 focus:ring-brand-gold"
             />
           </div>
 
           {/* Character Type Picker */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-bold uppercase tracking-wider text-amber-300">
+            <label className="text-xs font-bold uppercase tracking-wider text-primary">
               Jenis Tokoh
             </label>
             <div className="flex flex-wrap gap-2">
@@ -177,8 +177,8 @@ export const StoryMakerModal: React.FC<StoryMakerModalProps> = ({
                   onClick={() => setCharacterType(type)}
                   className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
                     characterType === type
-                      ? 'bg-amber-500 text-white ring-2 ring-amber-300 shadow-md'
-                      : 'bg-amber-950/60 text-amber-200 hover:bg-amber-800 border border-amber-800'
+                      ? 'bg-brand-gold text-white shadow-md'
+                      : 'reader-soft-panel text-secondary hover:text-primary hover:bg-surface-hover border border-default'
                   }`}
                 >
                   {type}
@@ -189,7 +189,7 @@ export const StoryMakerModal: React.FC<StoryMakerModalProps> = ({
 
           {/* Setting Picker */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-bold uppercase tracking-wider text-amber-300">
+            <label className="text-xs font-bold uppercase tracking-wider text-primary">
               Latar Tempat Petualangan
             </label>
             <div className="flex flex-wrap gap-2">
@@ -200,8 +200,8 @@ export const StoryMakerModal: React.FC<StoryMakerModalProps> = ({
                   onClick={() => setSetting(st)}
                   className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
                     setting === st
-                      ? 'bg-amber-500 text-white ring-2 ring-amber-300 shadow-md'
-                      : 'bg-amber-950/60 text-amber-200 hover:bg-amber-800 border border-amber-800'
+                      ? 'bg-brand-gold text-white shadow-md'
+                      : 'reader-soft-panel text-secondary hover:text-primary hover:bg-surface-hover border border-default'
                   }`}
                 >
                   {st}
@@ -212,7 +212,7 @@ export const StoryMakerModal: React.FC<StoryMakerModalProps> = ({
 
           {/* Moral Value Picker */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-bold uppercase tracking-wider text-amber-300">
+            <label className="text-xs font-bold uppercase tracking-wider text-primary">
               Pesan Moral
             </label>
             <div className="flex flex-wrap gap-2">
@@ -223,8 +223,8 @@ export const StoryMakerModal: React.FC<StoryMakerModalProps> = ({
                   onClick={() => setMoralValue(mv)}
                   className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
                     moralValue === mv
-                      ? 'bg-amber-500 text-white ring-2 ring-amber-300 shadow-md'
-                      : 'bg-amber-950/60 text-amber-200 hover:bg-amber-800 border border-amber-800'
+                      ? 'bg-brand-gold text-white shadow-md'
+                      : 'reader-soft-panel text-secondary hover:text-primary hover:bg-surface-hover border border-default'
                   }`}
                 >
                   {mv}
@@ -238,18 +238,18 @@ export const StoryMakerModal: React.FC<StoryMakerModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="px-5 py-2.5 rounded-2xl bg-amber-950/60 hover:bg-amber-950 text-amber-300 font-bold text-xs"
+              className="px-5 py-2.5 rounded-2xl reader-soft-panel hover:bg-surface-hover text-secondary hover:text-primary font-bold text-xs"
             >
               Batal
             </button>
             <button
               type="submit"
               disabled={isLoading || quotaRemaining <= 0}
-              className="px-6 py-2.5 rounded-2xl bg-amber-500 hover:bg-amber-400 text-amber-950 font-black text-sm flex items-center gap-2 shadow-xl disabled:opacity-50"
+              className="px-6 py-2.5 rounded-2xl bg-brand-gold hover:opacity-90 text-white font-black text-sm flex items-center gap-2 shadow-xl disabled:opacity-50"
             >
               {isLoading ? (
                 <>
-                  <Loader2 className="w-5 h-5 animate-spin text-amber-950" />
+                  <Loader2 className="w-5 h-5 animate-spin text-white" />
                   <span>Merancang Cerita...</span>
                 </>
               ) : quotaRemaining <= 0 ? (

@@ -36,19 +36,19 @@ export const UserSettingsView: React.FC<UserSettingsProps> = ({ onBack, isNight 
   };
 
   return (
-    <div className={`min-h-screen pt-24 pb-12 px-4 sm:px-6 ${isNight ? 'bg-slate-950 text-slate-200' : 'bg-slate-50 text-slate-800'}`}>
+    <div className="min-h-screen pt-24 pb-12 px-4 sm:px-6">
       <div className="max-w-2xl mx-auto space-y-6">
         
         <div className="flex items-center gap-4">
           <button 
             onClick={onBack}
-            className={`p-2 rounded-xl transition-colors ${isNight ? 'hover:bg-slate-800' : 'hover:bg-slate-200'}`}
+            className="p-2 rounded-xl transition-colors bg-surface hover:bg-black/10 dark:hover:bg-white/10"
           >
             <ArrowLeft className="w-6 h-6" />
           </button>
           <div>
             <h1 className="text-2xl font-black flex items-center gap-2">
-              <Settings className="w-6 h-6 text-indigo-500" />
+              <Settings className="w-6 h-6" />
               Pengaturan Orang Tua
             </h1>
             <p className="text-sm opacity-70">Kelola preferensi membaca anak dan keamanan aplikasi</p>
@@ -57,9 +57,9 @@ export const UserSettingsView: React.FC<UserSettingsProps> = ({ onBack, isNight 
 
         <div className="space-y-6">
           {/* Notifications */}
-          <div className={`p-6 rounded-3xl border-2 ${isNight ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'} shadow-sm`}>
+          <div className="p-6 rounded-3xl border-2 bg-surface border-default shadow-sm">
             <h2 className="text-lg font-bold flex items-center gap-2 mb-4">
-              <Bell className="w-5 h-5 text-amber-500" />
+              <Bell className="w-5 h-5" />
               Notifikasi & Peringatan
             </h2>
             <label className="flex items-center justify-between cursor-pointer">
@@ -74,20 +74,20 @@ export const UserSettingsView: React.FC<UserSettingsProps> = ({ onBack, isNight 
                   checked={settings.enableNotifications}
                   onChange={(e) => setSettings({ ...settings, enableNotifications: e.target.checked })}
                 />
-                <div className="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-500"></div>
+                <div className="w-11 h-6 bg-[var(--border-default)] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-[var(--border-default)] after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-green"></div>
               </div>
             </label>
           </div>
 
           {/* Reading Interval */}
-          <div className={`p-6 rounded-3xl border-2 ${isNight ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'} shadow-sm`}>
+          <div className="p-6 rounded-3xl border-2 bg-surface border-default shadow-sm">
             <h2 className="text-lg font-bold flex items-center gap-2 mb-4">
-              <Clock className="w-5 h-5 text-emerald-500" />
+              <Clock className="w-5 h-5" />
               Durasi Membaca Maksimal
             </h2>
             <div className="space-y-4">
               <p className="text-sm opacity-80">
-                Atur berapa lama anak boleh membaca berturut-turut sebelum pop-up pengingat istirahat mata (Aturan 20-20-20) muncul. 
+                Atur berapa lama anak boleh membaca berturut-turut sebelum pop-up pengingat istirahat mata muncul. 
                 Kosongkan untuk mengikuti aturan <strong className="text-primary">default</strong> dari Admin.
               </p>
               <div>
@@ -99,16 +99,16 @@ export const UserSettingsView: React.FC<UserSettingsProps> = ({ onBack, isNight 
                   placeholder="Gunakan default admin"
                   value={settings.restIntervalMinutes || ''}
                   onChange={(e) => setSettings({ ...settings, restIntervalMinutes: e.target.value ? parseInt(e.target.value, 10) : null })}
-                  className={`w-full p-3 rounded-xl border-2 ${isNight ? 'bg-slate-950 border-slate-800 focus:border-emerald-500' : 'bg-slate-50 border-slate-200 focus:border-emerald-500'} focus:outline-none font-bold`}
+                  className="w-full p-3 rounded-xl border-2 bg-card border-default focus:border-brand-green focus:outline-none font-bold text-primary"
                 />
               </div>
             </div>
           </div>
 
           {/* Security Question */}
-          <div className={`p-6 rounded-3xl border-2 ${isNight ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'} shadow-sm`}>
+          <div className="p-6 rounded-3xl border-2 bg-surface border-default shadow-sm">
             <h2 className="text-lg font-bold flex items-center gap-2 mb-4">
-              <ShieldCheck className="w-5 h-5 text-rose-500" />
+              <ShieldCheck className="w-5 h-5" />
               Pertanyaan Pengaman (Parental Gate)
             </h2>
             <div className="space-y-4">
@@ -119,20 +119,20 @@ export const UserSettingsView: React.FC<UserSettingsProps> = ({ onBack, isNight 
               <div className="flex flex-col sm:flex-row gap-3">
                 <button
                   onClick={() => setSettings({ ...settings, securityQuestionType: 'math' })}
-                  className={`flex-1 p-3 rounded-xl border-2 font-bold transition-colors ${settings.securityQuestionType === 'math' ? 'border-rose-500 bg-rose-500/10 text-rose-700 dark:text-rose-400' : 'border-slate-200 dark:border-slate-800 opacity-60'}`}
+                  className={`flex-1 p-3 rounded-xl border-2 font-bold transition-colors ${settings.securityQuestionType === 'math' ? 'border-default bg-default text-primary' : 'border-default opacity-60 text-primary'}`}
                 >
                   Matematika Sederhana
                 </button>
                 <button
                   onClick={() => setSettings({ ...settings, securityQuestionType: 'custom' })}
-                  className={`flex-1 p-3 rounded-xl border-2 font-bold transition-colors ${settings.securityQuestionType === 'custom' ? 'border-rose-500 bg-rose-500/10 text-rose-700 dark:text-rose-400' : 'border-slate-200 dark:border-slate-800 opacity-60'}`}
+                  className={`flex-1 p-3 rounded-xl border-2 font-bold transition-colors ${settings.securityQuestionType === 'custom' ? 'border-default bg-default text-primary' : 'border-default opacity-60 text-primary'}`}
                 >
                   Pertanyaan Kustom
                 </button>
               </div>
 
               {settings.securityQuestionType === 'custom' && (
-                <div className={`p-4 rounded-xl space-y-4 ${isNight ? 'bg-slate-950/50' : 'bg-slate-100'}`}>
+                <div className="p-4 rounded-xl space-y-4 bg-surface">
                   <div>
                     <label className="text-xs font-bold uppercase tracking-wider opacity-70 mb-1 block">Pertanyaan (Teks)</label>
                     <input 
@@ -140,7 +140,7 @@ export const UserSettingsView: React.FC<UserSettingsProps> = ({ onBack, isNight 
                       placeholder="Contoh: Siapa nama kucing peliharaan kita?"
                       value={settings.customQuestion}
                       onChange={(e) => setSettings({ ...settings, customQuestion: e.target.value })}
-                      className={`w-full p-3 rounded-xl border-2 ${isNight ? 'bg-slate-900 border-slate-800 focus:border-rose-500' : 'bg-white border-slate-200 focus:border-rose-500'} focus:outline-none`}
+                      className="w-full p-3 rounded-xl border-2 bg-card border-default focus:border-brand-green focus:outline-none text-primary"
                     />
                   </div>
                   <div>
@@ -150,7 +150,7 @@ export const UserSettingsView: React.FC<UserSettingsProps> = ({ onBack, isNight 
                       placeholder="Contoh: Moli"
                       value={settings.customAnswer}
                       onChange={(e) => setSettings({ ...settings, customAnswer: e.target.value })}
-                      className={`w-full p-3 rounded-xl border-2 ${isNight ? 'bg-slate-900 border-slate-800 focus:border-rose-500' : 'bg-white border-slate-200 focus:border-rose-500'} focus:outline-none`}
+                      className="w-full p-3 rounded-xl border-2 bg-card border-default focus:border-brand-green focus:outline-none text-primary"
                     />
                     <p className="text-[10px] opacity-60 mt-1">Jawaban akan divalidasi tanpa memedulikan huruf besar/kecil (case-insensitive).</p>
                   </div>
@@ -163,7 +163,7 @@ export const UserSettingsView: React.FC<UserSettingsProps> = ({ onBack, isNight 
             <button
               onClick={handleSave}
               disabled={isSaving}
-              className="px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-black flex items-center gap-2 shadow-lg transition-transform hover:scale-105 disabled:opacity-50 disabled:hover:scale-100"
+              className="btn-primary px-6 py-3 flex items-center gap-2 disabled:opacity-50 text-sm sm:text-base"
             >
               <Save className="w-5 h-5" />
               {isSaving ? 'Menyimpan...' : 'Simpan Pengaturan'}
@@ -171,7 +171,7 @@ export const UserSettingsView: React.FC<UserSettingsProps> = ({ onBack, isNight 
           </div>
 
           {toastMsg && (
-            <div className="fixed bottom-6 right-6 z-50 p-4 rounded-2xl bg-indigo-600 text-white font-bold shadow-xl animate-bounce-subtle flex items-center gap-2">
+            <div className="fixed bottom-6 right-6 z-50 p-4 rounded-2xl bg-brand-green text-white font-bold shadow-xl animate-bounce-subtle flex items-center gap-2">
               <CheckCircle2 className="w-5 h-5" />
               {toastMsg}
             </div>

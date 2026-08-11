@@ -55,9 +55,14 @@ export interface StoryPage {
   colors: {
     bgGradFrom: string;
     bgGradTo: string;
+    darkBgGradFrom?: string;
+    darkBgGradTo?: string;
     textBg: string;
+    darkTextBg?: string;
     accentColor: string;
+    darkAccentColor?: string;
     borderAccent: string;
+    darkBorderAccent?: string;
   };
   interactiveElements?: InteractiveElement[];
   quizQuestion?: QuizQuestion;
@@ -102,8 +107,10 @@ export interface Story {
   category: string;
   coverImage: string;
   coverBg: string;
+  darkCoverBg?: string;
   themeColor: string;
   accentColor: string;
+  darkAccentColor?: string;
   pages: StoryPage[];
   moralMessage: string;
   targetAge: string;

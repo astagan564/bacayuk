@@ -250,7 +250,7 @@ export const Flipbook3D = React.forwardRef<FlipbookHandle, FlipbookProps>(({
             aria-label={element.label}
           >
             <span>{element.emoji || '✨'}</span>
-            <span className="pointer-events-none absolute bottom-full mb-2 hidden whitespace-nowrap rounded-lg bg-[#2f241c]/90 px-2 py-1 text-[10px] font-bold text-white shadow-md group-hover:block sm:block sm:opacity-0 sm:transition-opacity sm:group-hover:opacity-100">
+            <span className="pointer-events-none absolute bottom-full mb-2 hidden whitespace-nowrap rounded-lg bg-primary/90 px-2 py-1 text-[10px] font-bold text-inverse shadow-md group-hover:block sm:block sm:opacity-0 sm:transition-opacity sm:group-hover:opacity-100">
               {element.label}
             </span>
           </button>
@@ -258,7 +258,7 @@ export const Flipbook3D = React.forwardRef<FlipbookHandle, FlipbookProps>(({
       })}
 
       {activeInteractive && page.interactiveElements?.some((element) => element.id === activeInteractive.id) && (
-        <div className="absolute inset-x-4 bottom-4 z-30 mx-auto flex max-w-md items-center justify-center gap-2 rounded-xl border border-white/70 bg-white/92 px-4 py-2.5 text-center text-xs font-semibold text-[#3f3025] shadow-xl backdrop-blur-md sm:text-sm">
+        <div className="absolute inset-x-4 bottom-4 z-30 mx-auto flex max-w-md items-center justify-center gap-2 rounded-xl border border-default bg-card/95 px-4 py-2.5 text-center text-xs font-semibold text-primary shadow-xl backdrop-blur-md sm:text-sm">
           <span>{activeInteractive.emoji}</span>
           <span>“{activeInteractive.dialogue || activeInteractive.label}”</span>
         </div>
@@ -291,13 +291,11 @@ export const Flipbook3D = React.forwardRef<FlipbookHandle, FlipbookProps>(({
         </figure>
 
         <section
-          className={`relative flex min-h-0 flex-col overflow-visible border-t px-5 py-6 sm:px-8 sm:py-8 md:min-h-0 md:overflow-y-auto md:border-l md:border-t-0 md:px-8 lg:px-10 ${
-            isNight ? 'border-slate-700 text-slate-100' : 'border-[#d9cfbd] text-[#251f1a]'
-          }`}
+          className="relative flex min-h-0 flex-col overflow-visible border-t border-default text-primary px-5 py-6 sm:px-8 sm:py-8 md:min-h-0 md:overflow-y-auto md:border-l md:border-t-0 md:px-8 lg:px-10"
           style={paperStyle}
         >
           <header>
-            <p className={`text-[10px] font-semibold tracking-[0.18em] ${isNight ? 'text-slate-400' : 'text-[#8a7968]'}`}>
+            <p className="text-[10px] font-semibold tracking-[0.18em] text-secondary">
               {story.author}
             </p>
           </header>
@@ -305,7 +303,7 @@ export const Flipbook3D = React.forwardRef<FlipbookHandle, FlipbookProps>(({
           <div className="flex flex-1 items-center py-6 sm:py-8 md:py-10">
             <div className="mx-auto w-full max-w-[34rem]">
               {pageTitle && (
-                <h2 className={`mb-4 text-balance font-serif text-xl font-semibold leading-[1.18] sm:text-2xl lg:text-[1.7rem] ${isNight ? 'text-slate-50' : 'text-[#2c241e]'}`}>
+                <h2 className="mb-4 text-balance font-serif text-xl font-semibold leading-[1.18] sm:text-2xl lg:text-[1.7rem] text-primary">
                   {pageTitle}
                 </h2>
               )}
@@ -322,7 +320,7 @@ export const Flipbook3D = React.forwardRef<FlipbookHandle, FlipbookProps>(({
             </div>
           </div>
 
-          <footer className={`flex items-end justify-between text-[10px] font-semibold ${isNight ? 'text-slate-500' : 'text-[#958472]'}`}>
+          <footer className="flex items-end justify-between text-[10px] font-semibold text-secondary">
             <span>{story.title}</span>
             <span className="tabular-nums">{page.pageNumber}</span>
           </footer>
@@ -333,16 +331,14 @@ export const Flipbook3D = React.forwardRef<FlipbookHandle, FlipbookProps>(({
 
   const renderBackCover = () => (
     <section
-      className={`flex h-full min-h-[30rem] w-full flex-col items-center justify-center px-8 py-8 text-center ${
-        isNight ? 'bg-[#121a28] text-slate-100' : 'bg-[#fffdf7] text-[#30251d]'
-      }`}
+      className="flex h-full min-h-[30rem] w-full flex-col items-center justify-center px-8 py-8 text-center bg-surface text-primary"
     >
-      <span className={`mb-6 grid h-20 w-20 place-items-center rounded-full ${isNight ? 'bg-slate-800' : 'bg-[#efe3cc]'}`}>
-        <Sparkles className="h-9 w-9 text-[var(--warm-gold)]" />
+      <span className="mb-6 grid h-20 w-20 place-items-center rounded-full bg-surface-hover">
+        <Sparkles className="h-9 w-9 text-brand-gold" />
       </span>
-      <p className={`mb-2 text-xs font-semibold tracking-[0.2em] ${isNight ? 'text-slate-400' : 'text-[#8b7259]'}`}>TAMAT</p>
+      <p className="mb-2 text-xs font-semibold tracking-[0.2em] text-secondary">TAMAT</p>
       <h2 className="max-w-2xl font-serif text-3xl font-semibold leading-tight sm:text-5xl">Cerita selesai, pesannya tetap tinggal.</h2>
-      <p className={`mt-6 max-w-xl font-serif text-base leading-8 sm:text-lg ${isNight ? 'text-slate-300' : 'text-[#665342]'}`}>
+      <p className="mt-6 max-w-xl font-serif text-base leading-8 sm:text-lg text-secondary">
         “{story.moralMessage}”
       </p>
       <div className="mt-8 grid w-full max-w-md grid-cols-1 gap-3 sm:grid-cols-2">
@@ -350,7 +346,7 @@ export const Flipbook3D = React.forwardRef<FlipbookHandle, FlipbookProps>(({
           <button
             type="button"
             onClick={() => setShowVocabQuizModal(true)}
-            className="min-h-14 rounded-2xl bg-[var(--magic-blue)] px-4 py-3 text-sm font-black text-white shadow-sm transition-transform hover:brightness-110 active:scale-[0.98]"
+            className="min-h-14 rounded-2xl bg-brand-blue px-4 py-3 text-sm font-black text-white shadow-sm transition-transform hover:brightness-110 active:scale-[0.98]"
           >
             <span className="flex items-center justify-center gap-2">
               <Languages className="h-5 w-5" />
@@ -362,7 +358,7 @@ export const Flipbook3D = React.forwardRef<FlipbookHandle, FlipbookProps>(({
           <button
             type="button"
             onClick={onCompleteBook}
-            className={`min-h-14 rounded-2xl bg-[var(--story-green)] px-4 py-3 text-sm font-black text-white shadow-sm transition-transform hover:brightness-110 active:scale-[0.98] ${
+            className={`min-h-14 rounded-2xl bg-brand-green px-4 py-3 text-sm font-black text-white shadow-sm transition-transform hover:brightness-110 active:scale-[0.98] ${
               hasVocabularyQuiz ? '' : 'sm:col-span-2'
             }`}
           >
@@ -413,12 +409,9 @@ export const Flipbook3D = React.forwardRef<FlipbookHandle, FlipbookProps>(({
     >
       <div className="w-full lg:flex lg:min-h-0 lg:flex-1 lg:items-center lg:justify-center">
         <div
-          className={`reader-book-frame relative min-h-0 w-full max-w-none overflow-hidden rounded-[1.4rem] border shadow-[0_24px_70px_rgba(54,39,24,0.22)] transition-all duration-300 md:aspect-[16/11] md:min-h-0 ${
-            isNight ? 'border-slate-700 bg-slate-900' : 'border-[#bfae93] bg-[#fffdf7]'
-          } ${
+          className={`reader-book-frame relative min-h-0 w-full max-w-none overflow-hidden rounded-[1.4rem] border border-default bg-surface shadow-[0_24px_70px_rgba(54,39,24,0.22)] dark:shadow-[0_24px_70px_rgba(2,6,23,0.58)] transition-all duration-300 md:aspect-[16/11] md:min-h-0 ${
             isFlipping ? 'translate-y-1 scale-[0.995] opacity-75' : 'translate-y-0 scale-100 opacity-100'
           }`}
-          style={{ boxShadow: isNight ? '0 24px 70px rgba(2, 6, 23, 0.58)' : undefined }}
         >
           {!isBackCover && (
             <div className="pointer-events-none absolute inset-y-0 left-1/2 z-30 hidden w-8 -translate-x-1/2 bg-gradient-to-r from-black/12 via-black/5 to-transparent md:block" />

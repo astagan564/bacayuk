@@ -1,4 +1,4 @@
-﻿import React, { useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { Story } from '../types';
 import confetti from 'canvas-confetti';
 import {
@@ -54,10 +54,8 @@ export const BookCompletionModal: React.FC<BookCompletionModalProps> = ({
   }, []);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
-      <div
-        className="reader-modal w-full max-w-lg rounded-[1.35rem] p-6 sm:p-8 relative overflow-hidden flex flex-col items-center text-center gap-6"
-      >
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[var(--color-overlay)] backdrop-blur-sm animate-fade-in">
+      <div className="app-modal w-full max-w-lg rounded-[1.35rem] p-6 sm:p-8 relative overflow-hidden flex flex-col items-center text-center gap-6">
         {/* Top Trophy & Stars Celebration */}
         <div className="relative flex flex-col items-center gap-2">
           <div className="relative">
@@ -79,7 +77,7 @@ export const BookCompletionModal: React.FC<BookCompletionModalProps> = ({
             ))}
           </div>
 
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-400/50 mt-1">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider bg-success/20 text-success border border-success/40 mt-1">
             <CheckCircle2 className="w-3.5 h-3.5" />
             <span>Selesai Membaca • Buku Tamat</span>
           </div>
@@ -87,23 +85,23 @@ export const BookCompletionModal: React.FC<BookCompletionModalProps> = ({
 
         {/* Title Appreciation Heading */}
         <div className="flex flex-col gap-1.5">
-          <h2 className="text-2xl sm:text-3xl font-black text-[var(--ink)] dark:text-slate-100 leading-tight">
+          <h2 className="text-2xl sm:text-3xl font-black text-primary leading-tight">
             Hebat, buku ini selesai dibaca.
           </h2>
-          <p className="text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-300">
-            Selamat telah membaca <strong className="text-[var(--magic-blue)] dark:text-blue-200">"{story.title}"</strong> dari awal hingga akhir.
+          <p className="text-xs sm:text-sm font-semibold text-secondary">
+            Selamat telah membaca <strong className="text-brand-blue">"{story.title}"</strong> dari awal hingga akhir.
           </p>
         </div>
 
         {/* Moral Message Box */}
         {story.moralMessage && (
           <div className="reader-soft-panel w-full p-4 rounded-2xl text-left flex items-start gap-3">
-            <Heart className="w-6 h-6 text-rose-500 shrink-0 mt-0.5" />
+            <Heart className="w-6 h-6 text-brand-rose shrink-0 mt-0.5" />
             <div className="flex flex-col gap-1">
-              <span className="text-[11px] font-extrabold uppercase tracking-wider text-[var(--muted-ink)] dark:text-blue-200">
+              <span className="text-[11px] font-extrabold uppercase tracking-wider text-secondary">
                 Pesan Moral Cerita
               </span>
-              <p className="text-xs font-medium leading-relaxed text-slate-800 dark:text-slate-200">
+              <p className="text-xs font-medium leading-relaxed text-primary">
                 "{story.moralMessage}"
               </p>
             </div>
@@ -135,7 +133,7 @@ export const BookCompletionModal: React.FC<BookCompletionModalProps> = ({
             {onOpenQuiz ? (
               <button
                 onClick={onOpenQuiz}
-                className="py-3 px-4 rounded-[0.9rem] bg-[var(--magic-blue)] hover:bg-[#3f5f8e] text-white font-extrabold text-xs shadow-md transition-transform hover:scale-[1.02] flex items-center justify-center gap-1.5"
+                className="py-3 px-4 rounded-[0.9rem] bg-brand-blue hover:opacity-90 text-white font-extrabold text-xs shadow-md transition-all hover:scale-[1.02] flex items-center justify-center gap-1.5"
               >
                 <HelpCircle className="w-4 h-4" />
                 <span>Mulai Kuis Seru</span>
@@ -143,7 +141,7 @@ export const BookCompletionModal: React.FC<BookCompletionModalProps> = ({
             ) : onOpenOfflineDownload ? (
               <button
                 onClick={onOpenOfflineDownload}
-                className="py-3 px-4 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs shadow-md transition-transform hover:scale-[1.02] flex items-center justify-center gap-1.5"
+                className="py-3 px-4 rounded-2xl bg-brand-green hover:opacity-90 text-white font-extrabold text-xs shadow-md transition-all hover:scale-[1.02] flex items-center justify-center gap-1.5"
               >
                 <Download className="w-4 h-4" />
                 <span>Unduh Offline</span>

@@ -237,26 +237,22 @@ export const PaymentGatewayModal: React.FC<PaymentGatewayModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#1f140e]/70 backdrop-blur-md animate-fade-in">
-      <div
-        className={`w-full max-w-2xl rounded-2xl border p-5 sm:p-6 shadow-2xl max-h-[90vh] overflow-y-auto ${
-          isNight ? 'bg-[#111b29] text-slate-100 border-blue-900/70' : 'bg-[#fffaf0] text-[var(--ink)] border-[#eadbc1]'
-        }`}
-      >
-        <div className="flex items-start justify-between gap-4 border-b border-[#eadbc1]/70 pb-4 dark:border-blue-900/60">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-overlay backdrop-blur-sm animate-fade-in">
+      <div className="w-full max-w-2xl rounded-2xl p-5 sm:p-6 shadow-2xl max-h-[90vh] overflow-y-auto app-modal">
+        <div className="flex items-start justify-between gap-4 border-b border-default pb-4">
           <div className="flex items-start gap-3">
-            <div className="rounded-xl bg-[var(--story-green)] p-2.5 text-white">
+            <div className="rounded-xl bg-brand-green p-2.5 text-white">
               <Lock className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-[11px] font-bold text-[var(--muted-ink)] dark:text-blue-200">Pembayaran aman</p>
+              <p className="text-[11px] font-bold text-secondary">Pembayaran aman</p>
               <h2 className="mb-0 text-2xl leading-tight text-balance">
                 {isVipOnly ? 'Aktifkan langganan keluarga' : 'Buka unduhan offline'}
               </h2>
             </div>
           </div>
 
-          <button onClick={onClose} className="rounded-xl p-2 text-[var(--muted-ink)] transition-colors hover:bg-black/5 dark:text-blue-200">
+          <button onClick={onClose} className="rounded-xl p-2 text-secondary transition-colors hover:bg-surface">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -270,13 +266,13 @@ export const PaymentGatewayModal: React.FC<PaymentGatewayModalProps> = ({
                   onClick={() => setPurchaseType('book')}
                   className={`rounded-xl border p-4 text-left transition-all ${
                     purchaseType === 'book'
-                      ? 'border-[var(--story-green)] bg-[var(--story-green)]/10'
-                      : 'border-[#eadbc1] bg-white/65 hover:bg-white dark:border-blue-900 dark:bg-blue-950/30'
+                      ? 'border-brand-green bg-brand-green/10'
+                      : 'border-default bg-surface/50 hover:bg-surface'
                   }`}
                 >
-                  <BookOpen className="mb-3 w-5 h-5 text-[var(--story-green)]" />
+                  <BookOpen className="mb-3 w-5 h-5 text-brand-green" />
                   <p className="text-sm font-extrabold">Beli satu buku</p>
-                  <p className="mt-1 text-xs leading-5 text-[var(--muted-ink)] dark:text-blue-100/75">{story?.title}</p>
+                  <p className="mt-1 text-xs leading-5 text-secondary">{story?.title}</p>
                   <p className="mt-3 text-lg font-extrabold tabular-nums">Rp {basePrice.toLocaleString('id-ID')}</p>
                 </button>
               )}
@@ -286,31 +282,31 @@ export const PaymentGatewayModal: React.FC<PaymentGatewayModalProps> = ({
                 onClick={() => setPurchaseType('vip')}
                 className={`rounded-xl border p-4 text-left transition-all ${
                   purchaseType === 'vip'
-                    ? 'border-[var(--magic-blue)] bg-[var(--magic-blue)]/10'
-                    : 'border-[#eadbc1] bg-white/65 hover:bg-white dark:border-blue-900 dark:bg-blue-950/30'
+                    ? 'border-brand-blue bg-brand-blue/10'
+                    : 'border-default bg-surface/50 hover:bg-surface'
                 }`}
               >
-                <Sparkles className="mb-3 w-5 h-5 text-[var(--magic-blue)]" />
+                <Sparkles className="mb-3 w-5 h-5 text-brand-blue" />
                 <p className="text-sm font-extrabold">Langganan keluarga</p>
-                <p className="mt-1 text-xs leading-5 text-[var(--muted-ink)] dark:text-blue-100/75">Unduh semua buku dan buat 10 cerita AI per bulan.</p>
+                <p className="mt-1 text-xs leading-5 text-secondary">Unduh semua buku dan buat 10 cerita AI per bulan.</p>
                 <p className="mt-3 text-lg font-extrabold tabular-nums">Rp {vipPrice.toLocaleString('id-ID')}</p>
               </button>
             </div>
 
-            <div className="rounded-xl border border-[#eadbc1] bg-white/70 p-4 dark:border-blue-900 dark:bg-blue-950/25">
+            <div className="rounded-xl border-default bg-surface/50 p-4 border">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <p className="text-xs font-bold text-[var(--muted-ink)] dark:text-blue-200">Ringkasan</p>
+                  <p className="text-xs font-bold text-secondary">Ringkasan</p>
                   <h3 className="mb-1 mt-1 text-base font-extrabold font-sans">
                     {purchaseType === 'vip' ? 'Langganan keluarga 1 bulan' : story?.title}
                   </h3>
-                  <p className="text-xs text-[var(--muted-ink)] dark:text-blue-100/75">
+                  <p className="text-xs text-secondary">
                     File akan diberi stempel nama dan email pembeli.
                   </p>
                 </div>
                 <div className="text-right">
                   {appliedDiscount > 0 && (
-                    <p className="text-xs text-[var(--muted-ink)] line-through">Rp {priceBeforeDiscount.toLocaleString('id-ID')}</p>
+                    <p className="text-xs text-secondary line-through">Rp {priceBeforeDiscount.toLocaleString('id-ID')}</p>
                   )}
                   <p className="text-2xl font-extrabold tabular-nums">Rp {finalPrice.toLocaleString('id-ID')}</p>
                 </div>
@@ -318,53 +314,53 @@ export const PaymentGatewayModal: React.FC<PaymentGatewayModalProps> = ({
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2">
-              <label className="grid gap-1.5 text-xs font-bold text-[var(--muted-ink)] dark:text-blue-200">
+              <label className="grid gap-1.5 text-xs font-bold text-secondary">
                 Nama pembeli
                 <input
                   type="text"
                   value={customerName}
                   onChange={(event) => setCustomerName(event.target.value)}
                   placeholder="Budi Santoso"
-                  className="rounded-xl border border-[#eadbc1] bg-white px-3 py-2.5 text-sm font-semibold text-[var(--ink)] dark:border-blue-900 dark:bg-blue-950 dark:text-white"
+                  className="rounded-xl px-3 py-2.5 text-sm font-semibold reader-field"
                 />
               </label>
-              <label className="grid gap-1.5 text-xs font-bold text-[var(--muted-ink)] dark:text-blue-200">
+              <label className="grid gap-1.5 text-xs font-bold text-secondary">
                 Email bukti pembayaran
                 <input
                   type="email"
                   value={customerEmail}
                   onChange={(event) => setCustomerEmail(event.target.value)}
                   placeholder="orangtua@email.com"
-                  className="rounded-xl border border-[#eadbc1] bg-white px-3 py-2.5 text-sm font-semibold text-[var(--ink)] dark:border-blue-900 dark:bg-blue-950 dark:text-white"
+                  className="rounded-xl px-3 py-2.5 text-sm font-semibold reader-field"
                 />
               </label>
             </div>
 
             <div className="grid gap-2">
               <div className="flex items-center gap-2">
-                <Tag className="w-4 h-4 text-[var(--warm-gold)]" />
+                <Tag className="w-4 h-4 text-brand-gold" />
                 <input
                   type="text"
                   value={couponInput}
                   onChange={(event) => setCouponInput(event.target.value)}
                   placeholder="Kode kupon"
-                  className="min-w-0 flex-1 rounded-xl border border-[#eadbc1] bg-white px-3 py-2.5 text-xs font-bold uppercase text-[var(--ink)] dark:border-blue-900 dark:bg-blue-950 dark:text-white"
+                  className="min-w-0 flex-1 rounded-xl px-3 py-2.5 text-xs font-bold uppercase reader-field"
                 />
                 <button type="button" onClick={handleApplyCoupon} className="btn-secondary px-3 py-2.5 text-xs">
                   Pasang
                 </button>
               </div>
-              {couponMessage && <p className="text-xs font-semibold text-[var(--muted-ink)] dark:text-blue-200">{couponMessage}</p>}
+              {couponMessage && <p className="text-xs font-semibold text-secondary">{couponMessage}</p>}
             </div>
 
             {errorMessage && (
-              <div className="rounded-xl border border-[var(--rose)]/40 bg-[var(--rose)]/10 px-4 py-3 text-xs font-semibold text-[var(--rose)]">
+              <div className="rounded-xl border border-error/40 bg-error/10 px-4 py-3 text-xs font-semibold text-error">
                 {errorMessage}
               </div>
             )}
 
-            <div className="rounded-xl border border-[var(--story-green)]/25 bg-[rgba(47,143,107,0.08)] p-4 text-xs leading-6 text-[var(--muted-ink)] dark:text-blue-100/80">
-              <div className="mb-1 flex items-center gap-2 font-extrabold text-[var(--story-green)]">
+            <div className="rounded-xl border border-brand-green/25 bg-brand-green/10 p-4 text-xs leading-6 text-secondary">
+              <div className="mb-1 flex items-center gap-2 font-extrabold text-brand-green">
                 <ShieldCheck className="w-4 h-4" />
                 <span>Pembayaran diverifikasi di server</span>
               </div>
@@ -392,26 +388,26 @@ export const PaymentGatewayModal: React.FC<PaymentGatewayModalProps> = ({
           </div>
         ) : (
           <div className="grid gap-5 pt-6 text-center">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--story-green)] text-white">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-success text-white">
               <CheckCircle2 className="w-9 h-9" />
             </div>
             <div>
-              <p className="text-xs font-bold text-[var(--story-green)]">Pembayaran terverifikasi</p>
+              <p className="text-xs font-bold text-success">Pembayaran terverifikasi</p>
               <h3 className="mb-0 mt-1 text-3xl text-balance">Akses sudah aktif.</h3>
             </div>
 
-            <div className="rounded-xl border border-[#eadbc1] bg-white/70 p-4 text-left text-xs dark:border-blue-900 dark:bg-blue-950/25">
+            <div className="rounded-xl border-default bg-surface/50 p-4 text-left text-xs border">
               <div className="grid gap-2">
-                <div className="flex justify-between gap-3 border-b border-[#eadbc1]/70 pb-2 dark:border-blue-900/50">
-                  <span className="text-[var(--muted-ink)] dark:text-blue-200">ID transaksi</span>
+                <div className="flex justify-between gap-3 border-b border-default pb-2">
+                  <span className="text-secondary">ID transaksi</span>
                   <span className="font-mono font-bold">#{currentReceipt?.transactionId}</span>
                 </div>
-                <div className="flex justify-between gap-3 border-b border-[#eadbc1]/70 pb-2 dark:border-blue-900/50">
-                  <span className="text-[var(--muted-ink)] dark:text-blue-200">Nama</span>
+                <div className="flex justify-between gap-3 border-b border-default pb-2">
+                  <span className="text-secondary">Nama</span>
                   <span className="font-bold">{currentReceipt?.customerName}</span>
                 </div>
                 <div className="flex justify-between gap-3">
-                  <span className="text-[var(--muted-ink)] dark:text-blue-200">Email</span>
+                  <span className="text-secondary">Email</span>
                   <span className="font-bold">{currentReceipt?.customerEmail}</span>
                 </div>
               </div>

@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { VocabularyQuiz } from '../types';
 import confetti from 'canvas-confetti';
 import { Award, CheckCircle2, XCircle, Volume2, Sparkles, X, Languages, RotateCcw } from 'lucide-react';
@@ -88,12 +88,12 @@ export const VocabularyQuizModal: React.FC<VocabularyQuizModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in">
+    <div className="fixed inset-0 z-50 bg-[var(--color-overlay)] backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
       <div
-        className="reader-modal w-full max-w-lg rounded-[1.35rem] overflow-hidden relative flex flex-col"
+        className="app-modal w-full max-w-lg rounded-[1.35rem] overflow-hidden relative flex flex-col"
       >
         {/* Modal Header */}
-        <div className="p-4 sm:p-5 bg-[var(--magic-blue)] text-white flex items-center justify-between">
+        <div className="p-4 sm:p-5 bg-brand-blue text-white flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="p-2 rounded-2xl bg-white/20 backdrop-blur-xs text-white">
               <Languages className="w-6 h-6" />
@@ -120,11 +120,11 @@ export const VocabularyQuizModal: React.FC<VocabularyQuizModalProps> = ({
         {!isFinished ? (
           <div className="p-6 flex flex-col gap-5">
             {/* Progress indicator */}
-            <div className="flex items-center justify-between text-xs font-black text-[var(--muted-ink)] dark:text-blue-200">
+            <div className="flex items-center justify-between text-xs font-black text-secondary">
               <span>
                 Soal {currentQuestionIndex + 1} dari {quiz.questions.length}
               </span>
-              <span className="px-2.5 py-0.5 rounded-lg bg-[var(--magic-blue)]/15 text-[var(--magic-blue)] dark:text-blue-200">
+              <span className="px-2.5 py-0.5 rounded-lg bg-brand-blue/15 text-brand-blue">
                 Skor: {score}
               </span>
             </div>
@@ -134,12 +134,12 @@ export const VocabularyQuizModal: React.FC<VocabularyQuizModalProps> = ({
               <span className="text-4xl animate-bounce">{question.emoji || '🇬🇧'}</span>
               
               <div className="flex items-center justify-center gap-2">
-                <h4 className="text-2xl sm:text-3xl font-black text-[var(--ink)] dark:text-slate-100">
+                <h4 className="text-2xl sm:text-3xl font-black text-primary">
                   "{question.wordEn}"
                 </h4>
                 <button
                   onClick={handleSpeakWord}
-                  className="p-2 rounded-full bg-[var(--magic-blue)]/12 hover:bg-[var(--magic-blue)]/20 dark:bg-blue-950/70 dark:hover:bg-blue-900 text-[var(--magic-blue)] dark:text-blue-200 transition-transform active:scale-90"
+                  className="p-2 rounded-full bg-brand-blue/15 hover:bg-brand-blue/25 text-brand-blue transition-transform active:scale-90"
                   title="Dengarkan pengucapan kata"
                 >
                   <Volume2 className="w-5 h-5" />
@@ -147,12 +147,12 @@ export const VocabularyQuizModal: React.FC<VocabularyQuizModalProps> = ({
               </div>
 
               {question.phonetic && (
-                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 italic">
+                <span className="text-xs font-semibold text-secondary italic">
                   Cara baca: [{question.phonetic}]
                 </span>
               )}
 
-              <p className="text-xs font-extrabold text-[var(--muted-ink)] dark:text-slate-300 mt-2">
+              <p className="text-xs font-extrabold text-secondary mt-2">
                 Apa arti kata Bahasa Inggris di atas dalam Bahasa Indonesia?
               </p>
             </div>
@@ -160,14 +160,14 @@ export const VocabularyQuizModal: React.FC<VocabularyQuizModalProps> = ({
             {/* Answer Options */}
             <div className="grid grid-cols-2 gap-3">
               {displayedOptions.map((opt, idx) => {
-                let btnStyle = 'reader-field hover:border-[var(--magic-blue)] text-slate-800 dark:text-slate-100';
+                let btnStyle = 'reader-field hover:border-brand-blue text-primary';
                 if (isAnswered) {
                   if (opt === question.correctTranslationId) {
-                    btnStyle = 'bg-emerald-600 border-emerald-400 text-white font-black ring-2 ring-emerald-300';
+                    btnStyle = 'bg-success border-success text-white font-black ring-2 ring-success/30';
                   } else if (opt === selectedOption) {
-                    btnStyle = 'bg-rose-600 border-rose-400 text-white font-bold';
+                    btnStyle = 'bg-error border-error text-white font-bold';
                   } else {
-                    btnStyle = 'bg-slate-100 dark:bg-slate-800 opacity-50 border-transparent';
+                    btnStyle = 'bg-surface opacity-50 border-transparent';
                   }
                 }
 
@@ -205,24 +205,24 @@ export const VocabularyQuizModal: React.FC<VocabularyQuizModalProps> = ({
         ) : (
           /* Quiz Results View */
           <div className="p-8 flex flex-col items-center text-center gap-5">
-            <div className="p-5 rounded-3xl bg-amber-400 text-amber-950 shadow-xl text-5xl animate-bounce">
+            <div className="p-5 rounded-3xl bg-brand-gold text-white shadow-xl text-5xl animate-bounce">
               🏆
             </div>
 
             <div>
-              <h3 className="text-2xl font-black text-[var(--ink)] dark:text-slate-100">
+              <h3 className="text-2xl font-black text-primary">
                 Kuis Kosakata Selesai!
               </h3>
-              <p className="text-xs text-slate-800 dark:text-slate-300 mt-1">
+              <p className="text-xs text-secondary mt-1">
                 Kamu menjawab dengan luar biasa!
               </p>
             </div>
 
             <div className="reader-soft-panel p-4 w-full rounded-2xl flex flex-col gap-1 items-center">
-              <span className="text-xs uppercase font-extrabold text-[var(--muted-ink)] dark:text-blue-200">
+              <span className="text-xs uppercase font-extrabold text-secondary">
                 Skor Akhir Kamu
               </span>
-              <span className="text-4xl font-black text-[var(--ink)] dark:text-slate-100">
+              <span className="text-4xl font-black text-primary">
                 {score} / {quiz.questions.length}
               </span>
             </div>

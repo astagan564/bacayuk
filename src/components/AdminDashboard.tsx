@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   InteractiveElement,
   Story,
@@ -228,11 +228,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     textEn: '',
     illustrationType: 'forest',
     colors: {
-      bgGradFrom: 'from-emerald-100',
-      bgGradTo: 'to-amber-100',
-      textBg: 'bg-white/80',
+      bgGradFrom: 'from-brand-green',
+      bgGradTo: 'to-warning',
+      textBg: 'bg-card/80',
       accentColor: 'emerald',
-      borderAccent: 'border-emerald-300',
+      borderAccent: 'border-brand-green',
     },
   });
 
@@ -826,7 +826,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       author: 'BacaYuk Studio',
       category: 'Petualangan',
       coverImage: 'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=600',
-      coverBg: 'from-amber-400 to-orange-500',
+      coverBg: 'from-warning to-warning',
       themeColor: 'amber',
       accentColor: 'orange',
       moralMessage: form.moralMessage.trim() || 'Setiap perjalanan menjadi lebih indah saat dijalani dengan berani dan hati baik.',
@@ -873,7 +873,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       author: 'BacaYuk Studio',
       category: draft.category?.trim() || 'Petualangan',
       coverImage: 'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=600',
-      coverBg: 'from-amber-400 to-orange-500',
+      coverBg: 'from-warning to-warning',
       themeColor: 'amber',
       accentColor: 'orange',
       moralMessage:
@@ -1354,28 +1354,24 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   }, {})).sort((a, b) => (b.aiCost + b.paymentFee) - (a.aiCost + a.paymentFee));
 
   return (
-    <div className={`min-h-screen w-full flex overflow-hidden animate-fade-in ${
-      isNight ? 'night-paper text-slate-100' : 'app-paper text-[var(--ink)]'
-    }`}>
+    <div className="min-h-screen w-full flex overflow-hidden animate-fade-in bg-background text-primary">
       
       {/* Toast Feedback */}
       {toast && (
-        <div className="fixed top-6 right-6 z-50 p-3 rounded-xl bg-[var(--story-green)] text-white font-semibold text-xs shadow-xl animate-fade-in flex items-center gap-2 border border-white/20">
+        <div className="fixed top-6 right-6 z-50 p-3 rounded-xl bg-brand-green text-white font-semibold text-xs shadow-xl animate-fade-in flex items-center gap-2 border border-white/20">
           <CheckCircle2 className="w-5 h-5" />
           <span>{toast}</span>
         </div>
       )}
 
       {/* Sidebar Menu */}
-      <aside className={`w-20 sm:w-72 shrink-0 border-r flex flex-col h-screen ${
-        isNight ? 'bg-[#101923]/95 border-blue-900/60' : 'bg-[#fffaf0]/95 border-[#eadbc1]'
-      }`}>
+      <aside className="w-20 sm:w-72 shrink-0 border-r border-default flex flex-col h-screen bg-surface">
         <div className="p-4 sm:p-6 border-b border-transparent">
           <div className="flex flex-col gap-2 items-center sm:items-start">
             <img src={bacaYukMark} alt="BacaYuk" className="h-11 w-11 sm:hidden" />
             <img src={bacaYukLogo} alt="BacaYuk" className="hidden h-12 w-auto max-w-full sm:block" />
-            <div className="inline-flex items-center gap-2 text-[10px] font-bold text-[var(--muted-ink)] dark:text-blue-200">
-              <ShieldCheck className="w-4 h-4 text-[var(--magic-blue)] shrink-0" />
+            <div className="inline-flex items-center gap-2 text-[10px] font-bold text-secondary">
+              <ShieldCheck className="w-4 h-4 text-brand-blue shrink-0" />
               <span className="hidden sm:inline">Ruang pengelola</span>
             </div>
           </div>
@@ -1395,8 +1391,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               onClick={() => setActiveTab(item.id as any)}
               className={`w-full py-3 px-3 sm:px-4 rounded-xl font-bold text-sm transition-all flex items-center justify-center sm:justify-start gap-3 ${
                 activeTab === item.id
-                  ? 'bg-[var(--ink)] text-[#fff7e6] shadow-sm dark:bg-blue-100 dark:text-[#101923]'
-                  : 'text-[var(--muted-ink)] dark:text-slate-400 hover:bg-black/5 dark:hover:bg-white/5'
+                  ? 'bg-[var(--text-primary)] text-[var(--bg-surface)] shadow-sm'
+                  : 'text-secondary hover:bg-surface-hover'
               }`}
               title={item.label}
             >
@@ -1409,7 +1405,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         <div className="p-2 sm:p-4 border-t-2 border-transparent mt-auto">
           <button
             onClick={onBackToHome}
-            className="w-full py-3 px-3 sm:px-4 rounded-xl font-bold text-sm transition-all flex items-center justify-center sm:justify-start gap-2 bg-white/70 hover:bg-white dark:bg-slate-800 dark:hover:bg-slate-700 text-[var(--muted-ink)] dark:text-slate-200 border border-[#eadbc1] dark:border-slate-700"
+            className="w-full py-3 px-3 sm:px-4 rounded-xl font-bold text-sm transition-all flex items-center justify-center sm:justify-start gap-2 bg-surface/70 hover:bg-card text-secondary hover:text-primary border border-default"
             title="Tutup & Kembali"
           >
             <X className="w-5 h-5 shrink-0" />
@@ -1428,7 +1424,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
                 <h3 className="text-xl mb-1">Kelola buku ({stories.length})</h3>
-                <p className="text-xs text-[var(--muted-ink)] dark:text-slate-400 font-medium">
+                <p className="text-xs text-[var(--muted-ink)] text-muted font-medium">
                   Atur akses baca, unduhan offline, harga, dan stempel lisensi.
                 </p>
               </div>
@@ -1456,7 +1452,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       author: 'Penulis Cilik',
                       category: 'Petualangan',
                       coverImage: 'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=600',
-                      coverBg: 'from-amber-400 to-orange-500',
+                      coverBg: 'from-warning to-warning',
                       themeColor: 'amber',
                       accentColor: 'orange',
                       moralMessage: 'Belajar dan bersabar membawa keberhasilan!',
@@ -1474,11 +1470,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                           text: 'Di sebuah desa yang indah, hiduplah seekor anak hewan yang rajin...',
                           illustrationType: 'forest',
                           colors: {
-                            bgGradFrom: 'from-emerald-100',
-                            bgGradTo: 'to-amber-100',
-                            textBg: 'bg-white/80',
+                            bgGradFrom: 'from-brand-green',
+                            bgGradTo: 'to-warning',
+                            textBg: 'bg-card/80',
                             accentColor: 'emerald',
-                            borderAccent: 'border-emerald-300',
+                            borderAccent: 'border-brand-green',
                           },
                         },
                       ],
@@ -1489,7 +1485,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     setShowAdvancedEditor(false);
                     setInteractionPlaceMode(false);
                   }}
-                  className="py-2.5 px-4 rounded-xl text-xs flex items-center gap-1.5 shrink-0 bg-white/70 hover:bg-white dark:bg-slate-800 dark:hover:bg-slate-700 text-[var(--muted-ink)] dark:text-slate-200 border border-[#eadbc1] dark:border-slate-700 font-bold transition-all"
+                  className="py-2.5 px-4 rounded-xl text-xs flex items-center gap-1.5 shrink-0 bg-surface/70 hover:bg-card text-secondary hover:text-primary border border-default font-bold transition-all"
                 >
                   <Plus className="w-4 h-4" />
                   <span>Tambah Manual</span>
@@ -1507,61 +1503,61 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 return (
                   <div
                     key={story.id}
-                    className="p-4 rounded-xl border bg-white/80 dark:bg-slate-800/80 border-[#eadbc1] dark:border-blue-900/60 flex items-start gap-4 shadow-sm hover:shadow-md transition-all"
+                    className="p-4 rounded-xl border border-default bg-surface flex items-start gap-4 shadow-sm hover:shadow-md transition-all"
                   >
                     <img
                       src={story.coverImage}
                       alt={story.title}
-                      className="w-20 h-28 object-cover rounded-lg shadow-sm shrink-0 border border-[#eadbc1]"
+                      className="w-20 h-28 object-cover rounded-lg shadow-sm shrink-0 border border-default"
                     />
 
                     <div className="flex-1 flex flex-col justify-between gap-2">
                       <div>
                         <div className="flex flex-wrap items-center gap-1.5 mb-1">
                           {status === 'free_guest' && (
-                            <span className="px-2 py-0.5 rounded-md bg-[var(--story-green)]/15 text-[var(--story-green)] text-[10px] font-bold border border-[var(--story-green)]/30">
+                            <span className="px-2 py-0.5 rounded-md bg-brand-green/15 text-brand-green text-[10px] font-bold border border-brand-green/30">
                               Gratis tanpa login
                             </span>
                           )}
                           {status === 'free_member' && (
-                            <span className="px-2 py-0.5 rounded-md bg-[var(--warm-gold)]/20 text-[#8a5e12] dark:text-amber-300 text-[10px] font-bold border border-[var(--warm-gold)]/35">
+                            <span className="px-2 py-0.5 rounded-md bg-warning/20 text-warning dark:text-warning text-[10px] font-bold border border-[var(--warm-gold)]/35">
                               Gratis setelah login
                             </span>
                           )}
                           {status === 'paid' && (
-                            <span className="px-2 py-0.5 rounded-md bg-[var(--magic-blue)]/15 text-[var(--magic-blue)] dark:text-blue-300 text-[10px] font-bold border border-[var(--magic-blue)]/30">
+                            <span className="px-2 py-0.5 rounded-md bg-brand-blue/15 text-brand-blue dark:text-brand-blue text-[10px] font-bold border border-brand-blue/30">
                               Berbayar
                             </span>
                           )}
                           <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold border ${
                             story.status === 'draft'
-                              ? 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-900 dark:text-slate-300 dark:border-slate-700'
-                              : 'bg-emerald-500/15 text-emerald-700 border-emerald-500/30 dark:text-emerald-300'
+                              ? 'bg-surface text-secondary border-default'
+                              : 'bg-brand-green/15 text-brand-green border-brand-green/30 dark:text-brand-green'
                           }`}>
                             {story.status === 'draft' ? 'Draft' : 'Published'}
                           </span>
 
                           {downloadOk ? (
-                            <span className="px-2 py-0.5 rounded-md bg-white/70 text-[var(--muted-ink)] dark:bg-slate-900 dark:text-blue-200 text-[10px] font-bold">
+                            <span className="px-2 py-0.5 rounded-md bg-surface text-secondary text-[10px] font-bold">
                               Unduh Rp {price.toLocaleString('id-ID')}
                             </span>
                           ) : (
-                            <span className="px-2 py-0.5 rounded-md bg-[var(--rose)]/15 text-[var(--rose)] text-[10px] font-bold">
+                            <span className="px-2 py-0.5 rounded-md bg-error/15 text-error text-[10px] font-bold">
                               Unduh dikunci
                             </span>
                           )}
                         </div>
 
-                        <h4 className="font-extrabold text-sm text-slate-900 dark:text-slate-100 line-clamp-1">
+                        <h4 className="font-extrabold text-sm text-primary line-clamp-1">
                           {story.title}
                         </h4>
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-2">
+                        <p className="text-[11px] text-muted line-clamp-2">
                           {story.description}
                         </p>
                       </div>
 
-                      <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-700 text-xs">
-                        <span className="text-[11px] font-bold text-amber-700 dark:text-amber-300">
+                      <div className="flex items-center justify-between pt-2 border-t border-default text-xs">
+                        <span className="text-[11px] font-bold text-warning">
                           {story.pages.length} halaman
                         </span>
 
@@ -1575,7 +1571,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                               setShowAdvancedEditor(false);
                               setInteractionPlaceMode(false);
                             }}
-                            className="p-1.5 rounded-lg bg-[var(--magic-blue)]/10 text-[var(--magic-blue)] dark:text-blue-200 hover:bg-[var(--magic-blue)]/18 font-bold transition-colors flex items-center gap-1"
+                            className="p-1.5 rounded-lg bg-brand-blue/10 text-info hover:bg-brand-blue/18 font-bold transition-colors flex items-center gap-1"
                             title="Edit Buku Cerita"
                           >
                             <Edit className="w-3.5 h-3.5" />
@@ -1591,7 +1587,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                 showToast('Buku dihapus dari data lokal, tetapi sinkron Supabase belum berhasil.');
                               }
                             }}
-                            className="p-1.5 rounded-lg bg-rose-500/10 text-rose-600 dark:text-rose-300 hover:bg-rose-500/18 font-bold transition-colors flex items-center gap-1"
+                            className="p-1.5 rounded-lg bg-error/10 text-error hover:bg-error/18 font-bold transition-colors flex items-center gap-1"
                             title="Hapus Buku Cerita"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -1613,7 +1609,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
                 <h3 className="text-xl mb-1">Orang tua terdaftar ({userList.length})</h3>
-                <p className="text-xs text-[var(--muted-ink)] dark:text-slate-400 font-medium">
+                <p className="text-xs text-secondary font-medium">
                   Pantau akun orang tua, kontak, dan aktivitas membaca keluarga.
                 </p>
               </div>
@@ -1629,21 +1625,21 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
             {/* Search filter */}
             <div className="relative">
-              <Search className="w-4 h-4 absolute left-3.5 top-3 text-slate-400" />
+              <Search className="w-4 h-4 absolute left-3.5 top-3 text-muted" />
               <input
                 type="text"
                 value={userSearchQuery}
                 onChange={(e) => setUserSearchQuery(e.target.value)}
                 placeholder="Cari berdasarkan nama, email, atau nomor WhatsApp..."
-                className="w-full pl-10 pr-3 py-2 rounded-xl border border-amber-300 dark:border-indigo-700 bg-white dark:bg-slate-800 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-amber-500"
+                className="w-full pl-10 pr-3 py-2 rounded-xl border border-default bg-surface text-xs font-medium focus:outline-none focus:ring-2 focus:ring-brand-blue"
               />
             </div>
 
             {/* User List Table */}
-            <div className="rounded-2xl border border-amber-200 dark:border-indigo-800 overflow-hidden bg-white dark:bg-slate-800 shadow-sm">
+            <div className="rounded-2xl border border-default overflow-hidden bg-surface shadow-sm">
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
-                  <thead className="bg-[#fff7e6] dark:bg-slate-700/80 text-[var(--muted-ink)] dark:text-blue-100 font-bold text-[10px]">
+                  <thead className="bg-surface text-secondary font-bold text-[10px]">
                     <tr>
                       <th className="p-3">Nama Orang Tua</th>
                       <th className="p-3">Email</th>
@@ -1652,7 +1648,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       <th className="p-3">Tanggal Daftar</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-amber-100 dark:divide-slate-700 font-medium">
+                  <tbody className="divide-y divide-default font-medium">
                     {userList
                       .filter(
                         (u) =>
@@ -1661,16 +1657,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                           (u.phone && u.phone.includes(userSearchQuery))
                       )
                       .map((u) => (
-                        <tr key={u.id} className="hover:bg-amber-50/50 dark:hover:bg-slate-700/50 transition-colors">
-                          <td className="p-3 font-bold text-slate-900 dark:text-slate-100">{u.name}</td>
-                          <td className="p-3 text-slate-700 dark:text-slate-300">{u.email}</td>
-                          <td className="p-3 text-slate-700 dark:text-slate-300">{u.phone || '-'}</td>
+                        <tr key={u.id} className="hover:bg-surface-hover transition-colors">
+                          <td className="p-3 font-bold text-primary">{u.name}</td>
+                          <td className="p-3 text-secondary">{u.email}</td>
+                          <td className="p-3 text-secondary">{u.phone || '-'}</td>
                           <td className="p-3">
-                            <span className="px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-[10px] font-bold uppercase">
+                            <span className="px-2 py-0.5 rounded-full bg-surface border border-default text-primary text-[10px] font-bold uppercase">
                               {u.loginMethod}
                             </span>
                           </td>
-                          <td className="p-3 text-slate-500 dark:text-slate-400">
+                          <td className="p-3 text-muted">
                             {new Date(u.createdAt).toLocaleDateString('id-ID')}
                           </td>
                         </tr>
@@ -1681,9 +1677,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             </div>
 
             {/* Reading Logs Section */}
-            <div className="flex flex-col gap-3 pt-4 border-t border-amber-200/50">
+            <div className="flex flex-col gap-3 pt-4 border-t border-default">
               <h3 className="text-base font-extrabold font-sans mb-1 flex items-center gap-2">
-                <BookOpen className="w-4 h-4 text-amber-600" />
+                <BookOpen className="w-4 h-4 text-warning" />
                 <span>Riwayat Aktivitas Membaca (Real-Time Reading Logs)</span>
               </h3>
 
@@ -1691,23 +1687,23 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 {readingLogs.map((log, idx) => (
                   <div
                     key={idx}
-                    className="p-3 rounded-xl bg-amber-500/10 dark:bg-slate-800 border border-amber-300 dark:border-indigo-800 flex flex-col gap-1 text-xs"
+                    className="p-3 rounded-xl bg-surface border border-default flex flex-col gap-1 text-xs"
                   >
-                    <div className="flex items-center justify-between font-bold text-amber-900 dark:text-amber-200">
+                    <div className="flex items-center justify-between font-bold text-primary">
                       <span>{log.userName}</span>
-                      <span className="text-[10px] font-normal text-slate-500">
+                      <span className="text-[10px] font-normal text-muted">
                         {new Date(log.updatedAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
                       </span>
                     </div>
-                    <div className="text-slate-700 dark:text-slate-300 font-semibold truncate">
+                    <div className="text-secondary font-semibold truncate">
                       📖 {log.storyTitle}
                     </div>
                     <div className="flex items-center justify-between text-[11px] pt-1">
-                      <span className="text-slate-500">Halaman {log.lastPageRead} dari {log.totalPages}</span>
+                      <span className="text-muted">Halaman {log.lastPageRead} dari {log.totalPages}</span>
                       {log.isCompleted ? (
-                        <span className="text-[var(--story-green)] font-bold">Selesai</span>
+                        <span className="text-brand-green font-bold">Selesai</span>
                       ) : (
-                        <span className="text-[#8a5e12] font-bold">Sedang dibaca</span>
+                        <span className="text-warning font-bold">Sedang dibaca</span>
                       )}
                     </div>
                   </div>
@@ -1723,35 +1719,35 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             {/* Financial Summary Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="book-panel p-4 rounded-xl flex flex-col justify-between gap-2">
-                <div className="flex items-center justify-between text-[var(--muted-ink)] dark:text-blue-200 text-xs font-bold">
+                <div className="flex items-center justify-between text-secondary text-xs font-bold">
                   <span>Total pendapatan</span>
-                  <DollarSign className="w-5 h-5 text-[var(--story-green)]" />
+                  <DollarSign className="w-5 h-5 text-brand-green" />
                 </div>
                 <div className="text-2xl sm:text-3xl font-extrabold tabular-nums">
                   Rp {totalRevenue.toLocaleString('id-ID')}
                 </div>
-                <div className="text-[11px] text-[var(--muted-ink)] dark:text-blue-200 font-medium">
+                <div className="text-[11px] text-secondary font-medium">
                   Dari {successTrxs.length} transaksi berhasil
                 </div>
               </div>
 
               <div className="book-panel p-4 rounded-xl flex flex-col justify-between gap-2">
-                <div className="flex items-center justify-between text-[var(--muted-ink)] dark:text-blue-200 text-xs font-bold">
+                <div className="flex items-center justify-between text-secondary text-xs font-bold">
                   <span>Menunggu pembayaran</span>
-                  <Clock className="w-5 h-5 text-[var(--warm-gold)]" />
+                  <Clock className="w-5 h-5 text-warning" />
                 </div>
                 <div className="text-2xl sm:text-3xl font-extrabold tabular-nums">
                   {pendingTrxs.length} transaksi
                 </div>
-                <div className="text-[11px] text-[var(--muted-ink)] dark:text-blue-200 font-medium">
+                <div className="text-[11px] text-secondary font-medium">
                   Belum selesai dibayar
                 </div>
               </div>
 
               <div className="book-panel p-4 rounded-xl flex flex-col justify-between gap-2">
-                <div className="flex items-center justify-between text-[var(--muted-ink)] dark:text-blue-200 text-xs font-bold">
+                <div className="flex items-center justify-between text-secondary text-xs font-bold">
                   <span>Konversi pesanan</span>
-                  <TrendingUp className="w-5 h-5 text-[var(--magic-blue)]" />
+                  <TrendingUp className="w-5 h-5 text-brand-blue" />
                 </div>
                 <div className="text-2xl sm:text-3xl font-extrabold tabular-nums">
                   {transactions.length > 0
@@ -1759,21 +1755,21 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     : 0}
                   %
                 </div>
-                <div className="text-[11px] text-[var(--muted-ink)] dark:text-blue-200 font-medium">
+                <div className="text-[11px] text-secondary font-medium">
                   {successTrxs.length} dari {transactions.length} total pesanan
                 </div>
               </div>
             </div>
 
             {/* Coupons Section */}
-            <div className="p-4 rounded-xl border border-[#eadbc1] dark:border-blue-900/60 bg-white/80 dark:bg-slate-800/80 flex flex-col gap-4">
+            <div className="p-4 rounded-xl border border-default bg-surface flex flex-col gap-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
                   <h3 className="text-base font-extrabold font-sans mb-1 flex items-center gap-2">
-                    <Tag className="w-4 h-4 text-[var(--warm-gold)]" />
+                    <Tag className="w-4 h-4 text-warning" />
                     <span>Kupon diskon</span>
                   </h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                  <p className="text-xs text-muted font-medium">
                     Buat kode promo untuk pembelian buku dan langganan.
                   </p>
                 </div>
@@ -1791,7 +1787,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               {showCouponForm && (
                 <form
                   onSubmit={handleCreateCoupon}
-                  className="p-3 rounded-xl bg-[#fff7e6] dark:bg-slate-700/50 border border-[#eadbc1] dark:border-blue-900/60 flex flex-col sm:flex-row items-end gap-3 animate-fade-in text-xs"
+                  className="p-3 rounded-xl bg-surface border border-default flex flex-col sm:flex-row items-end gap-3 animate-fade-in text-xs"
                 >
                   <div className="flex-1 w-full">
                     <label className="font-bold block mb-1">Kode kupon</label>
@@ -1800,7 +1796,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       value={newCouponCode}
                       onChange={(e) => setNewCouponCode(e.target.value)}
                       placeholder="Contoh: BUKUANAK20"
-                      className="w-full px-3 py-2 rounded-lg border border-amber-300 bg-white dark:bg-slate-800 font-bold uppercase"
+                      className="w-full px-3 py-2 rounded-lg border border-default bg-background font-bold uppercase"
                       required
                     />
                   </div>
@@ -1810,7 +1806,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     <select
                       value={newCouponType}
                       onChange={(e) => setNewCouponType(e.target.value as 'percent' | 'fixed')}
-                      className="w-full px-3 py-2 rounded-lg border border-amber-300 bg-white dark:bg-slate-800 font-bold"
+                      className="w-full px-3 py-2 rounded-lg border border-default bg-background font-bold"
                     >
                       <option value="percent">Persentase (%)</option>
                       <option value="fixed">Potongan (Rp)</option>
@@ -1823,14 +1819,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       type="number"
                       value={newCouponValue}
                       onChange={(e) => setNewCouponValue(Number(e.target.value))}
-                      className="w-full px-3 py-2 rounded-lg border border-amber-300 bg-white dark:bg-slate-800 font-bold"
+                      className="w-full px-3 py-2 rounded-lg border border-default bg-background font-bold"
                       required
                     />
                   </div>
 
                   <button
                     type="submit"
-                    className="w-full sm:w-auto py-2 px-4 rounded-lg bg-[var(--story-green)] hover:bg-[#27795b] text-white font-bold text-xs shadow-sm"
+                    className="w-full sm:w-auto py-2 px-4 rounded-lg bg-brand-green hover:bg-brand-green/80 text-white font-bold text-xs shadow-sm"
                   >
                     Simpan Kupon
                   </button>
@@ -1844,15 +1840,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     key={c.code}
                     className={`p-3 rounded-xl border flex items-center justify-between text-xs shadow-sm ${
                       c.isActive
-                        ? 'bg-amber-50 dark:bg-slate-700 border-amber-300 dark:border-indigo-700'
-                        : 'bg-slate-100 dark:bg-slate-800 border-slate-300 opacity-60'
+                        ? 'bg-background border-default'
+                        : 'bg-surface border-default opacity-60'
                     }`}
                   >
                     <div>
-                      <div className="font-black text-sm text-amber-900 dark:text-amber-200">
+                      <div className="font-black text-sm text-primary">
                         {c.code}
                       </div>
-                      <div className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+                      <div className="text-[11px] font-semibold text-secondary">
                         Diskon {c.type === 'percent' ? `${c.value}%` : `Rp ${c.value.toLocaleString('id-ID')}`} • Terpakai {c.usageCount}x
                       </div>
                     </div>
@@ -1861,7 +1857,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       <button
                         onClick={() => handleToggleCoupon(c.code)}
                         className={`p-1.5 rounded-lg text-[10px] font-bold ${
-                          c.isActive ? 'bg-emerald-500/20 text-emerald-700' : 'bg-slate-300 text-slate-700'
+                          c.isActive ? 'bg-brand-green/20 text-brand-green' : 'bg-[var(--border-default)] text-primary'
                         }`}
                         title="Aktifkan/Nonaktifkan Kupon"
                       >
@@ -1870,7 +1866,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
                       <button
                         onClick={() => handleDeleteCoupon(c.code)}
-                        className="p-1.5 rounded-lg bg-rose-500/20 text-rose-700 hover:bg-rose-500/30 transition-colors"
+                        className="p-1.5 rounded-lg bg-error/20 text-error hover:bg-error/30 transition-colors"
                         title="Hapus Kupon"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -1884,14 +1880,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             {/* Transactions Log Table */}
             <div className="flex flex-col gap-3">
               <h3 className="text-base font-extrabold font-sans mb-1 flex items-center gap-2">
-                <CreditCard className="w-4 h-4 text-amber-600" />
+                <CreditCard className="w-4 h-4 text-warning" />
                 <span>Riwayat Transaksi Penagihan (Midtrans Log)</span>
               </h3>
 
-              <div className="rounded-2xl border border-amber-200 dark:border-indigo-800 overflow-hidden bg-white dark:bg-slate-800 shadow-sm">
+              <div className="rounded-2xl border border-default overflow-hidden bg-surface shadow-sm">
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs">
-                    <thead className="bg-[#fff7e6] dark:bg-slate-700/80 text-[var(--muted-ink)] dark:text-blue-100 font-bold text-[10px]">
+                    <thead className="bg-surface text-secondary font-bold text-[10px]">
                       <tr>
                         <th className="p-3">ID Transaksi</th>
                         <th className="p-3">Pembeli</th>
@@ -1902,32 +1898,32 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                         <th className="p-3">Aksi Simu Admin</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-amber-100 dark:divide-slate-700 font-medium">
+                    <tbody className="divide-y divide-default font-medium">
                       {transactions.map((t) => (
-                        <tr key={t.id} className="hover:bg-amber-50/50 dark:hover:bg-slate-700/50 transition-colors">
-                          <td className="p-3 font-mono font-bold text-amber-900 dark:text-amber-200">{t.id}</td>
+                        <tr key={t.id} className="hover:bg-surface-hover transition-colors">
+                          <td className="p-3 font-mono font-bold text-primary">{t.id}</td>
                           <td className="p-3">
                             <div className="font-bold">{t.customerName}</div>
-                            <div className="text-[10px] text-slate-500">{t.customerEmail}</div>
+                            <div className="text-[10px] text-muted">{t.customerEmail}</div>
                           </td>
-                          <td className="p-3 font-semibold text-slate-800 dark:text-slate-200">{t.storyTitle}</td>
+                          <td className="p-3 font-semibold text-primary">{t.storyTitle}</td>
                           <td className="p-3 uppercase font-bold text-[10px]">{t.paymentMethod}</td>
-                          <td className="p-3 font-bold text-slate-900 dark:text-slate-100">
+                          <td className="p-3 font-bold text-primary">
                             Rp {t.amount.toLocaleString('id-ID')}
                           </td>
                           <td className="p-3">
                             {t.status === 'success' && (
-                              <span className="px-2 py-0.5 rounded-md bg-[var(--story-green)]/15 text-[var(--story-green)] font-bold text-[10px]">
+                              <span className="px-2 py-0.5 rounded-md bg-brand-green/15 text-brand-green font-bold text-[10px]">
                                 Berhasil
                               </span>
                             )}
                             {t.status === 'pending' && (
-                              <span className="px-2 py-0.5 rounded-md bg-[var(--warm-gold)]/20 text-[#8a5e12] dark:text-amber-300 font-bold text-[10px]">
+                              <span className="px-2 py-0.5 rounded-md bg-warning/20 text-warning dark:text-warning font-bold text-[10px]">
                                 Menunggu
                               </span>
                             )}
                             {t.status === 'expired' && (
-                              <span className="px-2 py-0.5 rounded-md bg-[var(--rose)]/15 text-[var(--rose)] font-bold text-[10px]">
+                              <span className="px-2 py-0.5 rounded-md bg-error/15 text-error font-bold text-[10px]">
                                 ❌ EXPIRED
                               </span>
                             )}
@@ -1937,14 +1933,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                               <div className="flex items-center gap-1">
                                 <button
                                   onClick={() => handleUpdateTrxStatus(t.id, 'success')}
-                                  className="px-2 py-1 rounded bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[10px]"
+                                  className="px-2 py-1 rounded bg-brand-green hover:bg-brand-green text-white font-bold text-[10px]"
                                   title="Tandai Sudah Bayar (Lunas)"
                                 >
                                   Bayar
                                 </button>
                                 <button
                                   onClick={() => handleUpdateTrxStatus(t.id, 'expired')}
-                                  className="px-2 py-1 rounded bg-rose-600 hover:bg-rose-500 text-white font-bold text-[10px]"
+                                  className="px-2 py-1 rounded bg-error hover:bg-error text-white font-bold text-[10px]"
                                   title="Tandai Kedaluwarsa"
                                 >
                                   Expired
@@ -1966,12 +1962,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           <div className="flex flex-col gap-6">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
               <div>
-                <div className="mb-1 inline-flex items-center gap-1.5 text-[10px] font-black text-[var(--story-green)]">
+                <div className="mb-1 inline-flex items-center gap-1.5 text-[10px] font-black text-brand-green">
                   <ReceiptText className="h-3.5 w-3.5" />
                   Ledger server-side
                 </div>
                 <h3 className="text-xl">Biaya & margin buku</h3>
-                <p className="mt-1 text-xs text-[var(--muted-ink)] dark:text-slate-300">
+                <p className="mt-1 text-xs text-secondary">
                   Biaya AI dicatat saat proses berhasil. Fee Midtrans tercatat ketika pembayaran terverifikasi sukses.
                 </p>
               </div>
@@ -1981,33 +1977,33 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             </div>
 
             {costLedgerError && (
-              <div className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-xs font-semibold text-amber-900 dark:border-amber-700 dark:bg-amber-950/30 dark:text-amber-100">
+              <div className="rounded-xl border border-warning bg-warning/10 p-3 text-xs font-semibold text-warning dark:border-warning dark:bg-warning/30 dark:text-warning">
                 {costLedgerError}
               </div>
             )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
               {[
-                ['Pendapatan tercatat', totalRevenue, 'text-[var(--story-green)]'],
-                ['Biaya AI', totalAiCost, 'text-[var(--rose)]'],
-                ['Fee Midtrans', totalPaymentFee, 'text-[var(--warm-gold)]'],
-                ['Margin bersih', netProfit, netProfit >= 0 ? 'text-[var(--story-green)]' : 'text-[var(--rose)]'],
+                ['Pendapatan tercatat', totalRevenue, 'text-brand-green'],
+                ['Biaya AI', totalAiCost, 'text-error'],
+                ['Fee Midtrans', totalPaymentFee, 'text-warning'],
+                ['Margin bersih', netProfit, netProfit >= 0 ? 'text-brand-green' : 'text-error'],
               ].map(([label, amount, color]) => (
                 <div key={label as string} className="book-panel rounded-xl p-4">
-                  <p className="text-[11px] font-bold text-[var(--muted-ink)] dark:text-slate-300">{label}</p>
+                  <p className="text-[11px] font-bold text-secondary">{label}</p>
                   <p className={`mt-2 text-2xl font-black tabular-nums ${color}`}>Rp {(amount as number).toLocaleString('id-ID')}</p>
                 </div>
               ))}
             </div>
 
-            <div className="overflow-hidden rounded-2xl border border-[#eadbc1] bg-white/80 dark:border-blue-900/60 dark:bg-slate-800/80">
-              <div className="border-b border-[#eadbc1] px-4 py-3 dark:border-blue-900/60">
+            <div className="overflow-hidden rounded-2xl border border-default bg-surface">
+              <div className="border-b border-default px-4 py-3">
                 <h4 className="text-sm font-black">Biaya aktual per buku</h4>
-                <p className="mt-0.5 text-[10px] text-[var(--muted-ink)] dark:text-slate-300">Token yang dikembalikan Gemini dipakai untuk menghitung estimasi tagihan dalam Rupiah pada saat event dicatat.</p>
+                <p className="mt-0.5 text-[10px] text-secondary">Token yang dikembalikan Gemini dipakai untuk menghitung estimasi tagihan dalam Rupiah pada saat event dicatat.</p>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
-                  <thead className="bg-[#fff7e6] text-[10px] font-black text-[var(--muted-ink)] dark:bg-slate-700/80 dark:text-blue-100">
+                  <thead className="bg-surface text-[10px] font-black text-secondary">
                     <tr>
                       <th className="p-3">Buku</th>
                       <th className="p-3">Gambar</th>
@@ -2016,7 +2012,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       <th className="p-3">Total biaya</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[#eadbc1] dark:divide-slate-700">
+                  <tbody className="divide-y divide-default">
                     {storyCostRows.map((row) => (
                       <tr key={row.storyId}>
                         <td className="p-3 font-bold">{row.title}</td>
@@ -2027,7 +2023,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       </tr>
                     ))}
                     {storyCostRows.length === 0 && (
-                      <tr><td colSpan={5} className="p-8 text-center text-[var(--muted-ink)] dark:text-slate-300">Belum ada biaya tercatat. Generate draft atau gambar buku untuk memulai ledger.</td></tr>
+                      <tr><td colSpan={5} className="p-8 text-center text-secondary">Belum ada biaya tercatat. Generate draft atau gambar buku untuk memulai ledger.</td></tr>
                     )}
                   </tbody>
                 </table>
@@ -2039,15 +2035,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         {/* TAB 4: GLOBAL SYSTEM & CHILD EYE HEALTH SETTINGS */}
         {activeTab === 'settings' && (
           <form onSubmit={handleSaveSettings} className="flex flex-col gap-6">
-            <div className="p-4 rounded-2xl border-2 border-amber-300 dark:border-indigo-800 bg-white dark:bg-slate-800 flex flex-col gap-4">
+            <div className="p-4 rounded-2xl border-2 border-default bg-surface flex flex-col gap-4">
               <h3 className="text-base font-black flex items-center gap-2">
-                <Clock className="w-5 h-5 text-amber-600" />
+                <Clock className="w-5 h-5 text-warning" />
                 <span>Pengaturan Kesehatan Anak & Waktu Aturan "20-20-20"</span>
               </h3>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                 <div>
-                  <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                  <label className="font-bold text-secondary block mb-1">
                     Interval Pengingat Istirahat Mata Anak (Menit)
                   </label>
                   <input
@@ -2058,15 +2054,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     onChange={(e) =>
                       setSettings({ ...settings, eyeRestIntervalMinutes: Number(e.target.value) })
                     }
-                    className="w-full px-3 py-2 rounded-xl border border-amber-300 dark:border-indigo-700 bg-amber-50/50 dark:bg-slate-900 font-bold"
+                    className="w-full px-3 py-2 rounded-xl border border-default bg-background font-bold"
                   />
-                  <p className="text-[11px] text-slate-500 mt-1">
+                  <p className="text-[11px] text-muted mt-1">
                     Sistem akan secara otomatis memunculkan animasi pengingat istirahat mata setiap {settings.eyeRestIntervalMinutes} menit membaca tanpa henti.
                   </p>
                 </div>
 
                 <div>
-                  <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                  <label className="font-bold text-secondary block mb-1">
                     Batas Waktu Masa Aktif Link Unduh E-Book (Jam)
                   </label>
                   <input
@@ -2077,15 +2073,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     onChange={(e) =>
                       setSettings({ ...settings, downloadLinkExpireHours: Number(e.target.value) })
                     }
-                    className="w-full px-3 py-2 rounded-xl border border-amber-300 dark:border-indigo-700 bg-amber-50/50 dark:bg-slate-900 font-bold"
+                    className="w-full px-3 py-2 rounded-xl border border-default bg-background font-bold"
                   />
-                  <p className="text-[11px] text-slate-500 mt-1">
+                  <p className="text-[11px] text-muted mt-1">
                     Link unduhan PDF & EPUB setelah pembelian akan otomatis hangus setelah {settings.downloadLinkExpireHours} jam.
                   </p>
                 </div>
 
                 <div>
-                  <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                  <label className="font-bold text-secondary block mb-1">
                     Harga Standar E-Book Unduhan Offline (Rp)
                   </label>
                   <input
@@ -2095,12 +2091,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     onChange={(e) =>
                       setSettings({ ...settings, defaultEbookPrice: Number(e.target.value) })
                     }
-                    className="w-full px-3 py-2 rounded-xl border border-amber-300 dark:border-indigo-700 bg-amber-50/50 dark:bg-slate-900 font-bold"
+                    className="w-full px-3 py-2 rounded-xl border border-default bg-background font-bold"
                   />
                 </div>
 
                 <div className="flex flex-col justify-center">
-                  <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                  <label className="font-bold text-secondary block mb-1">
                     Perlindungan Hak Cipta (Social Watermarking)
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer mt-1">
@@ -2110,9 +2106,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       onChange={(e) =>
                         setSettings({ ...settings, enableGlobalWatermark: e.target.checked })
                       }
-                      className="w-4 h-4 text-amber-600 rounded focus:ring-amber-500"
+                      className="w-4 h-4 text-warning rounded focus:ring-warning"
                     />
-                    <span className="font-bold text-xs text-amber-900 dark:text-amber-200">
+                    <span className="font-bold text-xs text-primary">
                       Otomatis sematkan stempel Lisensi Resmi dengan Nama & Email pembeli pada file PDF/EPUB
                     </span>
                   </label>
@@ -2120,7 +2116,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
                 {/* Anti-Right Click & Copy Protection Toggle */}
                 <div className="reader-soft-panel flex flex-col justify-center col-span-1 md:col-span-2 p-3 rounded-xl">
-                  <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                  <label className="font-bold text-secondary block mb-1">
                     🔒 Fitur Anti-Right Click & Copy Protection (Perlindungan Konten E-Book)
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer mt-1">
@@ -2130,9 +2126,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       onChange={(e) =>
                         setSettings({ ...settings, enableCopyProtection: e.target.checked })
                       }
-                      className="w-4 h-4 text-amber-600 rounded focus:ring-amber-500"
+                      className="w-4 h-4 text-warning rounded focus:ring-warning"
                     />
-                    <span className="font-bold text-xs text-slate-800 dark:text-slate-200">
+                    <span className="font-bold text-xs text-primary">
                       Aktifkan pencegahan Klik Kanan, Blokir Kombinasi Tombol Ctrl+S / Inspect Element, & Matikan Seleksi Teks saat anak membaca cerita.
                     </span>
                   </label>
@@ -2141,8 +2137,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 {/* Promo Banner Settings */}
                 <div className="reader-soft-panel col-span-1 md:col-span-2 p-4 rounded-xl flex flex-col gap-3">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <label className="font-black text-purple-900 dark:text-purple-200 flex items-center gap-2">
-                      <Megaphone className="w-4 h-4 text-purple-600 shrink-0" />
+                    <label className="font-black text-primary flex items-center gap-2">
+                      <Megaphone className="w-4 h-4 text-brand-blue shrink-0" />
                       <span>Manajemen Spanduk / Banner Pengumuman Promo Katalog</span>
                     </label>
                     <label className="flex items-center gap-2 cursor-pointer shrink-0">
@@ -2152,9 +2148,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                         onChange={(e) =>
                           setSettings({ ...settings, promoBannerActive: e.target.checked })
                         }
-                        className="w-4 h-4 text-purple-600 rounded"
+                        className="w-4 h-4 text-brand-blue rounded focus:ring-brand-blue"
                       />
-                      <span className="font-bold text-xs text-purple-800 dark:text-purple-300">
+                      <span className="font-bold text-xs text-secondary">
                         Tampilkan Banner
                       </span>
                     </label>
@@ -2166,9 +2162,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       setSettings({ ...settings, promoBannerText: e.target.value })
                     }
                     placeholder="Contoh: 🎉 Promo Hari Anak: Diskon Unduhan 50% dengan Kupon BUKUANAK20!"
-                    className="w-full px-3 py-2 rounded-xl border border-purple-300 dark:border-indigo-700 bg-white dark:bg-slate-800 font-bold text-xs text-slate-900 dark:text-white"
+                    className="w-full px-3 py-2 rounded-xl border border-default bg-background font-bold text-xs text-primary"
                   />
-                  <p className="text-[11px] text-slate-500">
+                  <p className="text-[11px] text-secondary">
                     Spanduk pengumuman promo akan muncul di halaman katalog utama e-book tanpa perlu mengubah kode web.
                   </p>
                 </div>
@@ -2177,11 +2173,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 <div className="reader-soft-panel col-span-1 md:col-span-2 p-4 rounded-xl flex flex-col gap-2">
                   <div className="flex items-center justify-between flex-wrap gap-2">
                     <div>
-                      <h4 className="font-black text-xs uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                        <RefreshCw className="w-4 h-4 text-indigo-600 animate-spin-slow" />
+                      <h4 className="font-black text-xs uppercase tracking-wider text-secondary flex items-center gap-1.5">
+                        <RefreshCw className="w-4 h-4 text-brand-blue animate-spin-slow" />
                         <span>Pembersihan Link Kedaluwarsa Otomatis (Cron Job Engine)</span>
                       </h4>
-                      <p className="text-[11px] text-slate-500">
+                      <p className="text-[11px] text-secondary">
                         Sistem cron job di latar belakang otomatis menghapus file sementara watermark & menandai link transaksi yang lewat {settings.downloadLinkExpireHours} jam.
                       </p>
                     </div>
@@ -2194,7 +2190,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                         showToast(`🧹 Pembersihan Cron Job berhasil! ${res.purgedCount} link kedaluwarsa dibersihkan.`);
                         setTransactions(adminStore.getTransactions());
                       }}
-                      className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs shadow-md transition-all flex items-center gap-1.5"
+                      className="px-4 py-2 rounded-xl bg-brand-blue hover:opacity-90 text-white font-black text-xs shadow-md transition-all flex items-center gap-1.5"
                     >
                       <RefreshCw className="w-3.5 h-3.5" />
                       <span>Jalankan Cron Pembersihan Otomatis Sekarang</span>
@@ -2202,7 +2198,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   </div>
 
                   {cronStatus && (
-                    <div className="p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-800 dark:text-emerald-300 text-[11px] font-bold">
+                    <div className="p-2.5 rounded-lg bg-success/10 border border-success/30 text-brand-green dark:text-brand-green text-[11px] font-bold">
                       {cronStatus}
                     </div>
                   )}
@@ -2212,7 +2208,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
             <button
               type="submit"
-              className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-amber-600 to-orange-500 hover:from-amber-500 hover:to-orange-400 text-white font-black text-sm shadow-xl transition-transform hover:scale-[1.02] flex items-center justify-center gap-2"
+              className="w-full py-3.5 px-6 rounded-2xl bg-brand-blue hover:opacity-90 text-white font-black text-sm shadow-md transition-transform hover:scale-[1.01] flex items-center justify-center gap-2"
             >
               <CheckCircle2 className="w-5 h-5" />
               <span>Simpan Semua Pengaturan Sistem Global</span>
@@ -2223,14 +2219,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         {/* TAB 5: ANALISIS RETENSI MEMBACA (DROP-OFF ANALYTICS) */}
         {activeTab === 'analytics' && (
           <div className="flex flex-col gap-6">
-            <div className="p-4 rounded-2xl bg-gradient-to-r from-indigo-900 via-purple-900 to-slate-900 text-white shadow-xl flex items-center justify-between flex-wrap gap-4 border border-indigo-500/40">
+            <div className="p-4 rounded-2xl bg-brand-blue text-white shadow-xl flex items-center justify-between flex-wrap gap-4">
               <div>
-                <span className="text-[10px] font-black uppercase tracking-wider text-indigo-300 flex items-center gap-1">
+                <span className="text-[10px] font-black uppercase tracking-wider text-brand-gold flex items-center gap-1">
                   <TrendingUp className="w-3.5 h-3.5" />
                   <span>Evaluasi Bisnis & Daya Tarik Konten</span>
                 </span>
                 <h3 className="text-xl font-black">Analisis Retensi Membaca (Drop-off Analytics)</h3>
-                <p className="text-xs text-indigo-200 mt-1 max-w-2xl">
+                <p className="text-xs text-white/80 mt-1 max-w-2xl">
                   Laporan statistik per-halaman untuk mengetahui di halaman berapa anak-anak berhenti/meninggalkan bacaan, sehingga penulis/desainer dapat merevisi bagian cerita yang kurang menarik.
                 </p>
               </div>
@@ -2241,14 +2237,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               {adminStore.getDropoffAnalytics(stories).map((analytics) => (
                 <div
                   key={analytics.storyId}
-                  className="p-5 rounded-2xl border-2 border-amber-200 dark:border-indigo-800 bg-white dark:bg-slate-800 shadow-md flex flex-col gap-4"
+                  className="p-5 rounded-2xl border-2 border-default bg-surface shadow-md flex flex-col gap-4"
                 >
-                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 border-b border-amber-100 dark:border-indigo-900 pb-3">
+                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 border-b border-default pb-3">
                     <div>
-                      <h4 className="font-black text-base text-slate-900 dark:text-white">
+                      <h4 className="font-black text-base text-primary">
                         {analytics.storyTitle}
                       </h4>
-                      <div className="text-xs text-slate-500 font-semibold flex flex-wrap items-center gap-2 mt-0.5">
+                      <div className="text-xs text-secondary font-semibold flex flex-wrap items-center gap-2 mt-0.5">
                         <span>Total Pembaca: <strong>{analytics.totalReaders} Anak</strong></span>
                         <span>•</span>
                         <span>Selesai: <strong>{analytics.completedCount} Anak ({analytics.completionRate}%)</strong></span>
@@ -2258,10 +2254,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     <span
                       className={`px-3 py-1 rounded-full text-xs font-black shrink-0 ${
                         analytics.completionRate >= 70
-                          ? 'bg-emerald-500/20 text-emerald-800 dark:text-emerald-300'
+                          ? 'bg-success/20 text-success'
                           : analytics.completionRate >= 40
-                          ? 'bg-amber-500/20 text-amber-800 dark:text-amber-300'
-                          : 'bg-rose-500/20 text-rose-800 dark:text-rose-300'
+                          ? 'bg-warning/20 text-warning'
+                          : 'bg-error/20 text-error'
                       }`}
                     >
                       {analytics.completionRate >= 70 ? '🌟 Sangat Disukai' : analytics.completionRate >= 40 ? '👍 Cukup Menarik' : '⚠️ Perlu Revisi'}
@@ -2269,15 +2265,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   </div>
 
                   {/* Hotspot Drop-off Alert */}
-                  <div className="p-3 rounded-xl bg-amber-50 dark:bg-slate-900 border border-amber-300 dark:border-amber-700/60 flex items-center gap-3 text-xs">
-                    <div className="p-2 rounded-lg bg-amber-500/20 text-amber-800 dark:text-amber-300 font-black">
+                  <div className="p-3 rounded-xl bg-surface border border-default flex items-center gap-3 text-xs">
+                    <div className="p-2 rounded-lg bg-warning/20 text-warning font-black">
                       Halaman {analytics.biggestDropPage}
                     </div>
                     <div>
-                      <div className="font-black text-amber-950 dark:text-amber-200">
+                      <div className="font-black text-primary">
                         Titik Drop-off Terbesar
                       </div>
-                      <div className="text-[11px] text-slate-600 dark:text-slate-400">
+                      <div className="text-[11px] text-secondary">
                         Sebagian besar pembaca berhenti di <strong>Halaman {analytics.biggestDropPage}</strong> dari total {analytics.totalPages} halaman. Disarankan merevisi ilustrasi / kalimat di halaman ini.
                       </div>
                     </div>
@@ -2285,7 +2281,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
                   {/* Page-by-Page Reading Funnel */}
                   <div className="flex flex-col gap-1.5 pt-1">
-                    <span className="text-xs font-black text-slate-700 dark:text-slate-300">
+                    <span className="text-xs font-black text-secondary">
                       Grafik Corong Retensi Per Halaman:
                     </span>
                     <div className="flex flex-col gap-1 text-[11px] font-bold">
@@ -2293,16 +2289,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                         const pct = Math.round((count / analytics.totalReaders) * 100);
                         return (
                           <div key={idx} className="flex items-center gap-2">
-                            <span className="w-16 shrink-0 text-slate-500">Hal {idx + 1}</span>
-                            <div className="flex-1 h-3.5 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden p-0.5">
+                            <span className="w-16 shrink-0 text-secondary">Hal {idx + 1}</span>
+                            <div className="flex-1 h-3.5 bg-surface  rounded-full overflow-hidden p-0.5">
                               <div
                                 className={`h-full rounded-full transition-all ${
-                                  pct >= 70 ? 'bg-emerald-500' : pct >= 40 ? 'bg-amber-500' : 'bg-rose-500'
+                                  pct >= 70 ? 'bg-success' : pct >= 40 ? 'bg-warning' : 'bg-error'
                                 }`}
                                 style={{ width: `${pct}%` }}
                               />
                             </div>
-                            <span className="w-12 text-right shrink-0 text-slate-700 dark:text-slate-300 font-black">
+                            <span className="w-12 text-right shrink-0 text-secondary font-black">
                               {pct}%
                             </span>
                           </div>
@@ -2318,22 +2314,22 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
         {/* Quick Create modal */}
         {showQuickCreate && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in overflow-y-auto">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[var(--color-overlay)] backdrop-blur-md animate-fade-in overflow-y-auto">
             <div className="reader-modal w-full max-w-4xl rounded-[1.6rem] p-5 sm:p-7 relative my-auto flex flex-col gap-5 max-h-[92vh] overflow-y-auto">
               <div className="flex items-start sm:items-center justify-between gap-3 pb-3 border-b reader-divider">
                 <div>
-                  <div className="mb-1 inline-flex items-center gap-1.5 text-[10px] font-black text-[var(--story-green)] dark:text-emerald-300">
+                  <div className="mb-1 inline-flex items-center gap-1.5 text-[10px] font-black text-brand-green dark:text-brand-green">
                     <Sparkles className="w-3.5 h-3.5" />
                     <span>Quick Create</span>
                   </div>
                   <h3 className="text-xl sm:text-2xl font-black tracking-tight text-balance">Mulai dari satu ide</h3>
-                  <p className="mt-1.5 max-w-2xl text-xs leading-5 text-[var(--muted-ink)] dark:text-slate-300">
+                  <p className="mt-1.5 max-w-2xl text-xs leading-5 text-secondary">
                     Ceritakan premisnya dengan bahasa biasa. BacaYuk akan menyusun naskah, karakter, halaman, dan arahan ilustrasinya.
                   </p>
                 </div>
                 <button
                   onClick={() => setShowQuickCreate(false)}
-                  className="p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
+                  className="p-2 rounded-full hover:bg-surface-hover transition-colors"
                   type="button"
                   aria-label="Tutup quick create"
                 >
@@ -2343,7 +2339,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
               <form onSubmit={handleQuickCreateDraft} className="flex flex-col gap-4 text-xs font-semibold">
                 {quickCreateErrors.length > 0 && (
-                  <div className="rounded-2xl border border-rose-300 bg-rose-50 p-3 text-rose-800 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-200">
+                  <div className="rounded-2xl border border-error bg-error/10 p-3 text-error dark:border-error dark:bg-error/40 dark:text-error">
                     <div className="flex items-center gap-2 font-black mb-2">
                       <AlertCircle className="w-4 h-4" />
                       <span>Perlu dilengkapi dulu</span>
@@ -2356,10 +2352,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   </div>
                 )}
 
-                <div className="rounded-[1.35rem] bg-[var(--story-green)]/8 p-3 sm:p-4 ring-1 ring-[var(--story-green)]/20">
+                <div className="rounded-[1.35rem] bg-brand-green/10 p-3 sm:p-4 ring-1 ring-brand-green/20">
                   <label className="mb-2 flex items-center justify-between gap-3 font-black text-sm">
                     <span>Ide cerita atau naskah</span>
-                    <span className="text-[10px] font-bold text-[var(--muted-ink)] dark:text-slate-300">Wajib</span>
+                    <span className="text-[10px] font-bold text-secondary">Wajib</span>
                   </label>
                   <textarea
                     rows={7}
@@ -2369,19 +2365,19 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     placeholder="Contoh: Seekor kelinci kecil takut bercerita di depan kelas. Temannya membantu ia berlatih sampai berani mencoba."
                     autoFocus
                   />
-                   <p className="mt-2 text-[11px] leading-5 text-[var(--muted-ink)] dark:text-slate-300">
+                   <p className="mt-2 text-[11px] leading-5 text-secondary">
                      Satu atau dua kalimat sudah cukup. Kamu juga boleh menempel naskah lengkap.
                    </p>
 
-                    <div className="mt-3 rounded-xl border border-dashed border-[var(--story-green)]/35 bg-white/45 p-3 dark:bg-slate-950/20">
+                    <div className="mt-3 rounded-xl border border-dashed border-brand-green/35 bg-surface/50 p-3">
                       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                         <div>
                           <p className="text-xs font-black">Atau impor dari PDF</p>
-                          <p className="mt-0.5 text-[10px] leading-4 text-[var(--muted-ink)] dark:text-slate-300">
+                          <p className="mt-0.5 text-[10px] leading-4 text-secondary">
                             Teks diekstrak di browser; PDF hasil scan dibaca dengan OCR AI per halaman. Hingga 400 MB.
                           </p>
                         </div>
-                        <label className={`inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg border border-[var(--story-green)]/30 bg-white px-3 py-2 text-[11px] font-black text-[var(--story-green)] transition-colors hover:bg-[var(--story-green)]/10 dark:bg-slate-900 ${
+                        <label className={`inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg border border-brand-green/30 bg-surface px-3 py-2 text-[11px] font-black text-brand-green transition-colors hover:bg-brand-green/10  ${
                           isExtractingPdf || isGeneratingBookDraft ? 'pointer-events-none opacity-60' : 'cursor-pointer'
                         }`}>
                           {isExtractingPdf ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
@@ -2397,13 +2393,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       </div>
 
                       {pdfImportProgress && (
-                        <p role="status" className="mt-2 text-[10px] font-bold text-[var(--magic-blue)] dark:text-blue-200">
+                        <p role="status" className="mt-2 text-[10px] font-bold text-info">
                           {pdfImportProgress}
                         </p>
                       )}
 
                       {pdfImport && (
-                        <p className="mt-2 text-[10px] font-bold text-[var(--story-green)] dark:text-emerald-300">
+                        <p className="mt-2 text-[10px] font-bold text-brand-green dark:text-brand-green">
                           {pdfImport.fileName} · {pdfImport.pageCount} halaman teks · {pdfImport.characterCount.toLocaleString('id-ID')} karakter siap direview.
                         </p>
                       )}
@@ -2426,12 +2422,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                           onClick={() => setQuickCreateForm({ ...quickCreateForm, targetAge: value })}
                           className={`rounded-xl px-2.5 py-3 text-left transition-all active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--story-green)] ${
                             quickCreateForm.targetAge === value
-                              ? 'bg-[var(--story-green)] text-white shadow-sm'
+                              ? 'bg-brand-green text-white shadow-sm'
                               : 'reader-field hover:-translate-y-0.5'
                           }`}
                         >
                           <span className="block text-xs font-black">{label}</span>
-                          <span className={`mt-1 block text-[9px] leading-4 ${quickCreateForm.targetAge === value ? 'text-white/80' : 'text-[var(--muted-ink)] dark:text-slate-300'}`}>
+                          <span className={`mt-1 block text-[9px] leading-4 ${quickCreateForm.targetAge === value ? 'text-white/80' : 'text-secondary'}`}>
                             {hint}
                           </span>
                         </button>
@@ -2453,8 +2449,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                           onClick={() => setQuickCreateForm({ ...quickCreateForm, primaryLanguage: value })}
                           className={`rounded-lg px-2 py-3 text-[11px] font-black transition-all active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--story-green)] ${
                             quickCreateForm.primaryLanguage === value
-                              ? 'bg-white text-[var(--ink)] shadow-sm dark:bg-slate-800 dark:text-white'
-                              : 'text-[var(--muted-ink)] hover:text-[var(--ink)] dark:text-slate-300'
+                              ? 'bg-primary text-inverse shadow-sm'
+                              : 'hover:text-primary text-secondary'
                           }`}
                         >
                           {label}
@@ -2471,23 +2467,23 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   className="reader-soft-panel rounded-xl px-3.5 py-3 flex items-center justify-between gap-3 text-left transition-transform active:scale-[0.99]"
                 >
                   <span className="flex items-center gap-2.5">
-                    <Settings className="h-4 w-4 text-[var(--story-green)]" />
+                    <Settings className="h-4 w-4 text-brand-green" />
                     <span>
                       <span className="block text-xs font-black">Pengaturan tambahan</span>
-                      <span className="mt-0.5 block text-[10px] font-bold text-[var(--muted-ink)] dark:text-slate-300">
+                      <span className="mt-0.5 block text-[10px] font-bold text-secondary">
                         Judul, pesan moral, karakter, panjang, dan gaya visual
                       </span>
                     </span>
                   </span>
-                  <span className="rounded-lg bg-white/70 px-2.5 py-1 text-[10px] font-black dark:bg-slate-900">
+                  <span className="rounded-lg bg-surface/70 px-2.5 py-1 text-[10px] font-black">
                     {showQuickCreateAdvanced ? 'Tutup' : 'Atur'}
                   </span>
                 </button>
 
                 {showQuickCreateAdvanced && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 rounded-[1.25rem] border border-[#eadbc1] bg-white/35 p-3.5 dark:border-blue-900/60 dark:bg-slate-950/25">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 rounded-[1.25rem] border border-default bg-surface p-3.5">
                     <div>
-                      <label className="block font-bold mb-1">Judul <span className="font-semibold text-[var(--muted-ink)]">(opsional)</span></label>
+                      <label className="block font-bold mb-1">Judul <span className="font-semibold text-secondary">(opsional)</span></label>
                       <input
                         type="text"
                         value={quickCreateForm.title}
@@ -2554,23 +2550,23 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   </div>
                 )}
 
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-2 px-1 text-[10px] font-black text-[var(--muted-ink)] dark:text-slate-300">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-2 px-1 text-[10px] font-black text-secondary">
                   {['Naskah & halaman', 'Character bible', 'Prompt ilustrasi', 'Kuis kandidat'].map((item) => (
                     <span key={item} className="inline-flex items-center gap-1.5">
-                      <Check className="w-3.5 h-3.5 text-[var(--story-green)]" />
+                      <Check className="w-3.5 h-3.5 text-brand-green" />
                       {item}
                     </span>
                   ))}
                 </div>
 
                 {isGeneratingBookDraft && (
-                  <div role="status" className="rounded-xl bg-[var(--magic-blue)]/10 px-3.5 py-3 text-[11px] font-bold text-[var(--magic-blue)] dark:text-blue-200">
+                  <div role="status" className="rounded-xl bg-brand-blue/10 px-3.5 py-3 text-[11px] font-bold text-info">
                     Menyusun alur, mengunci desain karakter, lalu menyiapkan adegan setiap halaman…
                   </div>
                 )}
 
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t reader-divider">
-                  <p className="text-[11px] leading-5 text-[var(--muted-ink)] dark:text-slate-300">
+                  <p className="text-[11px] leading-5 text-secondary">
                     Draft tetap berstatus belum terbit. Setelah dibuat, kamu akan masuk ke editor untuk review dan koreksi.
                   </p>
                   <button
@@ -2593,7 +2589,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
         {/* Story editor sub-modal */}
         {editingStory && (
-          <div className="fixed inset-0 z-50 flex items-stretch justify-center bg-black/80 backdrop-blur-md animate-fade-in overflow-hidden">
+          <div className="fixed inset-0 z-50 flex items-stretch justify-center bg-[var(--color-overlay)] backdrop-blur-md animate-fade-in overflow-hidden">
             <div
               className="reader-modal w-full max-w-none h-[100dvh] rounded-none p-4 sm:p-6 relative flex flex-col gap-5 overflow-y-auto"
             >
@@ -2604,7 +2600,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 <button
                   onClick={() => setEditingStory(null)}
                   disabled={Boolean(imageGenerationProgress)}
-                  className="p-2 rounded-full hover:bg-black/10 transition-colors disabled:opacity-40 disabled:cursor-wait"
+                  className="p-2 rounded-full hover:bg-surface-hover transition-colors disabled:opacity-40 disabled:cursor-wait"
                   aria-label="Tutup editor buku"
                 >
                   <X className="w-5 h-5" />
@@ -2613,7 +2609,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
               <form onSubmit={handleSaveStoryCMS} className="flex flex-col gap-4 text-xs font-semibold">
                 {storyFormErrors.length > 0 && (
-                  <div className="rounded-2xl border border-rose-300 bg-rose-50 p-3 text-rose-800 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-200">
+                  <div className="rounded-2xl border border-error bg-error/10 p-3 text-error dark:border-error dark:bg-error/40 dark:text-error">
                     <div className="flex items-center gap-2 font-black mb-2">
                       <AlertCircle className="w-4 h-4" />
                       <span>Perlu diperbaiki sebelum disimpan</span>
@@ -2629,10 +2625,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 <section className="reader-soft-panel rounded-2xl p-3.5 flex flex-col gap-3">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div>
-                      <span className="text-[10px] font-black uppercase text-[var(--muted-ink)] dark:text-blue-200">
+                      <span className="text-[10px] font-black uppercase text-secondary">
                         Status produksi buku
                       </span>
-                      <p className="mt-1 text-[11px] leading-5 text-[var(--muted-ink)] dark:text-slate-300">
+                      <p className="mt-1 text-[11px] leading-5 text-secondary">
                         Buku tetap draft sampai kamu publish, tetapi pipeline ini membantu melacak kesiapan konten.
                       </p>
                     </div>
@@ -2669,8 +2665,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                           key={step.id}
                           className={`rounded-xl px-2.5 py-2 text-[10px] font-black border ${
                             stepIndex <= activeIndex
-                              ? 'bg-[var(--story-green)]/12 border-[var(--story-green)]/35 text-[var(--story-green)]'
-                              : 'bg-white/45 dark:bg-slate-900/45 border-[#eadbc1] dark:border-blue-900/60 text-[var(--muted-ink)] dark:text-slate-300'
+                              ? 'bg-brand-green/12 border-brand-green/35 text-brand-green'
+                              : 'bg-surface border-default text-secondary'
                           }`}
                         >
                           {step.label}
@@ -2681,22 +2677,22 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 </section>
 
                 {editingStory.productionGuide && (
-                  <section className="rounded-2xl border border-[var(--story-green)]/25 bg-[var(--story-green)]/7 p-3.5">
+                  <section className="rounded-2xl border border-brand-green/25 bg-brand-green/7 p-3.5">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
                       <div>
                         <span className="text-xs font-black">Acuan visual buku</span>
-                        <p className="mt-1 text-[11px] leading-5 text-[var(--muted-ink)] dark:text-slate-300">
+                        <p className="mt-1 text-[11px] leading-5 text-secondary">
                           Acuan ini otomatis dipakai setiap kali gambar halaman dibuat.
                         </p>
                       </div>
                       <div className="flex flex-wrap gap-2 text-[10px] font-black">
-                        <span className="rounded-lg bg-white/70 px-2.5 py-1.5 dark:bg-slate-900/70">
+                        <span className="rounded-lg bg-surface/70 px-2.5 py-1.5">
                           {visualPresetLabel(editingStory.productionGuide.visualPreset)}
                         </span>
-                        <span className="rounded-lg bg-white/70 px-2.5 py-1.5 dark:bg-slate-900/70">
+                        <span className="rounded-lg bg-surface/70 px-2.5 py-1.5">
                           {editingStory.productionGuide.characterBible.length} karakter
                         </span>
-                        <span className="rounded-lg bg-white/70 px-2.5 py-1.5 dark:bg-slate-900/70">
+                        <span className="rounded-lg bg-surface/70 px-2.5 py-1.5">
                           {editingStory.productionGuide.aspectRatio}
                         </span>
                       </div>
@@ -2706,11 +2702,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                         <article key={character.id} className="reader-field min-w-[15rem] max-w-[19rem] rounded-xl p-3">
                           <div className="flex items-center justify-between gap-2">
                             <span className="font-black text-xs">{character.name}</span>
-                            <span className="text-[9px] font-black text-[var(--story-green)] dark:text-emerald-300">
+                            <span className="text-[9px] font-black text-brand-green dark:text-brand-green">
                               {character.role === 'main' ? 'Tokoh utama' : character.role === 'supporting' ? 'Pendukung' : 'Latar'}
                             </span>
                           </div>
-                          <p className="mt-1.5 text-[10px] leading-4 text-[var(--muted-ink)] dark:text-slate-300">
+                          <p className="mt-1.5 text-[10px] leading-4 text-secondary">
                             {[character.speciesOrIdentity, character.outfit].filter(Boolean).join(' · ')}
                           </p>
                           {character.immutableTraits.length > 0 && (
@@ -2739,22 +2735,22 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                             <span className="text-xs font-black">Produksi ilustrasi</span>
                             <span className={`rounded-lg px-2 py-1 text-[9px] font-black ${
                               allImagesReady
-                                ? 'bg-emerald-500/12 text-emerald-700 dark:text-emerald-300'
-                                : 'bg-amber-500/12 text-amber-700 dark:text-amber-300'
+                                ? 'bg-brand-green/12 text-success'
+                                : 'bg-warning/12 text-warning'
                             }`}>
                               {allImagesReady ? 'Semua siap' : `${completedAssetCount}/${totalAssetCount} gambar`}
                             </span>
                           </div>
-                          <p className="mt-1 text-[11px] leading-5 text-[var(--muted-ink)] dark:text-slate-300">
+                          <p className="mt-1 text-[11px] leading-5 text-secondary">
                             {imageGenerationProgress
                               ? imageGenerationProgress.label
                               : allImagesReady
                                 ? 'Cover dan seluruh halaman sudah memiliki gambar.'
                                 : `Cover ${coverReady ? 'siap' : 'belum dibuat'} · ${generatedPageCount} dari ${editingStory.pages.length} halaman siap.`}
                           </p>
-                          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-black/8 dark:bg-white/10">
+                          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-surface-hover">
                             <div
-                              className="h-full rounded-full bg-[var(--story-green)] transition-all duration-300"
+                              className="h-full rounded-full bg-brand-green transition-all duration-300"
                               style={{
                                 width: `${Math.round(((imageGenerationProgress?.completed ?? completedAssetCount) / Math.max(1, imageGenerationProgress?.total ?? totalAssetCount)) * 100)}%`,
                               }}
@@ -2797,11 +2793,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   };
 
                   return (
-                    <section className="reader-soft-panel rounded-2xl overflow-hidden border border-[#eadbc1] dark:border-blue-900/60">
+                    <section className="reader-soft-panel rounded-2xl overflow-hidden border border-default">
                       <div className="grid grid-cols-1 xl:grid-cols-[14rem_minmax(32rem,1fr)_18rem] min-h-[42rem] xl:h-[calc(100dvh-15rem)]">
-                        <aside className="border-b xl:border-b-0 xl:border-r border-[#eadbc1] dark:border-blue-900/60 bg-white/45 dark:bg-slate-950/30 p-3 overflow-hidden">
+                        <aside className="border-b xl:border-b-0 xl:border-r border-default bg-surface p-3 overflow-hidden">
                           <div className="flex items-center justify-between gap-2 mb-3">
-                            <span className="font-black text-[11px] text-[var(--muted-ink)] dark:text-blue-200">
+                            <span className="font-black text-[11px] text-secondary">
                               Halaman
                             </span>
                             <button
@@ -2811,7 +2807,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                 setEditingStory({ ...editingStory, pages: [...editingStory.pages, nextPage] });
                                 setPreviewPageIndex(editingStory.pages.length);
                               }}
-                              className="px-2 py-1 rounded-lg bg-[var(--story-green)] text-white font-black text-[10px]"
+                              className="px-2 py-1 rounded-lg bg-brand-green text-white font-black text-[10px]"
                             >
                               + Halaman
                             </button>
@@ -2824,8 +2820,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                 onClick={() => setPreviewPageIndex(idx)}
                                 className={`min-w-32 lg:min-w-0 text-left rounded-xl p-2 transition-all ${
                                   pageIndex === idx
-                                    ? 'bg-[var(--story-green)] text-white shadow-sm'
-                                    : 'bg-white/70 dark:bg-slate-900/70 hover:bg-white dark:hover:bg-slate-900 text-[var(--ink)] dark:text-slate-100'
+                                    ? 'bg-brand-green text-white shadow-sm'
+                                    : 'hover:bg-surface-hover text-primary'
                                 }`}
                               >
                                 <span className="block text-[10px] font-black opacity-75">
@@ -2839,26 +2835,26 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                           </div>
                         </aside>
 
-                        <div className="p-4 sm:p-5 bg-[#fffaf0]/70 dark:bg-slate-950/50 min-w-0">
-                          <div className="h-full min-h-[38rem] rounded-2xl border border-[#eadbc1] dark:border-blue-900/60 bg-gradient-to-br from-emerald-100 to-amber-100 dark:from-slate-900 dark:to-slate-800 p-4 sm:p-6 flex flex-col gap-4">
+                        <div className="p-4 sm:p-5 bg-background min-w-0">
+                          <div className="h-full min-h-[38rem] rounded-2xl border border-default bg-surface p-4 sm:p-6 flex flex-col gap-4">
                             <div className="shrink-0">
                               <input
                                 value={page.title || ''}
                                 onChange={(e) => updatePage({ ...page, title: e.target.value })}
-                                className="w-full bg-transparent text-xl sm:text-2xl font-black outline-none placeholder:text-slate-500/70"
+                                className="w-full bg-transparent text-xl sm:text-2xl font-black outline-none placeholder:text-muted/70"
                                 placeholder={`Judul halaman ${pageIndex + 1}`}
                               />
                               <textarea
                                 value={page.text}
                                 onChange={(e) => updatePage({ ...page, text: e.target.value })}
                                 rows={5}
-                                className="mt-4 w-full resize-none rounded-2xl bg-white/70 dark:bg-slate-950/70 p-4 text-sm leading-7 font-bold text-slate-800 dark:text-slate-100 outline-none border border-white/70 dark:border-blue-900/50"
+                                className="mt-4 w-full resize-none rounded-2xl bg-background p-4 text-sm leading-7 font-bold text-primary outline-none border border-default"
                                 placeholder="Teks cerita halaman ini"
                               />
                             </div>
                             <div
                               onClick={(e) => handleCanvasInteractionClick(e, page, pageIndex)}
-                              className={`relative flex-1 min-h-[20rem] rounded-2xl bg-white/65 dark:bg-slate-950/70 overflow-hidden border border-white/70 dark:border-blue-900/50 ${
+                              className={`relative flex-1 min-h-[20rem] rounded-2xl bg-background overflow-hidden border border-default ${
                                 interactionPlaceMode ? 'cursor-crosshair ring-2 ring-[var(--story-green)]' : ''
                               }`}
                             >
@@ -2866,14 +2862,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                               {page.imageUrl && <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent" />}
                               <div className="relative z-10 p-4">
                               <div className="mb-2 flex items-center justify-between gap-2">
-                                <span className="text-[10px] font-black text-[var(--story-green)] dark:text-emerald-300">
+                                <span className="text-[10px] font-black text-brand-green dark:text-brand-green">
                                   Illustration canvas
                                 </span>
-                                <span className="text-[10px] font-black text-[var(--muted-ink)] dark:text-blue-200">
+                                <span className="text-[10px] font-black text-secondary">
                                   {page.illustrationType}
                                 </span>
                               </div>
-                              <p className={`text-xs leading-5 ${page.imageUrl ? 'text-white font-bold drop-shadow' : 'text-[var(--muted-ink)] dark:text-slate-300'}`}>
+                              <p className={`text-xs leading-5 ${page.imageUrl ? 'text-white font-bold drop-shadow' : 'text-secondary'}`}>
                                 {page.illustrationPrompt || `Scene ${page.illustrationType} untuk halaman ini.`}
                               </p>
                               </div>
@@ -2881,7 +2877,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                 <button
                                   key={element.id}
                                   type="button"
-                                  className="absolute -translate-x-1/2 -translate-y-1/2 rounded-full bg-[var(--story-green)] px-2 py-1 text-xs font-black text-white shadow-md"
+                                  className="absolute -translate-x-1/2 -translate-y-1/2 rounded-full bg-brand-green px-2 py-1 text-xs font-black text-white shadow-md"
                                   style={{ left: `${element.x}%`, top: `${element.y}%` }}
                                   title={`${element.label} (${element.x}%, ${element.y}%)`}
                                   onClick={(event) => event.stopPropagation()}
@@ -2890,7 +2886,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                 </button>
                               ))}
                               {interactionPlaceMode && (
-                                <div className="absolute inset-x-3 bottom-3 rounded-xl bg-[var(--story-green)] px-3 py-2 text-[11px] font-black text-white shadow-lg">
+                                <div className="absolute inset-x-3 bottom-3 rounded-xl bg-brand-green px-3 py-2 text-[11px] font-black text-white shadow-lg">
                                   Klik area canvas untuk menaruh interaksi.
                                 </div>
                               )}
@@ -2898,17 +2894,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                           </div>
                         </div>
 
-                        <aside className="border-t xl:border-t-0 xl:border-l border-[#eadbc1] dark:border-blue-900/60 bg-white/45 dark:bg-slate-950/30 p-4 flex flex-col gap-3 overflow-y-auto">
+                        <aside className="border-t xl:border-t-0 xl:border-l border-default bg-surface p-4 flex flex-col gap-3 overflow-y-auto">
                           <div>
                             <div className="mb-1 flex items-center justify-between gap-2">
-                              <label className="block text-[10px] font-black text-[var(--muted-ink)] dark:text-blue-200">
+                              <label className="block text-[10px] font-black text-secondary">
                                 Illustration
                               </label>
                               <button
                                 type="button"
                                 onClick={() => handleGenerateEnhancement('illustration', page.pageNumber)}
                                 disabled={generatingEnhancement === 'illustration' || Boolean(imageGenerationProgress)}
-                                className="rounded-lg bg-[var(--story-green)]/12 px-2 py-1 text-[10px] font-black text-[var(--story-green)] disabled:opacity-50 dark:text-emerald-200"
+                                className="rounded-lg bg-brand-green/12 px-2 py-1 text-[10px] font-black text-brand-green disabled:opacity-50 dark:text-brand-green"
                               >
                                 {generatingEnhancement === 'illustration' ? 'Generating...' : 'Regenerate'}
                               </button>
@@ -2937,21 +2933,21 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                               type="button"
                               onClick={() => handleGeneratePageImage(page, pageIndex)}
                                disabled={generatingImagePageNumber === page.pageNumber || Boolean(imageGenerationProgress)}
-                              className="mt-2 w-full rounded-lg bg-[var(--magic-blue)] px-3 py-2 text-[11px] font-black text-white disabled:opacity-60 disabled:cursor-wait"
+                              className="mt-2 w-full rounded-lg bg-brand-blue px-3 py-2 text-[11px] font-black text-white disabled:opacity-60 disabled:cursor-wait"
                             >
                               {generatingImagePageNumber === page.pageNumber ? 'Generate gambar...' : 'Generate gambar halaman'}
                             </button>
                           </div>
                           <div>
                             <div className="mb-1 flex items-center justify-between gap-2">
-                              <label className="block text-[10px] font-black text-[var(--muted-ink)] dark:text-blue-200">
+                              <label className="block text-[10px] font-black text-secondary">
                                 Translation
                               </label>
                               <button
                                 type="button"
                                 onClick={handleGenerateTranslation}
                                 disabled={isGeneratingTranslation}
-                                className="rounded-lg bg-[var(--magic-blue)]/12 px-2 py-1 text-[10px] font-black text-[var(--magic-blue)] disabled:opacity-50 dark:text-blue-200"
+                                className="rounded-lg bg-brand-blue/12 px-2 py-1 text-[10px] font-black text-brand-blue disabled:opacity-50 dark:text-brand-blue"
                               >
                                 {isGeneratingTranslation ? 'Generating...' : 'Generate'}
                               </button>
@@ -2974,7 +2970,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                           <div className="reader-soft-panel rounded-xl p-3 flex flex-col gap-2 text-[11px]">
                             <div className="flex items-center justify-between gap-2">
                               <span className="font-black">Enhancements</span>
-                              <span className="font-black text-[var(--story-green)] dark:text-emerald-300">
+                              <span className="font-black text-brand-green dark:text-brand-green">
                                 Review
                               </span>
                             </div>
@@ -2990,12 +2986,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                               type="button"
                               onClick={() => handleGenerateEnhancement('quiz_interactions', page.pageNumber)}
                               disabled={generatingEnhancement === 'quiz_interactions'}
-                              className="mt-1 rounded-lg bg-[var(--magic-blue)]/12 px-2 py-2 text-[10px] font-black text-[var(--magic-blue)] disabled:opacity-50 dark:text-blue-200"
+                              className="mt-1 rounded-lg bg-brand-blue/12 px-2 py-2 text-[10px] font-black text-brand-blue disabled:opacity-50 dark:text-brand-blue"
                             >
                               {generatingEnhancement === 'quiz_interactions' ? 'Generating...' : 'Regenerate kuis & interaksi'}
                             </button>
                           </div>
-                          <p className="text-[11px] leading-5 text-[var(--muted-ink)] dark:text-slate-300">
+                          <p className="text-[11px] leading-5 text-secondary">
                             Pengaturan detail tetap tersedia di bagian Advanced di bawah.
                           </p>
                           <button
@@ -3003,8 +2999,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                             onClick={() => setInteractionPlaceMode((value) => !value)}
                             className={`rounded-xl px-3 py-2 text-[11px] font-black transition-all ${
                               interactionPlaceMode
-                                ? 'bg-[var(--story-green)] text-white'
-                                : 'reader-field text-[var(--ink)] dark:text-slate-100'
+                                ? 'bg-brand-green text-white'
+                                : 'reader-field text-primary'
                             }`}
                           >
                             {interactionPlaceMode ? 'Batal taruh interaksi' : '+ Klik canvas untuk interaction'}
@@ -3018,10 +3014,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 <section className="reader-soft-panel rounded-2xl p-3.5 flex flex-col gap-3">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <div>
-                      <span className="font-black text-xs text-[var(--muted-ink)] dark:text-blue-200">
+                      <span className="font-black text-xs text-secondary">
                         Glosarium terdeteksi — {editingStory.glossary?.length || 0} kata
                       </span>
-                      <p className="mt-1 text-[11px] leading-5 text-[var(--muted-ink)] dark:text-slate-300">
+                      <p className="mt-1 text-[11px] leading-5 text-secondary">
                         Approve kata yang layak masuk kamus sentuh. Kata yang dihapus tidak ikut tersimpan.
                       </p>
                     </div>
@@ -3030,21 +3026,21 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                         type="button"
                         onClick={() => handleGenerateEnhancement('glossary')}
                         disabled={generatingEnhancement === 'glossary'}
-                        className="rounded-xl bg-[var(--story-green)]/12 px-3 py-2 text-[11px] font-black text-[var(--story-green)] disabled:opacity-50 dark:text-emerald-200"
+                        className="rounded-xl bg-brand-green/12 px-3 py-2 text-[11px] font-black text-brand-green disabled:opacity-50 dark:text-brand-green"
                       >
                         {generatingEnhancement === 'glossary' ? 'Generating...' : 'Generate AI'}
                       </button>
                       <button
                         type="button"
                         onClick={refreshGlossaryCandidates}
-                        className="rounded-xl bg-[var(--magic-blue)]/12 px-3 py-2 text-[11px] font-black text-[var(--magic-blue)] dark:text-blue-200"
+                        className="rounded-xl bg-brand-blue/12 px-3 py-2 text-[11px] font-black text-info"
                       >
                         Generate ulang
                       </button>
                       <button
                         type="button"
                         onClick={() => setEditingStory({ ...editingStory, glossary: [] })}
-                        className="rounded-xl bg-rose-500/10 px-3 py-2 text-[11px] font-black text-rose-600 dark:text-rose-300"
+                        className="rounded-xl bg-error/10 px-3 py-2 text-[11px] font-black text-error"
                       >
                         Kosongkan
                       </button>
@@ -3070,7 +3066,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                           <span className="text-base leading-none">{item.emoji || '•'}</span>
                           <span className="min-w-0">
                             <span className="block font-black truncate">{item.wordEn}</span>
-                            <span className="block text-[var(--muted-ink)] dark:text-slate-300 truncate">
+                            <span className="block text-secondary truncate">
                               {item.translationId}
                             </span>
                           </span>
@@ -3078,7 +3074,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       ))}
                     </div>
                   ) : (
-                    <div className="rounded-xl border border-dashed border-[#eadbc1] dark:border-blue-900/60 p-4 text-center text-[11px] font-bold text-[var(--muted-ink)] dark:text-slate-300">
+                    <div className="rounded-xl border border-dashed border-default p-4 text-center text-[11px] font-bold text-secondary">
                       Belum ada kandidat glosarium. Klik Generate ulang setelah teks halaman siap.
                     </div>
                   )}
@@ -3090,14 +3086,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   className="reader-soft-panel rounded-2xl p-3.5 flex items-center justify-between gap-3 text-left"
                 >
                   <span>
-                    <span className="block text-xs font-black text-[var(--ink)] dark:text-slate-100">
+                    <span className="block text-xs font-black text-primary">
                       Advanced editor
                     </span>
-                    <span className="mt-1 block text-[11px] font-bold text-[var(--muted-ink)] dark:text-slate-300">
+                    <span className="mt-1 block text-[11px] font-bold text-secondary">
                       Metadata, akses, halaman detail, kuis, koordinat X/Y, glosarium manual, dan narasi.
                     </span>
                   </span>
-                  <span className="rounded-lg bg-white/70 px-3 py-1 text-[11px] font-black dark:bg-slate-900">
+                  <span className="rounded-lg bg-surface/70 px-3 py-1 text-[11px] font-black">
                     {showAdvancedEditor ? 'Sembunyikan' : 'Buka'}
                   </span>
                 </button>
@@ -3186,11 +3182,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     <img
                       src={editingStory.coverImage}
                       alt={editingStory.title}
-                      className="h-28 w-20 rounded-xl object-cover border border-[#eadbc1] dark:border-blue-900 bg-white"
+                      className="h-28 w-20 rounded-xl object-cover border border-default dark:border-brand-blue bg-card"
                     />
                     <div className="min-w-0">
                       <p className="font-black text-sm truncate">{editingStory.title || 'Judul buku'}</p>
-                      <p className="mt-1 text-[11px] text-[var(--muted-ink)] dark:text-slate-300 line-clamp-3">
+                      <p className="mt-1 text-[11px] text-[var(--muted-ink)] text-secondary line-clamp-3">
                         {editingStory.description || 'Deskripsi buku akan tampil di kartu katalog.'}
                       </p>
                     </div>
@@ -3221,7 +3217,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
                 {/* STATUS AKSES BUKU */}
                 <div className="reader-soft-panel p-3 rounded-2xl flex flex-col gap-2">
-                  <label className="font-black text-xs text-[var(--muted-ink)] dark:text-blue-200">
+                  <label className="font-black text-xs text-secondary">
                     Akses membaca online
                   </label>
                   <div className="flex flex-col gap-1.5">
@@ -3263,7 +3259,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 {/* PENGUNCI FITUR UNDUHAN & HARGA */}
                 <div className="reader-soft-panel p-3 rounded-2xl flex flex-col gap-2">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                    <label className="font-bold text-xs text-[var(--muted-ink)] dark:text-blue-200">
+                    <label className="font-bold text-xs text-secondary">
                       Unduhan offline
                     </label>
                     <label className="flex items-center gap-2 cursor-pointer">
@@ -3310,11 +3306,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 {/* --- 1. MANAJEMEN HALAMAN BILINGUAL (TEKS GANDA INDONESIA ⇄ INGGRIS) --- */}
                 <div className="reader-soft-panel p-3.5 rounded-2xl flex flex-col gap-3">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                    <span className="font-black text-xs uppercase text-indigo-900 dark:text-indigo-200 flex items-center gap-1.5">
-                      <Languages className="w-4 h-4 text-indigo-600 shrink-0" />
+                    <span className="font-black text-xs uppercase text-brand-blue dark:text-brand-blue flex items-center gap-1.5">
+                      <Languages className="w-4 h-4 text-brand-blue shrink-0" />
                       <span>Teks dua bahasa</span>
                     </span>
-                    <span className="text-[10px] bg-indigo-200 text-indigo-900 font-bold px-2 py-0.5 rounded-full">
+                    <span className="text-[10px] bg-brand-blue text-brand-blue font-bold px-2 py-0.5 rounded-full">
                       {editingStory.pages.length} Halaman
                     </span>
                     <button
@@ -3324,7 +3320,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                         setEditingStory({ ...editingStory, pages: [...editingStory.pages, nextPage] });
                         setPreviewPageIndex(editingStory.pages.length);
                       }}
-                      className="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-[11px]"
+                      className="px-2.5 py-1 rounded-lg bg-brand-blue hover:bg-brand-blue text-white font-bold text-[11px]"
                     >
                       + Tambah Halaman
                     </button>
@@ -3341,7 +3337,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                             type="button"
                             onClick={() => setPreviewPageIndex(idx)}
                             className={`text-left font-extrabold text-xs ${
-                              previewPageIndex === idx ? 'text-[var(--story-green)]' : 'text-indigo-800 dark:text-indigo-300'
+                              previewPageIndex === idx ? 'text-brand-green' : 'text-brand-blue dark:text-brand-blue'
                             }`}
                           >
                             Halaman {idx + 1}
@@ -3360,7 +3356,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                 setEditingStory({ ...editingStory, pages: newPages });
                                 setPreviewPageIndex(idx + 1);
                               }}
-                              className="px-2 py-1 rounded-lg bg-white/70 dark:bg-slate-900 text-[10px] font-bold"
+                              className="px-2 py-1 rounded-lg bg-card text-[10px] font-bold"
                             >
                               Duplikat
                             </button>
@@ -3372,7 +3368,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                 setEditingStory({ ...editingStory, pages: newPages });
                                 setPreviewPageIndex(Math.max(0, Math.min(previewPageIndex, newPages.length - 1)));
                               }}
-                              className="px-2 py-1 rounded-lg bg-rose-500/10 text-rose-600 dark:text-rose-300 disabled:opacity-40 text-[10px] font-bold"
+                              className="px-2 py-1 rounded-lg bg-error/10 text-error disabled:opacity-40 text-[10px] font-bold"
                             >
                               Hapus
                             </button>
@@ -3381,7 +3377,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
                         <div className="grid grid-cols-1 sm:grid-cols-[1fr_12rem] gap-2">
                           <div>
-                            <label className="block text-[10px] font-bold text-[var(--muted-ink)] dark:text-slate-300">
+                            <label className="block text-[10px] font-bold text-[var(--muted-ink)] text-secondary">
                               Judul halaman
                             </label>
                             <input
@@ -3396,7 +3392,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                             />
                           </div>
                           <div>
-                            <label className="block text-[10px] font-bold text-[var(--muted-ink)] dark:text-slate-300">
+                            <label className="block text-[10px] font-bold text-[var(--muted-ink)] text-secondary">
                               Ilustrasi
                             </label>
                             <select
@@ -3421,7 +3417,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                           <div>
-                            <label className="block text-[10px] font-bold text-amber-900 dark:text-amber-200">
+                            <label className="block text-[10px] font-bold text-warning dark:text-warning">
                               🇮🇩 Teks Bahasa Indonesia
                             </label>
                             <textarea
@@ -3437,7 +3433,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                           </div>
 
                           <div>
-                            <label className="block text-[10px] font-bold text-indigo-900 dark:text-indigo-200">
+                            <label className="block text-[10px] font-bold text-brand-blue dark:text-brand-blue">
                               🇬🇧 English Translation (Edisi Belajar)
                             </label>
                             <input
@@ -3467,7 +3463,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
                         {pg.illustrationType === 'custom' && (
                           <div>
-                            <label className="block text-[10px] font-bold text-[var(--muted-ink)] dark:text-slate-300">
+                            <label className="block text-[10px] font-bold text-[var(--muted-ink)] text-secondary">
                               Prompt ilustrasi custom / catatan aset
                             </label>
                             <textarea
@@ -3490,8 +3486,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 {editingStory.pages.length > 0 && (
                   <div className="reader-soft-panel p-3.5 rounded-2xl flex flex-col gap-3">
                     <div className="flex items-center justify-between gap-2">
-                      <span className="font-black text-xs uppercase text-[var(--muted-ink)] dark:text-blue-200 flex items-center gap-1.5">
-                        <Eye className="w-4 h-4 text-[var(--story-green)]" />
+                      <span className="font-black text-xs uppercase text-secondary flex items-center gap-1.5">
+                        <Eye className="w-4 h-4 text-brand-green" />
                         Preview halaman
                       </span>
                       <select
@@ -3509,18 +3505,18 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     {(() => {
                       const page = editingStory.pages[Math.min(previewPageIndex, editingStory.pages.length - 1)];
                       return (
-                        <div className="rounded-2xl border border-[#eadbc1] dark:border-blue-900 overflow-hidden bg-[#fffaf0] dark:bg-slate-950">
-                          <div className="p-4 bg-gradient-to-br from-emerald-100 to-amber-100 dark:from-slate-800 dark:to-slate-900">
-                            <div className="min-h-36 rounded-2xl bg-white/70 dark:bg-slate-900/70 p-4 flex flex-col justify-end">
-                              <p className="text-[11px] font-black text-[var(--story-green)] uppercase">
+                        <div className="rounded-2xl border border-default overflow-hidden bg-background">
+                          <div className="p-4 bg-surface">
+                            <div className="min-h-36 rounded-2xl bg-card/70 p-4 flex flex-col justify-end">
+                              <p className="text-[11px] font-black text-brand-green uppercase">
                                 {page.illustrationType}
                               </p>
                               <h4 className="text-base font-black mb-1">{page.title || `Halaman ${page.pageNumber}`}</h4>
-                              <p className="text-sm leading-relaxed font-bold text-slate-800 dark:text-slate-100">
+                              <p className="text-sm leading-relaxed font-bold text-primary">
                                 {page.text || 'Teks cerita halaman ini belum diisi.'}
                               </p>
                               {page.textEn && (
-                                <p className="mt-2 text-xs leading-relaxed text-indigo-800 dark:text-indigo-200">
+                                <p className="mt-2 text-xs leading-relaxed text-brand-blue dark:text-brand-blue">
                                   {page.textEn}
                                 </p>
                               )}
@@ -3544,7 +3540,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   return (
                     <div className="reader-soft-panel p-3.5 rounded-2xl flex flex-col gap-3">
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                        <span className="font-black text-xs uppercase text-[var(--muted-ink)] dark:text-blue-200">
+                        <span className="font-black text-xs uppercase text-secondary">
                           Interaksi & kuis halaman {pageIndex + 1}
                         </span>
                         <button
@@ -3563,7 +3559,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                             };
                             updatePage({ ...page, interactiveElements: [...(page.interactiveElements || []), nextElement] });
                           }}
-                          className="px-2.5 py-1 rounded-lg bg-[var(--story-green)] hover:bg-[#27795b] text-white font-bold text-[11px]"
+                          className="px-2.5 py-1 rounded-lg bg-brand-green hover:bg-brand-green/80 text-white font-bold text-[11px]"
                         >
                           + Elemen Interaktif
                         </button>
@@ -3571,7 +3567,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
                       <div className="flex flex-col gap-2">
                         {(page.interactiveElements || []).map((element, elemIdx) => (
-                          <div key={element.id || elemIdx} className="grid grid-cols-1 sm:grid-cols-[1fr_4rem_4rem_4rem_auto] gap-2 items-end rounded-xl bg-white/60 dark:bg-slate-900/60 p-2">
+                          <div key={element.id || elemIdx} className="grid grid-cols-1 sm:grid-cols-[1fr_4rem_4rem_4rem_auto] gap-2 items-end rounded-xl bg-surface p-2">
                             <div>
                               <label className="block text-[10px] font-bold">Label & dialog</label>
                               <input
@@ -3642,7 +3638,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                 const updated = (page.interactiveElements || []).filter((_, i) => i !== elemIdx);
                                 updatePage({ ...page, interactiveElements: updated });
                               }}
-                              className="px-2 py-2 rounded-lg bg-rose-500/10 text-rose-600 dark:text-rose-300 text-[10px] font-bold"
+                              className="px-2 py-2 rounded-lg bg-error/10 text-error text-[10px] font-bold"
                             >
                               Hapus
                             </button>
@@ -3650,7 +3646,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                         ))}
                       </div>
 
-                      <div className="rounded-xl bg-white/60 dark:bg-slate-900/60 p-3 flex flex-col gap-2">
+                      <div className="rounded-xl bg-surface p-3 flex flex-col gap-2">
                         <label className="flex items-center gap-2 font-bold">
                           <input
                             type="checkbox"
@@ -3724,7 +3720,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 })()}
 
                 {/* --- 2. MANAJEMEN GLOSARIUM KAMUS SENTUH --- */}
-                <div className="p-3.5 rounded-2xl bg-purple-50 dark:bg-slate-800 border-2 border-purple-200 dark:border-purple-800 flex flex-col gap-3">
+                <div className="p-3.5 rounded-2xl bg-purple-50  border-2 border-purple-200 dark:border-purple-800 flex flex-col gap-3">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <span className="font-black text-xs uppercase text-purple-900 dark:text-purple-200 flex items-center gap-1.5">
                       <BookOpen className="w-4 h-4 text-purple-600 shrink-0" />
@@ -3756,7 +3752,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     {(editingStory.glossary || []).map((item, gIdx) => (
                       <div
                         key={item.id || gIdx}
-                        className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-purple-200 dark:border-purple-700/60 grid grid-cols-1 sm:grid-cols-5 gap-2 items-center text-[11px]"
+                        className="p-2.5 rounded-xl bg-card border border-purple-200 dark:border-purple-700/60 grid grid-cols-1 sm:grid-cols-5 gap-2 items-center text-[11px]"
                       >
                         <input
                           type="text"
@@ -3808,7 +3804,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                             const updated = (editingStory.glossary || []).filter((_, i) => i !== gIdx);
                             setEditingStory({ ...editingStory, glossary: updated });
                           }}
-                          className="px-2 py-1 rounded bg-rose-500 hover:bg-rose-600 text-white font-bold text-[10px]"
+                          className="px-2 py-1 rounded bg-error hover:bg-error text-white font-bold text-[10px]"
                         >
                           Hapus
                         </button>
@@ -3818,12 +3814,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 </div>
 
                 {/* --- 3. PUSTAKA SUARA (AUDIO LIBRARY NATIVE NARRATION) --- */}
-                <div className="p-3.5 rounded-2xl bg-amber-50 dark:bg-slate-800 border-2 border-amber-200 dark:border-amber-800 flex flex-col gap-2">
-                  <span className="font-black text-xs uppercase text-amber-900 dark:text-amber-200 flex items-center gap-1.5">
-                    <Megaphone className="w-4 h-4 text-amber-600" />
+                <div className="p-3.5 rounded-2xl bg-warning/10  border-2 border-warning dark:border-warning flex flex-col gap-2">
+                  <span className="font-black text-xs uppercase text-warning dark:text-warning flex items-center gap-1.5">
+                    <Megaphone className="w-4 h-4 text-warning" />
                     <span>Pustaka suara narator</span>
                   </span>
-                  <p className="text-[11px] text-amber-800/80 dark:text-indigo-200">
+                  <p className="text-[11px] text-warning/80 dark:text-brand-blue">
                     Audio otomatis memakai suara perangkat. Orang tua juga dapat merekam narasi per halaman.
                   </p>
                 </div>

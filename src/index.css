@@ -4,6 +4,36 @@
 /* Override Tailwind v4 default media dark mode to use class strategy */
 @custom-variant dark (&:where(.dark, .dark *));
 
+@theme {
+  --color-surface: var(--bg-surface);
+  --color-surface-hover: var(--bg-surface-hover);
+  --color-card: var(--bg-card);
+  --color-overlay: var(--bg-overlay);
+  --color-primary: var(--text-primary);
+  --color-secondary: var(--text-secondary);
+  --color-muted: var(--text-muted);
+  --color-inverse: var(--text-inverse);
+  --color-default: var(--border-default);
+  
+  /* Brand colors */
+  --color-brand-green: var(--story-green);
+  --color-brand-blue: var(--magic-blue);
+  --color-brand-gold: var(--warm-gold);
+  --color-brand-rose: var(--rose);
+  
+  /* Action colors */
+  --color-action-primary: var(--action-primary);
+  --color-action-primary-hover: var(--action-primary-hover);
+  --color-action-secondary: var(--action-secondary);
+  --color-action-secondary-hover: var(--action-secondary-hover);
+
+  /* Semantic state colors */
+  --color-success: var(--color-success);
+  --color-error: var(--color-error);
+  --color-warning: var(--color-warning);
+  --color-info: var(--color-info);
+}
+
 :root {
   --parchment: #fff7e6;
   --paper: #fffaf0;
@@ -16,110 +46,77 @@
   --line: #eadbc1;
   --shadow-book: 0 18px 40px rgba(46, 31, 22, 0.12);
 
-  /* =========================================
-     PRIMITIVE COLORS (Palette Dasar)
-     ========================================= */
-  --color-sky-100: #e0f2fe;
-  --color-sky-300: #7dd3fc;
-  --color-sky-500: #0ea5e9;
+  /* Semantic Colors - Light Mode */
+  --bg-primary: var(--parchment);
+  --bg-surface: var(--parchment);
+  --bg-surface-hover: rgba(0, 0, 0, 0.05);
+  --bg-card: var(--paper);
+  --bg-overlay: rgba(0, 0, 0, 0.8);
   
-  --color-yellow-100: #fef9c3;
-  --color-yellow-400: #facc15;
-  --color-yellow-500: #eab308;
-  
-  --color-rose-100: #ffe4e6;
-  --color-rose-400: #fb7185;
-  --color-rose-500: #f43f5e;
-  
-  --color-emerald-100: #d1fae5;
-  --color-emerald-400: #34d399;
-  --color-emerald-500: #10b981;
-  
-  --color-slate-50: #f8fafc;
-  --color-slate-100: #f1f5f9;
-  --color-slate-800: #1e293b;
-  --color-slate-900: #0f172a;
-
-  /* =========================================
-     SEMANTIC COLORS (Warna Berdasarkan Fungsi)
-     ========================================= */
-  /* Backgrounds */
-  --bg-primary: var(--color-sky-100);
-  --bg-surface: var(--color-slate-50);
-  --bg-card: #ffffff;
-  
-  /* Text */
-  --text-primary: var(--color-slate-900);
-  --text-secondary: var(--color-slate-800);
-  --text-muted: #64748b;
+  --text-primary: var(--ink);
+  --text-secondary: var(--muted-ink);
+  --text-muted: #8b7259;
   --text-inverse: #ffffff;
   
-  /* Actions / Buttons */
-  --action-primary: var(--color-rose-500);
-  --action-primary-hover: var(--color-rose-400);
-  --action-secondary: var(--color-yellow-400);
-  --action-secondary-hover: var(--color-yellow-500);
+  --border-default: var(--line);
   
-  /* Feedback */
-  --success: var(--color-emerald-500);
-  --warning: var(--color-yellow-500);
-  --error: var(--color-rose-500);
-  --info: var(--color-sky-500);
+  --action-primary: var(--story-green);
+  --action-primary-hover: #27795b;
+  --action-secondary: var(--warm-gold);
+  --action-secondary-hover: #d39632;
+  
+  --icon-primary: var(--warm-gold);
 
-  /* =========================================
-     TYPOGRAPHY (Teks)
-     ========================================= */
+  /* Semantic State Colors */
+  --color-success: #10b981; /* emerald-500 */
+  --color-error: #f43f5e; /* rose-500 */
+  --color-warning: #f59e0b; /* amber-500 */
+  --color-info: #3b82f6; /* blue-500 */
+
+  /* Typography */
   --font-sans: 'Nunito Sans', system-ui, sans-serif;
   --font-display: 'Fraunces', Georgia, serif;
   
-  --text-xs: 0.875rem;   /* 14px */
-  --text-sm: 1rem;       /* 16px */
-  --text-base: 1.125rem; /* 18px - Base teks lebih besar untuk anak */
-  --text-lg: 1.25rem;    /* 20px */
-  --text-xl: 1.5rem;     /* 24px */
-  --text-2xl: 2rem;      /* 32px */
-  --text-3xl: 2.5rem;    /* 40px */
-  --text-4xl: 3.5rem;    /* 56px */
+  --text-xs: 0.875rem;
+  --text-sm: 1rem;
+  --text-base: 1.125rem;
+  --text-lg: 1.25rem;
+  --text-xl: 1.5rem;
+  --text-2xl: 2rem;
+  --text-3xl: 2.5rem;
+  --text-4xl: 3.5rem;
   
   --font-weight-normal: 400;
   --font-weight-semibold: 600;
   --font-weight-bold: 700;
   --font-weight-black: 900;
 
-  /* =========================================
-     SPACING (Jarak/Ruang)
-     ========================================= */
-  --space-1: 0.25rem;  /* 4px */
-  --space-2: 0.5rem;   /* 8px */
-  --space-3: 0.75rem;  /* 12px */
-  --space-4: 1rem;     /* 16px */
-  --space-5: 1.25rem;  /* 20px */
-  --space-6: 1.5rem;   /* 24px */
-  --space-8: 2rem;     /* 32px */
-  --space-12: 3rem;    /* 48px */
-  --space-16: 4rem;    /* 64px */
+  /* Spacing */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
 
-  /* =========================================
-     RADII (Kelengkungan Sudut)
-     ========================================= */
-  --radius-sm: 0.5rem;     /* 8px */
-  --radius-md: 0.75rem;    /* 12px */
-  --radius-lg: 1rem;       /* 16px */
-  --radius-xl: 1.5rem;     /* 24px */
-  --radius-full: 9999px;   /* Bulat sempurna */
-  --radius-blob: 40% 60% 70% 30% / 40% 50% 60% 50%; /* Bentuk organik playful */
+  /* Radii */
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+  --radius-full: 9999px;
+  --radius-blob: 40% 60% 70% 30% / 40% 50% 60% 50%;
 
-  /* =========================================
-     SHADOWS & ELEVATION (Bayangan)
-     ========================================= */
+  /* Shadows */
   --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
   --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.1);
-  --shadow-playful: 4px 4px 0px rgba(0, 0, 0, 0.15); /* Bayangan tajam ala kartun */
+  --shadow-playful: 4px 4px 0px rgba(0, 0, 0, 0.15);
 
-  /* =========================================
-     ANIMATIONS & TRANSITIONS (Animasi)
-     ========================================= */
+  /* Animations */
   --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
   --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   --transition-bouncy: 0.5s cubic-bezier(0.68, -0.55, 0.26, 1.55);
@@ -154,8 +151,6 @@
   animation: fade-in 0.28s ease-out both;
 }
 
-/* Reader controls use position: fixed. Keep its entry animation transform-free
-   so the reader never becomes their containing block on mobile. */
 @keyframes reader-fade-in {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -166,8 +161,6 @@
 }
 
 @media (min-width: 1024px) {
-  /* The desktop reader is a single viewport-sized workspace. Its book is
-     capped by available height so the whole spread is visible at once. */
   .reader-book-frame {
     width: min(100%, calc((100dvh - 2.5rem) * 16 / 11));
   }
@@ -186,131 +179,86 @@
 }
 
 /* =========================================
-   DARK MODE TOKENS (Tema Gelap)
+   DARK MODE TOKENS
    ========================================= */
 .dark {
-  /* Backgrounds */
-  --bg-primary: var(--color-slate-900);
-  --bg-surface: var(--color-slate-800);
-  --bg-card: var(--color-slate-950);
+  /* Semantic Colors - Dark Mode Override */
+  --bg-primary: #0f172a;
+  --bg-surface: #1e293b;
+  --bg-surface-hover: rgba(255, 255, 255, 0.1);
+  --bg-card: #020617;
+  --bg-overlay: rgba(0, 0, 0, 0.8);
   
-  /* Text */
-  --text-primary: var(--color-slate-100);
-  --text-secondary: var(--color-slate-300);
-  --text-muted: var(--color-slate-400);
-  --text-inverse: var(--color-slate-900);
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted: #64748b;
+  --text-inverse: #020617;
   
-  /* Actions (Sedikit lebih terang untuk visibilitas di dark mode) */
-  --action-primary: var(--color-rose-400);
-  --action-primary-hover: var(--color-rose-500);
-  --action-secondary: var(--color-yellow-300);
-  --action-secondary-hover: var(--color-yellow-400);
+  --border-default: #334155;
   
-  /* Shadows untuk dark mode (lebih pekat) */
+  --action-primary: var(--story-green);
+  --action-primary-hover: #2f8f6b;
+  --action-secondary: var(--warm-gold);
+  --action-secondary-hover: #facc15;
+  
+  --icon-primary: var(--warm-gold);
+
+  /* Semantic State Colors */
+  --color-success: #34d399; /* emerald-400 */
+  --color-error: #fb7185; /* rose-400 */
+  --color-warning: #fbbf24; /* amber-400 */
+  --color-info: #60a5fa; /* blue-400 */
+
   --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
   --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.5);
   --shadow-playful: 4px 4px 0px rgba(0, 0, 0, 0.6);
+  --shadow-book: 0 18px 40px rgba(0, 0, 0, 0.55);
 }
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
   }
-
   .text-pretty {
     text-wrap: pretty;
   }
-
   .tabular-nums {
     font-variant-numeric: tabular-nums;
   }
 }
 
 @layer components {
-  .app-paper {
-    background:
-      radial-gradient(circle at 16px 16px, rgba(231, 169, 59, 0.08) 1px, transparent 1.5px),
-      linear-gradient(135deg, #fff9ed 0%, #f7ead2 100%);
-    background-size: 28px 28px, auto;
-  }
-
-  .night-paper {
-    background:
-      radial-gradient(circle at 16px 16px, rgba(114, 141, 184, 0.12) 1px, transparent 1.5px),
-      linear-gradient(135deg, #101923 0%, #172233 100%);
-    background-size: 28px 28px, auto;
-  }
-
   .book-panel {
-    border: 1px solid rgba(234, 219, 193, 0.9);
-    background: rgba(255, 250, 240, 0.9);
+    border: 1px solid var(--border-default);
+    background-color: var(--bg-card);
     box-shadow: var(--shadow-book);
-  }
-
-  .dark .book-panel {
-    border-color: rgba(86, 120, 164, 0.5);
-    background:
-      linear-gradient(135deg, rgba(20, 32, 51, 0.96), rgba(14, 24, 38, 0.96));
-    box-shadow: 0 18px 42px rgba(0, 0, 0, 0.28);
   }
 
   .reader-modal {
-    border: 1px solid rgba(234, 219, 193, 0.9);
-    background:
-      radial-gradient(circle at top right, rgba(231, 169, 59, 0.1), transparent 34%),
-      rgba(255, 250, 240, 0.97);
-    color: var(--ink);
+    border: 1px solid var(--border-default);
+    background-color: var(--bg-card);
+    color: var(--text-primary);
     box-shadow: var(--shadow-book);
   }
 
-  .dark .reader-modal {
-    border-color: rgba(86, 120, 164, 0.55);
-    background:
-      radial-gradient(circle at top right, rgba(74, 111, 165, 0.2), transparent 34%),
-      linear-gradient(135deg, rgba(20, 32, 51, 0.98), rgba(13, 22, 35, 0.98));
-    color: #e9f0f7;
-    box-shadow: 0 24px 56px rgba(0, 0, 0, 0.34);
-  }
-
   .reader-soft-panel {
-    border: 1px solid rgba(234, 219, 193, 0.85);
-    background: rgba(255, 255, 255, 0.62);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55);
-  }
-
-  .dark .reader-soft-panel {
-    border-color: rgba(86, 120, 164, 0.5);
-    background: rgba(24, 38, 58, 0.7);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-default);
+    background-color: color-mix(in srgb, var(--bg-card) 60%, transparent);
   }
 
   .reader-divider {
-    border-color: rgba(234, 219, 193, 0.75);
-  }
-
-  .dark .reader-divider {
-    border-color: rgba(86, 120, 164, 0.45);
+    border-color: var(--border-default);
   }
 
   .reader-field {
-    border: 1px solid rgba(234, 219, 193, 0.95);
-    background: rgba(255, 255, 255, 0.78);
-    color: var(--ink);
-  }
-
-  .dark .reader-field {
-    border-color: rgba(86, 120, 164, 0.58);
-    background: rgba(14, 24, 38, 0.82);
-    color: #e9f0f7;
+    border: 1px solid var(--border-default);
+    background-color: var(--bg-card);
+    color: var(--text-primary);
   }
 
   .reader-field::placeholder {
-    color: rgba(89, 73, 52, 0.58);
-  }
-
-  .dark .reader-field::placeholder {
-    color: rgba(190, 207, 226, 0.55);
+    color: var(--text-muted);
   }
 
   .reader-page-label {
@@ -318,14 +266,9 @@
   }
 
   .reader-story-box {
-    border: 1px solid rgba(234, 219, 193, 0.75);
-    background: color-mix(in srgb, var(--bg-card) 78%, transparent);
+    border: 1px solid var(--border-default);
+    background-color: color-mix(in srgb, var(--bg-card) 78%, transparent);
     color: var(--text-primary);
-  }
-
-  .dark .reader-story-box {
-    border-color: rgba(86, 120, 164, 0.45);
-    background: color-mix(in srgb, var(--bg-surface) 84%, transparent);
   }
 
   .reader-story-title {
@@ -337,29 +280,25 @@
   }
 
   .reader-inline-code {
-    background: color-mix(in srgb, var(--bg-surface) 84%, transparent);
+    background-color: color-mix(in srgb, var(--bg-surface) 84%, transparent);
     color: var(--text-primary);
   }
 
   .reader-vocab-chip,
   .reader-glossary-chip {
-    background: color-mix(in srgb, var(--bg-surface) 82%, transparent);
+    background-color: color-mix(in srgb, var(--bg-surface) 82%, transparent);
     color: var(--text-primary);
-    border-color: color-mix(in srgb, var(--text-muted) 48%, transparent);
+    border-color: color-mix(in srgb, var(--border-default) 48%, transparent);
   }
 
   .reader-vocab-chip:hover,
   .reader-glossary-chip:hover {
-    background: color-mix(in srgb, var(--bg-surface) 94%, transparent);
+    background-color: color-mix(in srgb, var(--bg-surface) 94%, transparent);
   }
 
   .reader-language-card {
-    border: 1px solid color-mix(in srgb, var(--text-muted) 22%, transparent);
-    background: color-mix(in srgb, var(--bg-card) 70%, transparent);
-  }
-
-  .dark .reader-language-card {
-    background: color-mix(in srgb, var(--bg-surface) 74%, transparent);
+    border: 1px solid color-mix(in srgb, var(--border-default) 22%, transparent);
+    background-color: color-mix(in srgb, var(--bg-card) 70%, transparent);
   }
 
   .reader-language-label {
@@ -372,7 +311,7 @@
 
   .btn-primary {
     border-radius: 0.9rem;
-    background: var(--story-green);
+    background-color: var(--action-primary);
     color: white;
     font-weight: 800;
     transition: transform 180ms ease, background-color 180ms ease, box-shadow 180ms ease;
@@ -380,7 +319,7 @@
   }
 
   .btn-primary:hover {
-    background: #27795b;
+    background-color: var(--action-primary-hover);
     transform: translateY(-1px);
   }
 
@@ -388,16 +327,20 @@
     transform: translateY(0) scale(0.98);
   }
 
+  .dark .btn-primary {
+    box-shadow: 0 10px 20px rgba(47, 143, 107, 0.12);
+  }
+
   .btn-secondary {
     border-radius: 0.9rem;
-    background: rgba(74, 111, 165, 0.1);
-    color: var(--magic-blue);
+    background-color: color-mix(in srgb, var(--action-secondary) 15%, transparent);
+    color: var(--action-secondary);
     font-weight: 800;
     transition: transform 180ms ease, background-color 180ms ease;
   }
 
   .btn-secondary:hover {
-    background: rgba(74, 111, 165, 0.18);
+    background-color: color-mix(in srgb, var(--action-secondary) 25%, transparent);
     transform: translateY(-1px);
   }
 
@@ -409,8 +352,74 @@
   button:focus-visible,
   input:focus-visible,
   textarea:focus-visible {
-    outline: 3px solid rgba(74, 111, 165, 0.45);
+    outline: 3px solid color-mix(in srgb, var(--magic-blue) 45%, transparent);
     outline-offset: 2px;
+  }
+
+  .dark .focus-visible-ring:focus-visible,
+  .dark button:focus-visible,
+  .dark input:focus-visible,
+  .dark textarea:focus-visible {
+    outline-color: color-mix(in srgb, var(--border-default) 60%, transparent);
+  }
+
+  /* =========================================
+     SURFACE COMPONENTS
+     ========================================= */
+  .app-surface {
+    background-color: var(--bg-surface);
+  }
+  
+  .app-modal {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-default);
+    color: var(--text-primary);
+  }
+
+  .app-modal-subtle {
+    background-color: color-mix(in srgb, var(--bg-card) 80%, transparent);
+    border-color: var(--border-default);
+  }
+
+  .header-surface {
+    background-color: color-mix(in srgb, var(--bg-card) 92%, transparent);
+    border: 1px solid var(--border-default);
+    color: var(--text-primary);
+  }
+
+  .shelf-surface {
+    background-color: color-mix(in srgb, var(--bg-surface) 80%, transparent);
+    border: 1px solid var(--border-default);
+  }
+
+  .icon-btn-surface {
+    background-color: color-mix(in srgb, var(--bg-surface) 50%, transparent);
+    color: var(--text-secondary);
+  }
+
+  .icon-btn-surface:hover {
+    background-color: color-mix(in srgb, var(--bg-surface) 80%, transparent);
+  }
+
+  .auth-chip {
+    background-color: color-mix(in srgb, var(--bg-card) 80%, transparent);
+    border: 1px solid var(--border-default);
+    color: var(--text-primary);
+  }
+
+  .library-card {
+    border: 1px solid var(--border-default);
+    background-color: color-mix(in srgb, var(--bg-card) 55%, transparent);
+    color: var(--text-primary);
+  }
+
+  .reader-page-surface {
+    border-color: var(--border-default);
+    color: var(--text-primary);
+  }
+
+  .reader-editorial-copy {
+    color: var(--text-secondary);
   }
 }
 
@@ -419,12 +428,13 @@
    ========================================= */
 @layer base {
   body {
-    background-color: var(--parchment);
-    color: var(--ink);
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
     font-family: var(--font-sans);
     font-size: var(--text-base);
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
+    transition: background-color 0.5s ease, color 0.3s ease;
   }
   
   h1, h2, h3, h4, h5, h6 {

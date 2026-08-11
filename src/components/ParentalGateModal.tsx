@@ -60,9 +60,9 @@ export const ParentalGateModal: React.FC<ParentalGateModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[var(--color-overlay)] backdrop-blur-sm animate-fade-in">
       <div
-        className="reader-modal w-full max-w-md rounded-[1.35rem] p-6 sm:p-8 relative flex flex-col gap-5"
+        className="app-modal w-full max-w-md rounded-[1.35rem] p-6 sm:p-8 relative flex flex-col gap-5"
       >
         <button
           onClick={onCancel}
@@ -77,7 +77,7 @@ export const ParentalGateModal: React.FC<ParentalGateModalProps> = ({
             <Lock className="w-6 h-6" />
           </div>
           <div>
-            <span className="text-[10px] font-black uppercase tracking-wider text-[var(--muted-ink)] dark:text-blue-200 flex items-center gap-1">
+            <span className="text-[10px] font-black uppercase tracking-wider text-secondary flex items-center gap-1">
               <ShieldCheck className="w-3.5 h-3.5 text-[var(--story-green)]" />
               <span>Gerbang Keamanan Orang Tua (Parental Gate)</span>
             </span>
@@ -85,18 +85,18 @@ export const ParentalGateModal: React.FC<ParentalGateModalProps> = ({
           </div>
         </div>
 
-        <p className="text-xs text-slate-600 dark:text-slate-300 font-semibold leading-relaxed">
+        <p className="text-xs text-secondary font-semibold leading-relaxed">
           Untuk melindungi anak-anak dari transaksi tidak disengaja, mohon selesaikan pertanyaan matematika sederhana berikut sebelum masuk ke menu pembelian:
         </p>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="reader-soft-panel p-4 rounded-2xl text-center flex flex-col items-center gap-2">
-            <div className="text-xs font-black text-[var(--muted-ink)] dark:text-blue-200 uppercase tracking-wide flex items-center gap-1">
+            <div className="text-xs font-black text-secondary uppercase tracking-wide flex items-center gap-1">
               <HelpCircle className="w-4 h-4" />
               <span>{settings?.securityQuestionType === 'custom' ? 'Jawab pertanyaan berikut:' : 'Berapa hasil penjumlahan berikut?'}</span>
             </div>
 
-            <div className="text-xl sm:text-2xl font-black tracking-wide text-slate-900 dark:text-white py-2 text-center px-2 leading-snug">
+            <div className="text-xl sm:text-2xl font-black tracking-wide text-primary py-2 text-center px-2 leading-snug">
               {settings?.securityQuestionType === 'custom' ? settings.customQuestion : `${num1} + ${num2} = ?`}
             </div>
 
@@ -115,7 +115,7 @@ export const ParentalGateModal: React.FC<ParentalGateModalProps> = ({
           </div>
 
           {errorMsg && (
-            <div className="p-3 rounded-xl bg-rose-500/20 border border-rose-400 text-rose-800 dark:text-rose-200 text-xs font-bold flex items-center gap-2">
+            <div className="p-3 rounded-xl bg-error/20 border border-error/40 text-error text-xs font-bold flex items-center gap-2">
               <AlertCircle className="w-4 h-4 shrink-0" />
               <span>{errorMsg}</span>
             </div>
@@ -143,7 +143,7 @@ export const ParentalGateModal: React.FC<ParentalGateModalProps> = ({
               <button
                 type="button"
                 onClick={handleForgotAnswer}
-                className="text-[10px] text-amber-700 dark:text-amber-400 font-bold hover:underline"
+                className="text-[10px] text-warning font-bold hover:underline"
               >
                 Lupa jawaban? Kirim ke Email/WhatsApp
               </button>

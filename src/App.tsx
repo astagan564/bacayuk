@@ -441,7 +441,7 @@ export default function App() {
 
   if (currentView === 'admin') {
     return (
-      <Suspense fallback={<div className="min-h-screen bg-[var(--cream)] dark:bg-slate-950" />}>
+      <Suspense fallback={<div className="min-h-screen bg-surface" />}>
         <AdminDashboard
           stories={stories}
           adminPin={adminPin}
@@ -476,18 +476,12 @@ export default function App() {
 
   return (
     <div
-      className={`min-h-screen flex flex-col ${selectedStory ? 'justify-start' : 'justify-between'} font-sans transition-colors duration-500 ${isNight
-        ? 'night-paper text-slate-100 selection:bg-blue-700'
-        : 'app-paper text-[var(--ink)] selection:bg-[#e7a93b]/40'
-        }`}
+      className={`min-h-screen flex flex-col ${selectedStory ? 'justify-start' : 'justify-between'} font-sans transition-colors duration-500`}
       >
       {/* Top Main Navigation Bar */}
       {!selectedStory && (
       <header
-        className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 border-b flex items-center justify-between gap-2 z-40 transition-colors duration-500 backdrop-blur-xl ${isNight
-          ? 'bg-[#101923]/92 text-slate-100 border-blue-900/50'
-          : 'bg-[#fffaf0]/92 text-[var(--ink)] border-[#eadbc1]'
-          }`}
+        className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border-b flex items-center justify-between gap-2 z-40 transition-colors duration-500 backdrop-blur-xl header-surface"
       >
         <div
           onClick={handleBackToLibrary}
@@ -497,8 +491,7 @@ export default function App() {
           <div className="hidden min-w-0 flex-col justify-center sm:flex">
             <img src={bacaYukLogo} alt="BacaYuk" className="h-10 w-auto max-w-[150px]" />
             <p
-              className={`ml-[42px] -mt-1 text-[9px] font-semibold ${isNight ? 'text-blue-300' : 'text-[var(--muted-ink)]'
-                }`}
+              className="ml-[48px] -mt-2 text-[11px] font-semibold text-secondary"
             >
               Perpustakaan cerita keluarga
             </p>
@@ -508,8 +501,8 @@ export default function App() {
         <div className="flex min-w-0 items-center justify-end gap-1 sm:gap-2">
           {/* Parent Auth Profile Status */}
           {currentUser ? (
-            <div className={`${selectedStory ? 'hidden sm:flex' : 'flex'} items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-xl border text-xs font-bold ${isNight ? 'bg-blue-950/40 border-blue-800 text-blue-100' : 'bg-white/80 border-[#eadbc1] text-[var(--ink)]'}`}>
-              <User className="w-4 h-4 text-[var(--story-green)] shrink-0" />
+            <div className={`${selectedStory ? 'hidden sm:flex' : 'flex'} items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-xl text-xs font-bold auth-chip`}>
+              <User className="w-4 h-4 shrink-0" />
               <span className="hidden md:inline truncate max-w-[120px]">{currentUser.name}</span>
               <button
                 onClick={async () => {
@@ -543,14 +536,12 @@ export default function App() {
           <div className={`${selectedStory ? 'hidden sm:block' : 'block'} relative`}>
             <button
               onClick={toggleWhatsNew}
-              className={`relative flex items-center justify-center p-2 rounded-xl transition-colors ${
-                isNight ? 'bg-slate-800 hover:bg-slate-700 text-slate-300' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
-              }`}
+              className="relative flex items-center justify-center p-2 rounded-xl transition-colors icon-btn-surface"
               title="Apa yang Baru?"
             >
               <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
               {hasUnreadChangelog && (
-                <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full border border-white dark:border-slate-800 animate-pulse"></span>
+                <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-error rounded-full border border-default animate-pulse"></span>
               )}
             </button>
             
@@ -560,23 +551,21 @@ export default function App() {
                   className="fixed inset-0 z-40" 
                   onClick={() => setShowWhatsNewDropdown(false)}
                 />
-                <div className={`absolute right-0 top-full mt-2 w-64 sm:w-72 rounded-2xl shadow-xl border overflow-hidden z-50 ${
-                  isNight ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'
-                }`}>
-                  <div className={`p-3 sm:p-4 border-b ${isNight ? 'border-slate-700 bg-slate-800/50' : 'border-slate-100 bg-slate-50'}`}>
-                    <h3 className={`text-sm sm:text-base font-bold flex items-center gap-2 ${isNight ? 'text-white' : 'text-slate-900'}`}>
-                      <Sparkles className="w-4 h-4 text-amber-500" />
+                <div className="absolute right-0 top-full mt-2 w-64 sm:w-72 rounded-2xl shadow-xl overflow-hidden z-50 app-modal">
+                  <div className="p-3 sm:p-4 border-b border-default bg-surface/50">
+                    <h3 className="text-sm sm:text-base font-bold flex items-center gap-2 text-primary">
+                      <Sparkles className="w-4 h-4 text-warning" />
                       Update Terbaru v{packageJson.version}
                     </h3>
                   </div>
-                  <div className={`p-3 sm:p-4 text-xs sm:text-sm space-y-2 ${isNight ? 'text-slate-300' : 'text-slate-600'}`}>
+                  <div className="p-3 sm:p-4 text-xs sm:text-sm space-y-2 text-secondary">
                     <ul className="list-disc pl-4 space-y-1">
                       <li><strong>Buat buku lebih cepat</strong> dari ide atau naskah singkat.</li>
                       <li><strong>Mode baca baru</strong> menampilkan gambar kiri dan teks kanan.</li>
                       <li><strong>Terjemahan, suara, kuis, dan ilustrasi</strong> kini lebih akurat.</li>
                     </ul>
                   </div>
-                  <div className={`p-3 border-t ${isNight ? 'border-slate-700 bg-slate-800/50' : 'border-slate-100 bg-slate-50'}`}>
+                  <div className="p-3 border-t border-default bg-surface/50">
                     <button
                       onClick={() => {
                         setShowWhatsNewDropdown(false);
@@ -595,7 +584,7 @@ export default function App() {
           {/* User Settings Button */}
           <button
             onClick={() => setCurrentView('userSettings')}
-            className={`${selectedStory ? 'hidden md:flex' : 'flex'} items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition-transform hover:scale-[1.02] shrink-0 border ${isNight ? 'bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-600' : 'bg-white/80 hover:bg-white text-[var(--ink)] border-[#eadbc1]'}`}
+            className={`${selectedStory ? 'hidden md:flex' : 'flex'} items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition-transform hover:scale-[1.02] shrink-0 auth-chip hover:bg-surface`}
             title="Pengaturan Orang Tua"
           >
             <Settings className="w-4 h-4" />
@@ -605,43 +594,37 @@ export default function App() {
           {/* Admin Dashboard Button */}
           <button
             onClick={() => setShowAdminPinPrompt(true)}
-            className={`${selectedStory ? 'hidden md:flex' : 'hidden sm:flex'} items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition-transform hover:scale-[1.02] shrink-0 border ${isNight ? 'bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-600' : 'bg-white/70 hover:bg-white text-[var(--muted-ink)] border-[#eadbc1]'}`}
+            className={`${selectedStory ? 'hidden md:flex' : 'hidden sm:flex'} items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition-transform hover:scale-[1.02] shrink-0 auth-chip hover:bg-surface text-secondary`}
             title="Buka Panel Kontrol Admin Internal"
           >
-            <ShieldCheck className="w-4 h-4 text-[var(--magic-blue)]" />
+            <ShieldCheck className="w-4 h-4" />
             <span className="hidden sm:inline">Admin</span>
           </button>
 
           {/* Stats Modal Toggle Button */}
           <button
             onClick={() => setShowStatsModal(true)}
-            className={`${selectedStory ? 'hidden md:flex' : 'hidden sm:flex'} items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 border hover:scale-[1.02] ${isNight
-              ? 'bg-blue-950/70 hover:bg-blue-900 text-blue-100 border-blue-800'
-              : 'bg-white/80 hover:bg-white text-[var(--ink)] border-[#eadbc1]'
-              }`}
+            className={`${selectedStory ? 'hidden md:flex' : 'hidden sm:flex'} items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 hover:scale-[1.02] auth-chip hover:bg-surface`}
             title="Lihat Statistik Membaca Anak"
           >
-            <BarChart3 className="w-4 h-4 text-[var(--magic-blue)]" />
+            <BarChart3 className="w-4 h-4" />
             <span className="hidden sm:inline">Statistik</span>
           </button>
 
           {/* Day / Night Theme Toggle Button */}
           <button
             onClick={handleToggleTheme}
-            className={`flex items-center justify-center gap-2 w-10 sm:w-auto px-0 sm:px-3 py-2 sm:py-1.5 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 border hover:scale-[1.02] shrink-0 ${isNight
-              ? 'bg-blue-950/70 hover:bg-blue-900 text-[#e7d08a] border-blue-800'
-              : 'bg-[#2e1f16] hover:bg-[#4a3324] text-[#fff7e6] border-[#2e1f16]'
-              }`}
+            className="flex items-center justify-center gap-2 w-10 sm:w-auto px-0 sm:px-3 py-2 sm:py-1.5 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 hover:scale-[1.02] shrink-0 auth-chip hover:bg-surface"
             title={isNight ? 'Beralih ke Mode Siang' : 'Beralih ke Mode Malam'}
           >
             {isNight ? (
               <>
-                <Moon className="w-4 h-4 fill-[#e7d08a] text-[#e7d08a]" />
+                <Moon className="w-4 h-4 fill-current" />
                 <span className="hidden sm:inline">Malam</span>
               </>
             ) : (
               <>
-                <Sun className="w-4 h-4 text-[#e7a93b]" />
+                <Sun className="w-4 h-4" />
                 <span className="hidden sm:inline">Siang</span>
               </>
             )}
@@ -650,10 +633,7 @@ export default function App() {
           {selectedStory && (
             <button
               onClick={handleBackToLibrary}
-              className={`hidden sm:inline-flex px-3.5 py-1.5 rounded-xl font-bold text-xs sm:text-sm transition-colors shadow-sm ${isNight
-                ? 'bg-slate-800 hover:bg-slate-700 text-slate-200'
-                : 'bg-amber-800 hover:bg-amber-700 text-amber-100'
-                }`}
+              className="hidden sm:inline-flex px-3.5 py-1.5 rounded-xl font-bold text-xs sm:text-sm transition-colors shadow-sm auth-chip hover:bg-surface"
             >
               Pilih Cerita
             </button>
@@ -664,7 +644,7 @@ export default function App() {
 
       {/* Toast Notification Banner */}
       {toastMessage && (
-        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 bg-[#2e1f16]/95 text-[#fff7e6] border border-[#e7a93b]/50 px-5 py-2.5 rounded-xl shadow-xl backdrop-blur-md flex items-center gap-2 font-semibold text-xs sm:text-sm animate-fade-in">
+        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 app-modal px-5 py-2.5 rounded-xl shadow-xl flex items-center gap-2 font-semibold text-xs sm:text-sm animate-fade-in">
           <span>{toastMessage}</span>
         </div>
       )}
@@ -782,16 +762,13 @@ export default function App() {
       {/* Footer */}
       {!selectedStory && (
       <footer
-        className={`w-full text-xs py-3 px-4 text-center border-t z-30 transition-colors duration-500 flex flex-col items-center gap-1 ${isNight
-          ? 'bg-slate-950/90 text-indigo-300 border-indigo-900/60'
-          : 'bg-amber-950/90 text-amber-300 border-amber-900/60'
-          }`}
+        className="w-full text-xs py-3 px-4 text-center border-t z-30 transition-colors duration-500 flex flex-col items-center gap-1 bg-surface border-default text-secondary"
       >
         <p>Buku Cerita Anak Interaktif • Dilengkapi Efek Flipbook 3D, Narasi Suara & Mode Siang/Malam</p>
         <div className="flex items-center justify-center gap-1.5 opacity-80 hover:opacity-100 transition-opacity text-[10px]">
           <span>v{packageJson.version}</span>
           <span>•</span>
-          <button onClick={() => setShowChangelogModal(true)} className="underline hover:text-amber-500 transition-colors">Changelog</button>
+          <button onClick={() => setShowChangelogModal(true)} className="underline hover:text-action-secondary transition-colors">Changelog</button>
         </div>
       </footer>
       )}
@@ -855,17 +832,17 @@ export default function App() {
 
       {/* Admin PIN Prompt Modal */}
       {showAdminPinPrompt && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
-          <div className={`w-full max-w-sm rounded-2xl p-6 shadow-2xl border flex flex-col gap-4 ${isNight ? 'bg-[#111b29] border-blue-900 text-slate-100' : 'bg-[#fffaf0] border-[#eadbc1] text-[var(--ink)]'}`}>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-overlay backdrop-blur-sm animate-fade-in">
+          <div className="w-full max-w-sm rounded-2xl p-6 shadow-2xl overflow-hidden z-50 flex flex-col gap-4 app-modal">
             <h3 className="text-lg font-extrabold font-sans mb-0 text-center flex items-center justify-center gap-2">
-              <ShieldCheck className="w-5 h-5 text-[var(--magic-blue)]" />
+              <ShieldCheck className="w-5 h-5 text-brand-blue" />
               Otentikasi Admin
             </h3>
-            <p className="text-xs text-center opacity-80">Masukkan PIN rahasia untuk mengakses Panel Kontrol.</p>
+            <p className="text-xs text-center opacity-80">Area Admin</p>
             <input 
               type="password" 
               autoFocus
-              className="w-full px-4 py-3 rounded-xl border border-[#eadbc1] text-center font-extrabold tracking-[0.5em] text-lg focus:outline-none text-slate-900"
+              className="w-full px-4 py-3 rounded-xl border-default text-center font-extrabold tracking-[0.5em] text-lg focus:outline-none reader-field"
               placeholder="••••"
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
@@ -885,7 +862,7 @@ export default function App() {
               </button>
               <button 
                 onClick={() => setShowAdminPinPrompt(false)} 
-                className="flex-1 py-3 rounded-xl font-bold text-xs bg-slate-200 text-slate-700 hover:bg-slate-300"
+                className="flex-1 py-3 rounded-xl font-bold text-xs btn-secondary"
               >
                 Batal
               </button>
@@ -1049,7 +1026,7 @@ export default function App() {
             await paymentStore.syncPurchasesFromSupabase(user.email);
             setCurrentUser(user);
             setShowLoginModal(false);
-            showToast(`🎉 Selamat datang, ${user.name}! Seluruh koleksi cerita kini terbuka.`);
+            showToast(`Selamat datang, ${user.name}! Seluruh koleksi cerita kini terbuka.`);
             if (loginStoryTarget) {
               const pendingStory = loginStoryTarget;
               setLoginStoryTarget(null);

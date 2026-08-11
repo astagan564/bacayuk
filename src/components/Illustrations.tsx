@@ -15,7 +15,7 @@ export const StoryIllustration: React.FC<IllustrationProps> = ({
 }) => {
   if (imageUrl) {
     return (
-      <div className={`relative w-full h-full overflow-hidden flex items-center justify-center bg-slate-100 ${className}`}>
+      <div className={`relative w-full h-full overflow-hidden flex items-center justify-center bg-surface ${className}`}>
         <img
           src={imageUrl}
           alt=""

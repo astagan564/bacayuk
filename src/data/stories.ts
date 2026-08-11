@@ -27,8 +27,10 @@ export const INITIAL_STORIES: Story[] = [
     category: 'Petualangan & Persahabatan',
     coverImage: 'forest',
     coverBg: 'from-emerald-600 via-teal-600 to-green-700',
+    darkCoverBg: 'from-emerald-900 via-teal-900 to-green-950',
     themeColor: 'emerald',
     accentColor: '#10B981',
+    darkAccentColor: '#34d399',
     targetAge: '3-8 Tahun',
     description: 'Ikuti kisah Kiko si kelinci cerdas yang membantu teman-temannya memecahkan teka-teki rahasia di Hutan Bintang.',
     moralMessage: 'Kerjasama, keberanian, dan saling membantu membuat segala masalah terasa lebih ringan!',
@@ -62,6 +64,11 @@ export const INITIAL_STORIES: Story[] = [
           textBg: 'bg-emerald-950/80',
           accentColor: '#059669',
           borderAccent: '#34d399',
+          darkBgGradFrom: '#0f172a',
+          darkBgGradTo: '#1e293b',
+          darkTextBg: 'bg-slate-900/90',
+          darkAccentColor: '#94a3b8',
+          darkBorderAccent: '#475569',
         },
         interactiveElements: [
           {
@@ -111,6 +118,11 @@ export const INITIAL_STORIES: Story[] = [
           textBg: 'bg-amber-950/80',
           accentColor: '#d97706',
           borderAccent: '#f59e0b',
+          darkBgGradFrom: '#0f172a',
+          darkBgGradTo: '#1e293b',
+          darkTextBg: 'bg-slate-900/90',
+          darkAccentColor: '#94a3b8',
+          darkBorderAccent: '#475569',
         },
         interactiveElements: [
           {
@@ -149,6 +161,11 @@ export const INITIAL_STORIES: Story[] = [
           textBg: 'bg-sky-950/80',
           accentColor: '#0284c7',
           borderAccent: '#38bdf8',
+          darkBgGradFrom: '#0f172a',
+          darkBgGradTo: '#1e293b',
+          darkTextBg: 'bg-slate-900/90',
+          darkAccentColor: '#94a3b8',
+          darkBorderAccent: '#475569',
         },
         interactiveElements: [
           {
@@ -187,6 +204,11 @@ export const INITIAL_STORIES: Story[] = [
           textBg: 'bg-slate-950/80',
           accentColor: '#475569',
           borderAccent: '#94a3b8',
+          darkBgGradFrom: '#0f172a',
+          darkBgGradTo: '#1e293b',
+          darkTextBg: 'bg-slate-900/90',
+          darkAccentColor: '#94a3b8',
+          darkBorderAccent: '#475569',
         },
         interactiveElements: [
           {
@@ -213,6 +235,11 @@ export const INITIAL_STORIES: Story[] = [
           textBg: 'bg-rose-950/80',
           accentColor: '#e11d48',
           borderAccent: '#fb7185',
+          darkBgGradFrom: '#0f172a',
+          darkBgGradTo: '#1e293b',
+          darkTextBg: 'bg-slate-900/90',
+          darkAccentColor: '#94a3b8',
+          darkBorderAccent: '#475569',
         },
         interactiveElements: [
           {
@@ -239,6 +266,11 @@ export const INITIAL_STORIES: Story[] = [
           textBg: 'bg-emerald-950/80',
           accentColor: '#16a34a',
           borderAccent: '#4ade80',
+          darkBgGradFrom: '#0f172a',
+          darkBgGradTo: '#1e293b',
+          darkTextBg: 'bg-slate-900/90',
+          darkAccentColor: '#94a3b8',
+          darkBorderAccent: '#475569',
         },
         interactiveElements: [
           {
@@ -287,6 +319,11 @@ export const INITIAL_STORIES: Story[] = [
           textBg: 'bg-indigo-950/80',
           accentColor: '#6366f1',
           borderAccent: '#818cf8',
+          darkBgGradFrom: '#0f172a',
+          darkBgGradTo: '#1e293b',
+          darkTextBg: 'bg-slate-900/90',
+          darkAccentColor: '#94a3b8',
+          darkBorderAccent: '#475569',
         },
         interactiveElements: [
           {
@@ -313,6 +350,11 @@ export const INITIAL_STORIES: Story[] = [
           textBg: 'bg-purple-950/80',
           accentColor: '#9333ea',
           borderAccent: '#c084fc',
+          darkBgGradFrom: '#0f172a',
+          darkBgGradTo: '#1e293b',
+          darkTextBg: 'bg-slate-900/90',
+          darkAccentColor: '#94a3b8',
+          darkBorderAccent: '#475569',
         },
         interactiveElements: [
           {
@@ -348,8 +390,10 @@ export const INITIAL_STORIES: Story[] = [
     category: 'Keberanian & Kepercayaan Diri',
     coverImage: 'dragon',
     coverBg: 'from-amber-500 via-orange-600 to-red-600',
+    darkCoverBg: 'from-amber-900 via-orange-950 to-red-950',
     themeColor: 'amber',
     accentColor: '#F59E0B',
+    darkAccentColor: '#fbbf24',
     targetAge: '4-9 Tahun',
     description: 'Kisah Milo naga biru lucu yang mengatasi rasa takut ketinggian hingga menemukan indahnya membumbung di angkasa.',
     moralMessage: 'Semua keberhasilan dimulai dari satu langkah kecil penuh keberanian!',
@@ -365,6 +409,11 @@ export const INITIAL_STORIES: Story[] = [
           textBg: 'bg-blue-950/80',
           accentColor: '#2563eb',
           borderAccent: '#60a5fa',
+          darkBgGradFrom: '#0f172a',
+          darkBgGradTo: '#1e293b',
+          darkTextBg: 'bg-slate-900/90',
+          darkAccentColor: '#94a3b8',
+          darkBorderAccent: '#475569',
         },
         interactiveElements: [
           {
@@ -391,6 +440,11 @@ export const INITIAL_STORIES: Story[] = [
           textBg: 'bg-orange-950/80',
           accentColor: '#ea580c',
           borderAccent: '#fb923c',
+          darkBgGradFrom: '#0f172a',
+          darkBgGradTo: '#1e293b',
+          darkTextBg: 'bg-slate-900/90',
+          darkAccentColor: '#94a3b8',
+          darkBorderAccent: '#475569',
         },
         interactiveElements: [
           {
@@ -417,6 +471,11 @@ export const INITIAL_STORIES: Story[] = [
           textBg: 'bg-yellow-950/80',
           accentColor: '#ca8a04',
           borderAccent: '#facc15',
+          darkBgGradFrom: '#0f172a',
+          darkBgGradTo: '#1e293b',
+          darkTextBg: 'bg-slate-900/90',
+          darkAccentColor: '#94a3b8',
+          darkBorderAccent: '#475569',
         },
         interactiveElements: [
           {
@@ -443,6 +502,11 @@ export const INITIAL_STORIES: Story[] = [
           textBg: 'bg-teal-950/80',
           accentColor: '#0d9488',
           borderAccent: '#2dd4bf',
+          darkBgGradFrom: '#0f172a',
+          darkBgGradTo: '#1e293b',
+          darkTextBg: 'bg-slate-900/90',
+          darkAccentColor: '#94a3b8',
+          darkBorderAccent: '#475569',
         },
         interactiveElements: [
           {
@@ -469,6 +533,11 @@ export const INITIAL_STORIES: Story[] = [
           textBg: 'bg-sky-950/80',
           accentColor: '#0369a1',
           borderAccent: '#38bdf8',
+          darkBgGradFrom: '#0f172a',
+          darkBgGradTo: '#1e293b',
+          darkTextBg: 'bg-slate-900/90',
+          darkAccentColor: '#94a3b8',
+          darkBorderAccent: '#475569',
         },
         interactiveElements: [
           {
@@ -495,6 +564,11 @@ export const INITIAL_STORIES: Story[] = [
           textBg: 'bg-fuchsia-950/80',
           accentColor: '#c026d3',
           borderAccent: '#e879f9',
+          darkBgGradFrom: '#0f172a',
+          darkBgGradTo: '#1e293b',
+          darkTextBg: 'bg-slate-900/90',
+          darkAccentColor: '#94a3b8',
+          darkBorderAccent: '#475569',
         },
         interactiveElements: [
           {
@@ -521,6 +595,11 @@ export const INITIAL_STORIES: Story[] = [
           textBg: 'bg-indigo-950/80',
           accentColor: '#4f46e5',
           borderAccent: '#818cf8',
+          darkBgGradFrom: '#0f172a',
+          darkBgGradTo: '#1e293b',
+          darkTextBg: 'bg-slate-900/90',
+          darkAccentColor: '#94a3b8',
+          darkBorderAccent: '#475569',
         },
         interactiveElements: [
           {
@@ -547,6 +626,11 @@ export const INITIAL_STORIES: Story[] = [
           textBg: 'bg-rose-950/80',
           accentColor: '#e11d48',
           borderAccent: '#fda4af',
+          darkBgGradFrom: '#0f172a',
+          darkBgGradTo: '#1e293b',
+          darkTextBg: 'bg-slate-900/90',
+          darkAccentColor: '#94a3b8',
+          darkBorderAccent: '#475569',
         },
         interactiveElements: [
           {
@@ -582,8 +666,10 @@ export const INITIAL_STORIES: Story[] = [
     category: 'Eksplorasi & Keajaiban',
     coverImage: 'space',
     coverBg: 'from-indigo-700 via-purple-700 to-blue-800',
+    darkCoverBg: 'from-indigo-950 via-purple-950 to-blue-950',
     themeColor: 'indigo',
     accentColor: '#6366F1',
+    darkAccentColor: '#818cf8',
     targetAge: '5-10 Tahun',
     description: 'Petualangan malam Maya dan Leo menemukan rumah pohon raksasa yang bercahaya di bawah naungan Bintang jatuh.',
     moralMessage: 'Rasa ingin tahu dan kreativitas membuka pintu keajaiban ilmu pengetahuan!',
@@ -599,6 +685,11 @@ export const INITIAL_STORIES: Story[] = [
           textBg: 'bg-slate-950/80',
           accentColor: '#38bdf8',
           borderAccent: '#7dd3fc',
+          darkBgGradFrom: '#0f172a',
+          darkBgGradTo: '#1e293b',
+          darkTextBg: 'bg-slate-900/90',
+          darkAccentColor: '#94a3b8',
+          darkBorderAccent: '#475569',
         },
         interactiveElements: [
           {
@@ -625,6 +716,11 @@ export const INITIAL_STORIES: Story[] = [
           textBg: 'bg-emerald-950/80',
           accentColor: '#059669',
           borderAccent: '#34d399',
+          darkBgGradFrom: '#0f172a',
+          darkBgGradTo: '#1e293b',
+          darkTextBg: 'bg-slate-900/90',
+          darkAccentColor: '#94a3b8',
+          darkBorderAccent: '#475569',
         },
         interactiveElements: [
           {
@@ -651,6 +747,11 @@ export const INITIAL_STORIES: Story[] = [
           textBg: 'bg-purple-950/80',
           accentColor: '#a855f7',
           borderAccent: '#c084fc',
+          darkBgGradFrom: '#0f172a',
+          darkBgGradTo: '#1e293b',
+          darkTextBg: 'bg-slate-900/90',
+          darkAccentColor: '#94a3b8',
+          darkBorderAccent: '#475569',
         },
         interactiveElements: [
           {
@@ -677,6 +778,11 @@ export const INITIAL_STORIES: Story[] = [
           textBg: 'bg-blue-950/80',
           accentColor: '#3b82f6',
           borderAccent: '#60a5fa',
+          darkBgGradFrom: '#0f172a',
+          darkBgGradTo: '#1e293b',
+          darkTextBg: 'bg-slate-900/90',
+          darkAccentColor: '#94a3b8',
+          darkBorderAccent: '#475569',
         },
         interactiveElements: [
           {
@@ -703,6 +809,11 @@ export const INITIAL_STORIES: Story[] = [
           textBg: 'bg-amber-950/80',
           accentColor: '#d97706',
           borderAccent: '#fbbf24',
+          darkBgGradFrom: '#0f172a',
+          darkBgGradTo: '#1e293b',
+          darkTextBg: 'bg-slate-900/90',
+          darkAccentColor: '#94a3b8',
+          darkBorderAccent: '#475569',
         },
         interactiveElements: [
           {
@@ -729,6 +840,11 @@ export const INITIAL_STORIES: Story[] = [
           textBg: 'bg-pink-950/80',
           accentColor: '#db2777',
           borderAccent: '#f472b6',
+          darkBgGradFrom: '#0f172a',
+          darkBgGradTo: '#1e293b',
+          darkTextBg: 'bg-slate-900/90',
+          darkAccentColor: '#94a3b8',
+          darkBorderAccent: '#475569',
         },
         interactiveElements: [
           {
@@ -755,6 +871,11 @@ export const INITIAL_STORIES: Story[] = [
           textBg: 'bg-slate-950/80',
           accentColor: '#38bdf8',
           borderAccent: '#a5f3fc',
+          darkBgGradFrom: '#0f172a',
+          darkBgGradTo: '#1e293b',
+          darkTextBg: 'bg-slate-900/90',
+          darkAccentColor: '#94a3b8',
+          darkBorderAccent: '#475569',
         },
         interactiveElements: [
           {
@@ -781,6 +902,11 @@ export const INITIAL_STORIES: Story[] = [
           textBg: 'bg-violet-950/80',
           accentColor: '#7c3aed',
           borderAccent: '#a78bfa',
+          darkBgGradFrom: '#0f172a',
+          darkBgGradTo: '#1e293b',
+          darkTextBg: 'bg-slate-900/90',
+          darkAccentColor: '#94a3b8',
+          darkBorderAccent: '#475569',
         },
         interactiveElements: [
           {
@@ -818,6 +944,7 @@ export const INITIAL_STORIES: Story[] = [
     coverBg: 'from-cyan-600 via-blue-600 to-indigo-700',
     themeColor: 'cyan',
     accentColor: '#06B6D4',
+    darkAccentColor: '#22d3ee',
     targetAge: '4-8 Tahun',
     description: 'Loli lumba-lumba ceria memimpin sahabat bawah laut membersihkan terumbu karang dari sampah plastik.',
     moralMessage: 'Menjaga kebersihan lingkungan adalah tanggung jawab bersama agar bumi tetap indah!',
@@ -833,6 +960,11 @@ export const INITIAL_STORIES: Story[] = [
           textBg: 'bg-cyan-950/80',
           accentColor: '#0891b2',
           borderAccent: '#22d3ee',
+          darkBgGradFrom: '#0f172a',
+          darkBgGradTo: '#1e293b',
+          darkTextBg: 'bg-slate-900/90',
+          darkAccentColor: '#94a3b8',
+          darkBorderAccent: '#475569',
         },
         interactiveElements: [
           {
@@ -859,6 +991,11 @@ export const INITIAL_STORIES: Story[] = [
           textBg: 'bg-emerald-950/80',
           accentColor: '#059669',
           borderAccent: '#34d399',
+          darkBgGradFrom: '#0f172a',
+          darkBgGradTo: '#1e293b',
+          darkTextBg: 'bg-slate-900/90',
+          darkAccentColor: '#94a3b8',
+          darkBorderAccent: '#475569',
         },
         interactiveElements: [
           {
@@ -885,6 +1022,11 @@ export const INITIAL_STORIES: Story[] = [
           textBg: 'bg-yellow-950/80',
           accentColor: '#ca8a04',
           borderAccent: '#facc15',
+          darkBgGradFrom: '#0f172a',
+          darkBgGradTo: '#1e293b',
+          darkTextBg: 'bg-slate-900/90',
+          darkAccentColor: '#94a3b8',
+          darkBorderAccent: '#475569',
         },
         interactiveElements: [
           {
@@ -911,6 +1053,11 @@ export const INITIAL_STORIES: Story[] = [
           textBg: 'bg-sky-950/80',
           accentColor: '#0284c7',
           borderAccent: '#38bdf8',
+          darkBgGradFrom: '#0f172a',
+          darkBgGradTo: '#1e293b',
+          darkTextBg: 'bg-slate-900/90',
+          darkAccentColor: '#94a3b8',
+          darkBorderAccent: '#475569',
         },
         interactiveElements: [
           {
@@ -937,6 +1084,11 @@ export const INITIAL_STORIES: Story[] = [
           textBg: 'bg-fuchsia-950/80',
           accentColor: '#c026d3',
           borderAccent: '#f0abfc',
+          darkBgGradFrom: '#0f172a',
+          darkBgGradTo: '#1e293b',
+          darkTextBg: 'bg-slate-900/90',
+          darkAccentColor: '#94a3b8',
+          darkBorderAccent: '#475569',
         },
         interactiveElements: [
           {
@@ -963,6 +1115,11 @@ export const INITIAL_STORIES: Story[] = [
           textBg: 'bg-red-950/80',
           accentColor: '#dc2626',
           borderAccent: '#f87171',
+          darkBgGradFrom: '#0f172a',
+          darkBgGradTo: '#1e293b',
+          darkTextBg: 'bg-slate-900/90',
+          darkAccentColor: '#94a3b8',
+          darkBorderAccent: '#475569',
         },
         interactiveElements: [
           {
@@ -989,6 +1146,11 @@ export const INITIAL_STORIES: Story[] = [
           textBg: 'bg-emerald-950/80',
           accentColor: '#059669',
           borderAccent: '#34d399',
+          darkBgGradFrom: '#0f172a',
+          darkBgGradTo: '#1e293b',
+          darkTextBg: 'bg-slate-900/90',
+          darkAccentColor: '#94a3b8',
+          darkBorderAccent: '#475569',
         },
         interactiveElements: [
           {
@@ -1015,6 +1177,11 @@ export const INITIAL_STORIES: Story[] = [
           textBg: 'bg-sky-950/80',
           accentColor: '#0284c7',
           borderAccent: '#38bdf8',
+          darkBgGradFrom: '#0f172a',
+          darkBgGradTo: '#1e293b',
+          darkTextBg: 'bg-slate-900/90',
+          darkAccentColor: '#94a3b8',
+          darkBorderAccent: '#475569',
         },
         interactiveElements: [
           {

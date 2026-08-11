@@ -262,7 +262,7 @@ export const InteractiveStoryText: React.FC<InteractiveStoryTextProps> = ({
             onClick={() => setDualLanguage('id')}
             aria-pressed={activeDualLanguage === 'id'}
             className={`min-h-11 rounded-lg px-3 text-xs font-black transition-colors ${
-              activeDualLanguage === 'id' ? 'bg-[var(--magic-blue)] text-white' : 'text-[var(--muted-ink)] dark:text-slate-300'
+              activeDualLanguage === 'id' ? 'bg-brand-blue text-white' : 'text-secondary hover:bg-surface-hover'
             }`}
           >
             Bahasa Indonesia
@@ -273,7 +273,7 @@ export const InteractiveStoryText: React.FC<InteractiveStoryTextProps> = ({
               onClick={() => setDualLanguage('en')}
               aria-pressed={activeDualLanguage === 'en'}
               className={`min-h-11 rounded-lg px-3 text-xs font-black transition-colors ${
-                activeDualLanguage === 'en' ? 'bg-[var(--magic-blue)] text-white' : 'text-[var(--muted-ink)] dark:text-slate-300'
+                activeDualLanguage === 'en' ? 'bg-brand-blue text-white' : 'text-secondary hover:bg-surface-hover'
               }`}
             >
               English

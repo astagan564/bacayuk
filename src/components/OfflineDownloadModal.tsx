@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Story } from '../types';
 import { paymentStore, PurchaseReceipt } from '../utils/paymentStore';
 import { userAuthStore } from '../utils/userAuthStore';
@@ -151,22 +151,16 @@ export const OfflineDownloadModal: React.FC<OfflineDownloadModalProps> = ({
   const downloadLimitReached = !!purchase && purchase.paymentMethod !== 'vip' && purchase.downloadCount >= 3;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
-      <div
-        className={`w-full max-w-lg rounded-2xl p-6 shadow-2xl border relative overflow-hidden flex flex-col gap-5 ${
-          isNight
-            ? 'bg-[#111b29] text-slate-100 border-blue-900/70'
-            : 'bg-[#fffaf0] text-[var(--ink)] border-[#eadbc1]'
-        }`}
-      >
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[var(--color-overlay)] backdrop-blur-sm animate-fade-in">
+      <div className="app-modal w-full max-w-lg rounded-2xl p-6 shadow-2xl relative overflow-hidden flex flex-col gap-5">
         {/* Header */}
-        <div className="flex items-center justify-between pb-3 border-b border-amber-200/50">
+        <div className="flex items-center justify-between pb-3 border-b border-default">
           <div className="flex items-center gap-2.5">
-            <div className="p-2.5 rounded-xl bg-[var(--story-green)] text-white shadow-sm">
+            <div className="p-2.5 rounded-xl bg-brand-green text-white shadow-sm">
               <Download className="w-6 h-6" />
             </div>
             <div>
-              <div className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+              <div className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-wider text-success">
                 <CheckCircle2 className="w-3.5 h-3.5" />
                 <span>Lisensi unduhan aktif</span>
               </div>
@@ -176,7 +170,7 @@ export const OfflineDownloadModal: React.FC<OfflineDownloadModalProps> = ({
 
           <button
             onClick={onClose}
-            className="p-2 rounded-full hover:bg-black/10 transition-colors"
+            className="p-2 rounded-full hover:bg-surface text-secondary transition-colors"
             title="Tutup Modal"
           >
             <X className="w-6 h-6" />
@@ -184,7 +178,7 @@ export const OfflineDownloadModal: React.FC<OfflineDownloadModalProps> = ({
         </div>
 
         {/* Story Info Banner */}
-        <div className="p-3.5 rounded-xl bg-white/80 dark:bg-slate-800/80 border border-[#eadbc1] dark:border-blue-900/60 shadow-sm flex items-center gap-3">
+        <div className="p-3.5 rounded-xl bg-surface border border-default shadow-sm flex items-center gap-3">
           <div
             className={`w-10 h-10 rounded-xl bg-gradient-to-br ${story.coverBg} flex items-center justify-center text-white shrink-0 shadow-md`}
           >
@@ -192,25 +186,25 @@ export const OfflineDownloadModal: React.FC<OfflineDownloadModalProps> = ({
           </div>
           <div className="min-w-0 flex-1">
             <h4 className="font-extrabold text-xs sm:text-sm truncate">{story.title}</h4>
-            <span className="text-[11px] text-amber-800/80 dark:text-indigo-200">
+            <span className="text-[11px] text-secondary">
               {story.pages.length} Halaman Cerita Bergambar
             </span>
           </div>
         </div>
 
         {/* Security & Expiration Info Box */}
-        <div className="p-3.5 rounded-xl bg-[#fff7e6] dark:bg-slate-800 border border-[#eadbc1] dark:border-blue-900/60 text-xs flex flex-col gap-2">
-          <div className="flex items-center justify-between font-extrabold text-amber-900 dark:text-indigo-200">
+        <div className="p-3.5 rounded-xl bg-surface/50 border border-default text-xs flex flex-col gap-2">
+          <div className="flex items-center justify-between font-extrabold text-primary">
             <span className="flex items-center gap-1">
-              <Clock className="w-3.5 h-3.5 text-[var(--warm-gold)]" /> Masa berlaku link:
+              <Clock className="w-3.5 h-3.5 text-brand-gold" /> Masa berlaku link:
             </span>
-            <span className={expired ? 'text-rose-600' : 'text-emerald-600'}>
+            <span className={expired ? 'text-error' : 'text-success'}>
               {expired ? 'Kedaluwarsa (24 Jam)' : 'Aktif'}
             </span>
           </div>
 
           {purchase && (
-            <div className="grid grid-cols-2 gap-2 text-[11px] text-slate-700 dark:text-slate-300">
+            <div className="grid grid-cols-2 gap-2 text-[11px] text-secondary">
               <div>
                 Pembeli: <strong>{purchase.customerName}</strong>
               </div>
@@ -221,7 +215,7 @@ export const OfflineDownloadModal: React.FC<OfflineDownloadModalProps> = ({
                 Sisa Unduhan: <strong>{Math.max(0, 3 - purchase.downloadCount)} / 3 kali</strong>
               </div>
               <div>
-                Watermark: <strong className="text-emerald-600">Aktif Pada File</strong>
+                Watermark: <strong className="text-success">Aktif Pada File</strong>
               </div>
             </div>
           )}
@@ -230,7 +224,7 @@ export const OfflineDownloadModal: React.FC<OfflineDownloadModalProps> = ({
             <button
               onClick={handleRenewToken}
               disabled={purchase?.paymentMethod === 'vip'}
-              className="mt-1 py-2 px-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-amber-950 font-extrabold text-xs shadow-sm flex items-center justify-center gap-1.5 transition-transform hover:scale-[1.02]"
+              className="mt-1 py-2 px-3 rounded-xl bg-brand-gold text-white font-extrabold text-xs shadow-sm flex items-center justify-center gap-1.5 transition-transform hover:scale-[1.02]"
             >
               <RefreshCw className="w-3.5 h-3.5" />
               <span>Perbarui masa berlaku link</span>
@@ -238,7 +232,7 @@ export const OfflineDownloadModal: React.FC<OfflineDownloadModalProps> = ({
           )}
 
           {downloadLimitReached && (
-            <div className="text-[11px] font-bold text-rose-600 dark:text-rose-300">
+            <div className="text-[11px] font-bold text-error">
               Batas unduh 3 kali sudah tercapai untuk token ini.
             </div>
           )}
@@ -246,32 +240,32 @@ export const OfflineDownloadModal: React.FC<OfflineDownloadModalProps> = ({
 
         {/* Notice Message */}
         {downloadNotice && (
-          <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 text-xs font-bold animate-fade-in flex items-center gap-2">
-            <Sparkles className="w-4 h-4 shrink-0 text-emerald-500" />
+          <div className="p-3 rounded-xl bg-success/10 border border-success/30 text-success text-xs font-bold animate-fade-in flex items-center gap-2">
+            <Sparkles className="w-4 h-4 shrink-0 text-success" />
             <span>{downloadNotice}</span>
           </div>
         )}
 
         {/* Format Choices */}
         <div className="flex flex-col gap-3">
-          <span className="text-xs font-bold text-[var(--muted-ink)] dark:text-blue-200">
+          <span className="text-xs font-bold text-secondary">
             Pilih format file
           </span>
 
           {/* Option 1: PDF Printable (Primary Recommendation) */}
-          <div className="p-4 rounded-xl bg-white dark:bg-slate-800 border border-[#eadbc1] dark:border-blue-900/60 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div className="p-4 rounded-xl bg-surface border border-default shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div className="flex items-start gap-3">
-              <div className="p-2.5 rounded-xl bg-red-100 text-red-600 font-bold shrink-0">
+              <div className="p-2.5 rounded-xl bg-error/10 text-error font-bold shrink-0">
                 <Printer className="w-6 h-6" />
               </div>
               <div>
-                <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[var(--warm-gold)]/15 text-[#8a5e12] text-[10px] font-bold">
+                <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-brand-gold/15 text-brand-gold text-[10px] font-bold">
                   Rekomendasi cetak
                 </div>
-                <h4 className="font-extrabold text-sm text-slate-900 dark:text-slate-100 mt-0.5">
+                <h4 className="font-extrabold text-sm text-primary mt-0.5">
                   Format PDF (Printable Book)
                 </h4>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-tight">
+                <p className="text-[11px] text-secondary leading-tight">
                   Cocok dicetak di kertas HVS/Karton agar anak bisa membaca buku fisik tanpa layar.
                 </p>
               </div>
@@ -280,7 +274,7 @@ export const OfflineDownloadModal: React.FC<OfflineDownloadModalProps> = ({
             <button
               onClick={handleDownloadPdf}
               disabled={isGeneratingPdf || expired || downloadLimitReached}
-              className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-[var(--rose)] hover:bg-[#c54c59] text-white font-bold text-xs shadow-sm transition-transform hover:scale-[1.02] flex items-center justify-center gap-1.5 shrink-0 disabled:opacity-50"
+              className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-brand-rose hover:bg-brand-rose/90 text-white font-bold text-xs shadow-sm transition-transform hover:scale-[1.02] flex items-center justify-center gap-1.5 shrink-0 disabled:opacity-50"
             >
               {isGeneratingPdf ? (
                 <>
@@ -297,19 +291,19 @@ export const OfflineDownloadModal: React.FC<OfflineDownloadModalProps> = ({
           </div>
 
           {/* Option 2: EPUB (For Tablet / iPad / Apple Books) */}
-          <div className="p-4 rounded-xl bg-white dark:bg-slate-800 border border-[#eadbc1] dark:border-blue-900/60 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div className="p-4 rounded-xl bg-surface border border-default shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div className="flex items-start gap-3">
-              <div className="p-2.5 rounded-xl bg-blue-100 text-blue-600 font-bold shrink-0">
+              <div className="p-2.5 rounded-xl bg-brand-blue/10 text-brand-blue font-bold shrink-0">
                 <Tablet className="w-6 h-6" />
               </div>
               <div>
-                <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[var(--magic-blue)]/15 text-[var(--magic-blue)] text-[10px] font-bold">
+                <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-brand-blue/15 text-brand-blue text-[10px] font-bold">
                   Untuk tablet
                 </div>
-                <h4 className="font-extrabold text-sm text-slate-900 dark:text-slate-100 mt-0.5">
+                <h4 className="font-extrabold text-sm text-primary mt-0.5">
                   Format EPUB (E-Book)
                 </h4>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-tight">
+                <p className="text-[11px] text-secondary leading-tight">
                   Disimpan di Apple Books / Google Play Books untuk dibaca saat bepergian tanpa internet.
                 </p>
               </div>
@@ -318,7 +312,7 @@ export const OfflineDownloadModal: React.FC<OfflineDownloadModalProps> = ({
             <button
               onClick={handleDownloadEpub}
               disabled={isGeneratingEpub || expired || downloadLimitReached}
-              className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-[var(--magic-blue)] hover:bg-[#3f5f8f] text-white font-bold text-xs shadow-sm transition-transform hover:scale-[1.02] flex items-center justify-center gap-1.5 shrink-0 disabled:opacity-50"
+              className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-brand-blue hover:bg-brand-blue/90 text-white font-bold text-xs shadow-sm transition-transform hover:scale-[1.02] flex items-center justify-center gap-1.5 shrink-0 disabled:opacity-50"
             >
               {isGeneratingEpub ? (
                 <>
@@ -336,8 +330,8 @@ export const OfflineDownloadModal: React.FC<OfflineDownloadModalProps> = ({
         </div>
 
         {/* Security Stamping Footer */}
-        <div className="p-3 rounded-xl bg-slate-900 text-slate-200 text-[11px] flex items-center gap-2">
-          <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+        <div className="p-3 rounded-xl bg-surface border border-default text-secondary text-[11px] flex items-center gap-2">
+          <ShieldCheck className="w-4 h-4 text-success shrink-0" />
           <span>
             <strong>Stempel Digital Watermark:</strong> Setiap halaman dicetak identitas pembeli ({purchase?.customerName}) untuk keamanan hak cipta.
           </span>
