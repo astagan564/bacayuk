@@ -1,7 +1,7 @@
 import { OfflineDownloadModal } from '@/components/OfflineDownloadModal';
 import { ParentalGateModal } from '@/components/ParentalGateModal';
-import { PaymentGatewayModal } from '@/components/PaymentGatewayModal';
 import { VipOfferModal } from '@/components/VipOfferModal';
+import { PaymentGatewayModal } from '@/features/commerce/components/payment/PaymentGatewayModal';
 import type { PurchaseFlowController } from '@/features/commerce/hooks/usePurchaseFlowController';
 
 interface PurchaseFlowModalsProps {
@@ -34,7 +34,6 @@ export function PurchaseFlowModals({ flow, isNight }: PurchaseFlowModalsProps) {
           isVipOnly
           onClose={flow.closeFlow}
           onPaymentSuccess={flow.handlePaymentSuccess}
-          isNight={isNight}
         />
       )}
 
@@ -43,7 +42,6 @@ export function PurchaseFlowModals({ flow, isNight }: PurchaseFlowModalsProps) {
           story={state.story}
           onClose={flow.closeFlow}
           onPaymentSuccess={flow.handlePaymentSuccess}
-          isNight={isNight}
         />
       )}
 

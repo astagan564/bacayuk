@@ -34,6 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Story catalog composition**: Replaced the monolithic catalog selector with a typed collection controller and focused promo, hero, personal-library tabs, category filter, cover, story-card, and empty-state components under the Reader feature.
 - **Account session boundary**: Moved authentication initialization, purchase synchronization, login/logout state, pending-story access, favorites, and recently-read persistence into a dedicated Account feature.
 - **Commerce flow state machine**: Replaced separate VIP, parental-gate, book-payment, and download modal booleans with one typed purchase flow and a dedicated Commerce modal composer.
+- **Payment gateway boundary**: Moved typed transaction and verification requests, Midtrans Snap loading, checkout state, purchase recording, and focused checkout/success views into the Commerce feature.
 
 ### Fixed
 - **Duplicate story maker dialog**: Removed a duplicate `StoryMakerModal` render that could mount the same AI story creation interface twice.
@@ -44,6 +45,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Reader progress storage validation**: Ignore malformed bookmark, duration, and completion values from browser storage instead of allowing invalid data to enter reader state.
 - **Post-login reader route**: Opening a locked story after successful parent login now navigates to its addressable `/read/:storyId` URL and records it in the signed-in account's recent library.
 - **Exclusive purchase dialogs**: Purchase transitions now guarantee only one offer, gate, payment, or download dialog can be active at a time.
+- **Checkout state consistency**: Changing between book and VIP purchases now clears stale coupon discounts, and successful VIP payments activate the subscription exactly once instead of repeating activation in the purchase flow.
+- **Unmounted payment callbacks**: Async transaction and Midtrans callbacks no longer update checkout state after the payment modal has been closed.
 - **Reader media cleanup**: Reader navigation and unmounting now cancel pending page-flip and interaction timers, stale narration lookups, and active custom recordings so media cannot continue on the wrong page or story.
 
 ## [0.1.0] - 2026-08-10

@@ -50,9 +50,8 @@ export function usePurchaseFlowController({
     });
   }, []);
 
-  const handlePaymentSuccess = useCallback(async (receipt: PurchaseReceipt) => {
+  const handlePaymentSuccess = useCallback((receipt: PurchaseReceipt) => {
     if (state.kind === 'vip_payment') {
-      await userAuthStore.activateVip();
       setState({ kind: 'idle' });
       showToast('🎉 Pembayaran VIP Berhasil! Fitur AI telah terbuka.');
       onVipActivated();
