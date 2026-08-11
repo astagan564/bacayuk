@@ -26,6 +26,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Admin feature composition**: Moved the complete catalog, Quick Create, and editor composition into a dedicated Book Studio workspace. Admin navigation, user activity state, CSV export, and shared section types now live behind the Admin feature boundary.
 - **Admin route and access boundary**: Moved Admin URL interpretation, section navigation, story persistence, lazy dashboard loading, PIN verification API calls, and access state out of `App.tsx` into the Admin feature.
 - **Reader progress controller boundary**: Moved bookmark, reading-time, completion, rest-reminder, and Admin activity-log state into the Reader feature, with browser persistence isolated behind a typed store.
+- **Reader session boundary**: Moved story selection, direct reader-route synchronization, saved-page restoration, page navigation, mobile scroll reset, and AI-created story opening into a dedicated Reader controller.
+- **Reader settings boundary**: Moved reading preferences, theme derivation, and document dark-mode synchronization out of the application shell into a focused settings controller.
+- **Reader overlay composition**: Moved thumbnail, Story Maker, quiz, rest reminder, parental gate, statistics, voice recorder, and completion modal state and rendering behind the Reader feature boundary.
 - **Account session boundary**: Moved authentication initialization, purchase synchronization, login/logout state, pending-story access, favorites, and recently-read persistence into a dedicated Account feature.
 - **Commerce flow state machine**: Replaced separate VIP, parental-gate, book-payment, and download modal booleans with one typed purchase flow and a dedicated Commerce modal composer.
 

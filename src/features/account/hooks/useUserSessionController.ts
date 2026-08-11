@@ -8,12 +8,10 @@ import {
 } from '@/features/account/stores/personalLibraryStore';
 
 interface UserSessionControllerOptions {
-  onPendingStoryReady: (story: Story) => void;
   showToast: (message: string) => void;
 }
 
 export function useUserSessionController({
-  onPendingStoryReady,
   showToast,
 }: UserSessionControllerOptions) {
   const [currentUser, setCurrentUser] = useState<UserAccount | null>(() => userAuthStore.getUser());
@@ -21,6 +19,7 @@ export function useUserSessionController({
     personalLibraryStore.load(userAuthStore.getUser()?.id)
   );
   const [pendingStory, setPendingStory] = useState<Story | null>(null);
+  const [readyStory, setReadyStory] = useState<Story | null>(null);
   const [showLoginModal, setShowLoginModal] = useState(false);
 
   useEffect(() => {
@@ -72,8 +71,8 @@ export function useUserSessionController({
     void userAuthStore.recordStoryRead(pendingStory.id, pendingStory.title);
     const storyToOpen = pendingStory;
     setPendingStory(null);
-    onPendingStoryReady(storyToOpen);
-  }, [onPendingStoryReady, pendingStory, showToast]);
+    setReadyStory(storyToOpen);
+  }, [pendingStory, showToast]);
 
   const logout = useCallback(async () => {
     try {
@@ -102,10 +101,13 @@ export function useUserSessionController({
     });
   }, [currentUser?.id]);
 
+  const clearReadyStory = useCallback(() => setReadyStory(null), []);
+
   return {
     currentUser,
     personalLibrary,
     pendingStory,
+    readyStory,
     showLoginModal,
     requestLogin,
     closeLogin,
@@ -113,5 +115,6 @@ export function useUserSessionController({
     logout,
     recordRecentStory,
     toggleFavorite,
+    clearReadyStory,
   };
 }
