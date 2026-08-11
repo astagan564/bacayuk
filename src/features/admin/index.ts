@@ -6,6 +6,7 @@ export { AdminPinDialog } from './components/AdminPinDialog';
 export { AnalyticsTab } from './components/AnalyticsTab';
 export { CostLedgerTab } from './components/CostLedgerTab';
 export { FinanceTab } from './components/FinanceTab';
+export type { FinanceTabProps } from './types/finance';
 export { UsersTab } from './components/UsersTab';
 export { useAdminFinanceController } from './hooks/useAdminFinanceController';
 export { useAdminAccessController } from './hooks/useAdminAccessController';

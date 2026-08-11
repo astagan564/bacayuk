@@ -49,6 +49,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Page canvas editor boundaries**: Split Book Studio page selection, story-content canvas, interaction placement, and page-generation settings into focused typed components while retaining the existing editor workflow contract.
 - **Book Studio AI lifecycle boundaries**: Split translation, enhancement, and image-generation workflows into focused controllers coordinated through one abortable single-flight operation boundary.
 - **Vocabulary quiz boundaries**: Moved vocabulary quiz session state, option ordering, question presentation, results, and empty-state rendering into focused Reader modules while retaining the original modal compatibility export.
+- **Admin finance presentation boundaries**: Split finance metrics, coupon creation and listing, and transaction history into focused typed Admin components while retaining the existing finance-controller contract.
 
 ### Fixed
 - **Duplicate story maker dialog**: Removed a duplicate `StoryMakerModal` render that could mount the same AI story creation interface twice.
