@@ -1,4 +1,4 @@
-import type { Dispatch, MouseEvent, ReactNode, SetStateAction } from 'react';
+import type { Dispatch, MouseEvent, SetStateAction } from 'react';
 import type { Story, StoryPage } from '@/types';
 import { createBlankPage, sentenceCaseTitle } from '@/features/book-studio/helpers/storyDraft';
 
@@ -17,7 +17,6 @@ interface PageCanvasEditorProps {
   onGenerateEnhancement: (mode: 'illustration' | 'glossary' | 'quiz_interactions', pageNumber?: number) => Promise<void>;
   onGeneratePageImage: (page: StoryPage, pageIndex: number) => Promise<void>;
   onCanvasInteractionClick: (event: MouseEvent<HTMLDivElement>, page: StoryPage, pageIndex: number) => void;
-  renderPageImagePreview: (page: StoryPage, className?: string) => ReactNode;
 }
 
 export function PageCanvasEditor({
@@ -35,7 +34,6 @@ export function PageCanvasEditor({
   onGenerateEnhancement,
   onGeneratePageImage,
   onCanvasInteractionClick,
-  renderPageImagePreview,
 }: PageCanvasEditorProps) {
   if (story.pages.length === 0) return null;
 
@@ -113,7 +111,14 @@ export function PageCanvasEditor({
                       interactionPlaceMode ? 'cursor-crosshair ring-2 ring-[var(--story-green)]' : ''
                     }`}
                   >
-                    {renderPageImagePreview(page, 'absolute inset-0 opacity-95')}
+                    {page.imageUrl && (
+                      <img
+                        src={page.imageUrl}
+                        alt=""
+                        className="absolute inset-0 h-full w-full object-cover opacity-95"
+                        loading="lazy"
+                      />
+                    )}
                     {page.imageUrl && <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent" />}
                     <div className="relative z-10 p-4">
                     <div className="mb-2 flex items-center justify-between gap-2">

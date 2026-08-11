@@ -11,6 +11,51 @@ import {
   targetAgeLabel,
 } from '@/features/book-studio/helpers/storyDraft';
 
+export const cloneStoryForEditing = (story: Story): Story => ({
+  ...story,
+  pages: story.pages.map((page) => ({
+    ...page,
+    interactiveElements: page.interactiveElements?.map((element) => ({ ...element })),
+    quizQuestion: page.quizQuestion ? {
+      ...page.quizQuestion,
+      options: [...page.quizQuestion.options],
+    } : undefined,
+  })),
+  glossary: story.glossary?.map((item) => ({ ...item })),
+});
+
+export const buildManualStoryDraft = (defaultEbookPrice: number): Story => ({
+  id: `story_${Date.now()}`,
+  title: 'Buku Cerita Baru',
+  author: 'Penulis Cilik',
+  category: 'Petualangan',
+  coverImage: 'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=600',
+  coverBg: 'from-warning to-warning',
+  themeColor: 'amber',
+  accentColor: 'orange',
+  moralMessage: 'Belajar dan bersabar membawa keberhasilan!',
+  targetAge: '6-8 Tahun',
+  description: 'Kisah seru yang penuh pesan kebaikan untuk anak.',
+  status: 'draft',
+  pipelineStatus: 'draft',
+  accessStatus: 'free_member',
+  downloadEnabled: true,
+  ebookPrice: defaultEbookPrice,
+  watermarkEnabled: true,
+  pages: [{
+    pageNumber: 1,
+    text: 'Di sebuah desa yang indah, hiduplah seekor anak hewan yang rajin...',
+    illustrationType: 'forest',
+    colors: {
+      bgGradFrom: 'from-brand-green',
+      bgGradTo: 'to-warning',
+      textBg: 'bg-card/80',
+      accentColor: 'emerald',
+      borderAccent: 'border-brand-green',
+    },
+  }],
+});
+
 export const buildDraftStoryFromQuickCreate = (form: QuickCreateForm, defaultEbookPrice: number): Story => {
   const pageDrafts = splitManuscriptIntoPageDrafts(form.brief);
   const fallbackTitle = form.title.trim() || sentenceCaseTitle(form.brief, 'Buku Cerita Baru');

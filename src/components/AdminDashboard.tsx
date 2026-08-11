@@ -1,9 +1,5 @@
 import React, { useCallback, useState, useEffect } from 'react';
-import {
-  InteractiveElement,
-  Story,
-  StoryPage,
-} from '../types';
+import { Story } from '../types';
 import bacaYukLogo from '../assets/bacayuk-logo.svg';
 import bacaYukMark from '../assets/bacayuk-mark.svg';
 import {
@@ -13,19 +9,8 @@ import {
 import { userAuthStore, UserAccount } from '../utils/userAuthStore';
 import {
   LEGACY_DEMO_USER_IDS,
-  PIPELINE_STEPS,
-  chunkSentences,
-  extractGlossaryCandidates,
-  hasCompleteStoryImages,
-  inferPipelineStatus,
-  isPlaceholderCover,
-  splitTextIntoSentences,
-  storybookApi,
-  normalizeStoryForSave,
-  validateStory,
   useQuickCreateController,
-  useStoryAiController,
-  visualPresetLabel,
+  useStoryEditorController,
 } from '../features/book-studio';
 import { QuickCreateDialog } from '../features/book-studio/components/QuickCreateDialog';
 import {
@@ -93,14 +78,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     return current && !LEGACY_DEMO_USER_IDS.has(current.id) ? [current] : [];
   });
 
-  // Story Uploader / Editor Modal State
-  const [editingStory, setEditingStory] = useState<Story | null>(null);
-  const [isNewStory, setIsNewStory] = useState(false);
-  const [storyFormErrors, setStoryFormErrors] = useState<string[]>([]);
-  const [previewPageIndex, setPreviewPageIndex] = useState(0);
-  const [showAdvancedEditor, setShowAdvancedEditor] = useState(false);
-  const [interactionPlaceMode, setInteractionPlaceMode] = useState(false);
-
   // Toast / Feedback message
   const [toast, setToast] = useState<string | null>(null);
   const showToast = useCallback((msg: string) => {
@@ -149,14 +126,44 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     loadCostEvents,
   } = useCostLedgerController({ adminPin, totalRevenue });
 
-  const openDraftInEditor = useCallback((draftStory: Story) => {
-    setEditingStory(draftStory);
-    setIsNewStory(true);
-    setStoryFormErrors([]);
-    setPreviewPageIndex(0);
-    setShowAdvancedEditor(false);
-    setInteractionPlaceMode(false);
-  }, []);
+  const {
+    editingStory,
+    isNewStory,
+    errors: storyFormErrors,
+    previewPageIndex,
+    showAdvancedEditor,
+    interactionPlaceMode,
+    setEditingStory,
+    setPreviewPageIndex,
+    setShowAdvancedEditor,
+    setInteractionPlaceMode,
+    openDraftInEditor,
+    openManualStory,
+    openExistingStory,
+    closeEditor,
+    refreshGlossaryCandidates,
+    handleCanvasInteractionClick,
+    handleSaveStory,
+    handleDeleteStory,
+    isGeneratingTranslation,
+    generatingEnhancement,
+    generatingImagePageNumber,
+    imageGenerationProgress,
+    handleGenerateTranslation,
+    handleGenerateEnhancement,
+    handleGeneratePageImage,
+    handleGenerateAllImages,
+  } = useStoryEditorController({
+    stories,
+    onUpdateStories,
+    defaultEbookPrice: settings.defaultEbookPrice,
+    adminPin,
+    routeAction,
+    routeStoryId,
+    onCloseRouteAction,
+    onOpenStoryEditor,
+    showToast,
+  });
 
   const {
     showQuickCreate,
@@ -186,139 +193,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     }
   }, [openQuickCreate, routeAction]);
 
-  useEffect(() => {
-    if (!routeStoryId || (routeAction !== 'edit' && routeAction !== 'canvas')) return;
-    const story = stories.find((candidate) => candidate.id === routeStoryId);
-    if (!story) return;
-    setEditingStory({ ...story, pages: story.pages.map((page) => ({ ...page })) });
-    setIsNewStory(false);
-    setShowAdvancedEditor(routeAction === 'canvas');
-  }, [routeAction, routeStoryId, stories]);
-
   const selectSection = (section: AdminSection) => {
     setInternalActiveTab(section);
     onSectionChange?.(section);
   };
 
-  const updateEditingPage = (pageIndex: number, nextPage: StoryPage) => {
-    if (!editingStory) return;
-    const newPages = [...editingStory.pages];
-    newPages[pageIndex] = nextPage;
-    setEditingStory({ ...editingStory, pages: newPages });
-  };
-
-  const renderPageImagePreview = (page: StoryPage, className = '') => (
-    page.imageUrl ? (
-      <img
-        src={page.imageUrl}
-        alt=""
-        className={`h-full w-full object-cover ${className}`}
-        loading="lazy"
-      />
-    ) : null
-  );
-
-  const refreshGlossaryCandidates = () => {
-    if (!editingStory) return;
-    const manuscript = editingStory.pages.map((page) => `${page.title || ''}\n${page.text}`).join('\n\n');
-    const candidates = extractGlossaryCandidates(manuscript);
-    const existing = editingStory.glossary || [];
-    const merged = [
-      ...existing,
-      ...candidates.filter((candidate) =>
-        !existing.some((item) => item.wordEn.toLowerCase() === candidate.wordEn.toLowerCase())
-      ),
-    ];
-    setEditingStory({ ...editingStory, glossary: merged });
-    showToast(`Glosarium terdeteksi: ${merged.length} kata.`);
-  };
-
-  const {
-    isGeneratingTranslation,
-    generatingEnhancement,
-    generatingImagePageNumber,
-    imageGenerationProgress,
-    handleGenerateTranslation,
-    handleGenerateEnhancement,
-    handleGeneratePageImage,
-    handleGenerateAllImages,
-  } = useStoryAiController({
-    editingStory,
-    setEditingStory,
-    adminPin,
-    showToast,
-  });
-
-  const handleCanvasInteractionClick = (
-    e: React.MouseEvent<HTMLDivElement>,
-    page: StoryPage,
-    pageIndex: number
-  ) => {
-    if (!interactionPlaceMode) return;
-
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = Math.round(((e.clientX - rect.left) / rect.width) * 100);
-    const y = Math.round(((e.clientY - rect.top) / rect.height) * 100);
-    const nextElement: InteractiveElement = {
-      id: `elem_${Date.now()}`,
-      type: 'character',
-      label: 'Interaksi baru',
-      x: Math.min(100, Math.max(0, x)),
-      y: Math.min(100, Math.max(0, y)),
-      animation: 'bounce',
-      soundType: 'pop',
-      dialogue: 'Halo!',
-      emoji: '✨',
-    };
-
-    updateEditingPage(pageIndex, {
-      ...page,
-      interactiveElements: [...(page.interactiveElements || []), nextElement],
-    });
-    setInteractionPlaceMode(false);
-    showToast('Interaksi ditaruh di canvas.');
-  };
-
   // Search queries
   const [userSearchQuery, setUserSearchQuery] = useState('');
-
-  // Handle editing/saving story in CMS
-  const handleSaveStoryCMS = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editingStory) return;
-
-    const errors = validateStory(editingStory);
-    if (isNewStory && stories.some((story) => story.id === editingStory.id.trim())) {
-      errors.push('ID buku sudah dipakai buku lain.');
-    }
-    if (errors.length > 0) {
-      setStoryFormErrors(errors);
-      showToast('Periksa kembali data buku.');
-      return;
-    }
-
-    const normalizedStory = normalizeStoryForSave(editingStory);
-    let updatedList: Story[];
-    let successMessage: string;
-    if (isNewStory) {
-      updatedList = [normalizedStory, ...stories];
-      successMessage = `Buku "${normalizedStory.title}" ditambahkan.`;
-    } else {
-      updatedList = stories.map((s) => (s.id === normalizedStory.id ? normalizedStory : s));
-      successMessage = `Perubahan "${normalizedStory.title}" disimpan.`;
-    }
-
-    try {
-      await onUpdateStories(updatedList);
-      showToast(successMessage);
-      setStoryFormErrors([]);
-      setEditingStory(null);
-    } catch {
-      showToast('Tersimpan lokal, tetapi belum tersinkron ke Supabase. Periksa service role key/server.');
-      setStoryFormErrors([]);
-      setEditingStory(null);
-    }
-  };
 
   // Export Users CSV
   const handleExportUsersCSV = () => {
@@ -413,56 +294,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               openQuickCreate();
               onOpenQuickCreate?.();
             }}
-            onCreateManually={() => {
-              setEditingStory({
-                id: `story_${Date.now()}`,
-                title: 'Buku Cerita Baru',
-                author: 'Penulis Cilik',
-                category: 'Petualangan',
-                coverImage: 'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=600',
-                coverBg: 'from-warning to-warning',
-                themeColor: 'amber',
-                accentColor: 'orange',
-                moralMessage: 'Belajar dan bersabar membawa keberhasilan!',
-                targetAge: '6-8 Tahun',
-                description: 'Kisah seru yang penuh pesan kebaikan untuk anak.',
-                status: 'draft',
-                pipelineStatus: 'draft',
-                accessStatus: 'free_member',
-                downloadEnabled: true,
-                ebookPrice: 15000,
-                watermarkEnabled: true,
-                pages: [{
-                  pageNumber: 1,
-                  text: 'Di sebuah desa yang indah, hiduplah seekor anak hewan yang rajin...',
-                  illustrationType: 'forest',
-                  colors: { bgGradFrom: 'from-brand-green', bgGradTo: 'to-warning', textBg: 'bg-card/80', accentColor: 'emerald', borderAccent: 'border-brand-green' },
-                }],
-              });
-              setIsNewStory(true);
-              setStoryFormErrors([]);
-              setPreviewPageIndex(0);
-              setShowAdvancedEditor(false);
-              setInteractionPlaceMode(false);
-            }}
-            onEdit={(story) => {
-              setEditingStory(story);
-              setIsNewStory(false);
-              setStoryFormErrors([]);
-              setPreviewPageIndex(0);
-              setShowAdvancedEditor(false);
-              setInteractionPlaceMode(false);
-              onOpenStoryEditor?.(story.id, 'edit');
-            }}
-            onDelete={async (story) => {
-              if (!window.confirm(`Hapus buku "${story.title}" dari katalog?`)) return;
-              try {
-                await onUpdateStories(stories.filter((item) => item.id !== story.id));
-                showToast(`Buku "${story.title}" dihapus.`);
-              } catch {
-                showToast('Buku dihapus dari data lokal, tetapi sinkron Supabase belum berhasil.');
-              }
-            }}
+            onCreateManually={openManualStory}
+            onEdit={openExistingStory}
+            onDelete={handleDeleteStory}
           />
         )}
 
@@ -519,12 +353,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             onGenerateAllImages={handleGenerateAllImages}
             onCanvasInteractionClick={handleCanvasInteractionClick}
             onRefreshGlossary={refreshGlossaryCandidates}
-            renderPageImagePreview={renderPageImagePreview}
-            onSubmit={handleSaveStoryCMS}
-            onClose={() => {
-              setEditingStory(null);
-              onCloseRouteAction?.();
-            }}
+            onSubmit={handleSaveStory}
+            onClose={closeEditor}
           />
         )}
         </div>

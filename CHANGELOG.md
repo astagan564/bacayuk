@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Book Studio controller boundary**: Moved translation, enhancement, and resumable illustration lifecycle state out of `AdminDashboard` into a dedicated typed controller hook. Draft mapping, save normalization, and validation now live in a separate pure helper module.
 - **Quick Create controller boundary**: Moved Quick Create form state, PDF text extraction and OCR progress, AI draft generation, local manuscript fallback, and dialog reset behavior into a dedicated Book Studio controller. `AdminDashboard` now coordinates the resulting draft instead of implementing the import and generation workflow itself.
 - **Admin operations controller boundaries**: Moved coupon and transaction state, global settings and cleanup actions, and cost-ledger loading and calculations into dedicated typed controllers. Admin tabs now receive explicit state and actions through the Admin feature boundary instead of accessing persistence directly.
+- **Book editor controller boundary**: Moved manual and AI draft opening, route-driven edit/canvas state, validation, persistence, deletion, glossary refresh, canvas interactions, and AI enhancement lifecycle into the Book Studio feature. `AdminDashboard` now composes the editor instead of implementing its workflow.
 
 ### Fixed
 - **Duplicate story maker dialog**: Removed a duplicate `StoryMakerModal` render that could mount the same AI story creation interface twice.

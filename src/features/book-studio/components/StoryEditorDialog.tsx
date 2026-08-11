@@ -1,4 +1,4 @@
-import type { Dispatch, FormEvent, MouseEvent, ReactNode, SetStateAction } from 'react';
+import type { Dispatch, FormEvent, MouseEvent, SetStateAction } from 'react';
 import type { AdminSettings } from '@/utils/adminStore';
 import type { Story, StoryPage } from '@/types';
 import { AlertCircle, X } from 'lucide-react';
@@ -30,7 +30,6 @@ interface StoryEditorDialogProps {
   onGenerateAllImages: () => Promise<void>;
   onCanvasInteractionClick: (event: MouseEvent<HTMLDivElement>, page: StoryPage, pageIndex: number) => void;
   onRefreshGlossary: () => void;
-  renderPageImagePreview: (page: StoryPage, className?: string) => ReactNode;
   onSubmit: (event: FormEvent) => void;
   onClose: () => void;
 }
@@ -41,7 +40,7 @@ export function StoryEditorDialog(props: StoryEditorDialogProps) {
     isGeneratingTranslation, generatingEnhancement, generatingImagePageNumber, imageGenerationProgress,
     onStoryChange, onPreviewPageChange, onAdvancedChange, onInteractionPlaceModeChange,
     onGenerateTranslation, onGenerateEnhancement, onGeneratePageImage, onGenerateAllImages,
-    onCanvasInteractionClick, onRefreshGlossary, renderPageImagePreview, onSubmit, onClose,
+    onCanvasInteractionClick, onRefreshGlossary, onSubmit, onClose,
   } = props;
 
   return (
@@ -102,7 +101,6 @@ export function StoryEditorDialog(props: StoryEditorDialogProps) {
         onGenerateEnhancement={onGenerateEnhancement}
         onGeneratePageImage={onGeneratePageImage}
         onCanvasInteractionClick={onCanvasInteractionClick}
-        renderPageImagePreview={renderPageImagePreview}
       />
 
       <GlossaryReviewSection
