@@ -6,4 +6,6 @@ export * from './hooks/useStoryAiController';
 export * from './hooks/useStoryEditorController';
 export * from './hooks/useQuickCreateController';
 export * from './components/BookStudioAdminWorkspace';
+export { QuickCreateDialog } from './components/QuickCreateDialog';
+export type { QuickCreateDialogProps } from './components/QuickCreateDialog';
 export type * from './types';

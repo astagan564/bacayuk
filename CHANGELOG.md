@@ -42,6 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Voice recorder boundary**: Split microphone capture, preview playback, IndexedDB mutations, recording status, duration formatting, and action controls into focused Reader modules while retaining the original modal compatibility export.
 - **Application route composition**: Replaced the remaining monolithic application root with focused Admin, Settings, Reader, modal, footer, story-bootstrap, toast, changelog, and copy-protection boundaries so route-specific controllers only mount for the active workspace.
 - **Story Maker boundary**: Split reader-facing AI story requests, typed response validation, local fallback generation, quota/controller state, choice controls, and modal presentation into a dedicated feature while retaining the original component compatibility export.
+- **Quick Create presentation boundary**: Split the Admin Quick Create dialog into focused manuscript/PDF import, audience and language, advanced metadata, and generation-summary sections while retaining its existing controller contract and workflow.
 
 ### Fixed
 - **Duplicate story maker dialog**: Removed a duplicate `StoryMakerModal` render that could mount the same AI story creation interface twice.
