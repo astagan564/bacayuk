@@ -54,6 +54,23 @@ export interface UserReadingActivity {
   updatedAt: string;
 }
 
+interface StoryAnalyticsInput {
+  id: string;
+  title: string;
+  pages: readonly unknown[];
+}
+
+export interface DropoffAnalytics {
+  storyId: string;
+  storyTitle: string;
+  totalPages: number;
+  totalReaders: number;
+  completedCount: number;
+  completionRate: number;
+  biggestDropPage: number;
+  pageCounts: number[];
+}
+
 import { supabase } from './supabaseClient';
 
 const ADMIN_SETTINGS_KEY = 'buku_cerita_admin_settings_v1';
@@ -162,7 +179,7 @@ export const adminStore = {
   validateCoupon(code: string, originalAmount: number): { valid: boolean; coupon?: DiscountCoupon; discountAmount: number; message?: string } {
     const coupons = this.getCoupons();
     const cleanCode = code.trim().toUpperCase();
-    const match = coupons.find((c) => c.code.toUpperCase() === cleanCode && c.isActive);
+    const match = coupons.find((coupon: DiscountCoupon) => coupon.code.toUpperCase() === cleanCode && coupon.isActive);
 
     if (!match) {
       return { valid: false, discountAmount: 0, message: 'Kode kupon tidak ditemukan atau tidak aktif!' };
@@ -189,7 +206,7 @@ export const adminStore = {
   async useCoupon(code: string): Promise<void> {
     const coupons = this.getCoupons();
     const cleanCode = code.trim().toUpperCase();
-    const idx = coupons.findIndex((c) => c.code.toUpperCase() === cleanCode);
+    const idx = coupons.findIndex((coupon: DiscountCoupon) => coupon.code.toUpperCase() === cleanCode);
     if (idx !== -1) {
       coupons[idx].usageCount += 1;
       await this.saveCoupons(coupons);
@@ -237,7 +254,7 @@ export const adminStore = {
 
   async updateTransactionStatus(id: string, newStatus: 'success' | 'pending' | 'expired'): Promise<void> {
     const list = this.getTransactions();
-    const item = list.find((t) => t.id === id);
+    const item = list.find((transaction: TransactionRecord) => transaction.id === id);
     if (item) {
       item.status = newStatus;
       if (newStatus === 'success') {
@@ -271,7 +288,7 @@ export const adminStore = {
 
   async logUserReading(activity: UserReadingActivity): Promise<void> {
     const logs = this.getReadingLogs();
-    const idx = logs.findIndex((l) => l.userId === activity.userId && l.storyId === activity.storyId);
+    const idx = logs.findIndex((log: UserReadingActivity) => log.userId === activity.userId && log.storyId === activity.storyId);
     if (idx !== -1) {
       logs[idx] = { ...logs[idx], ...activity, updatedAt: new Date().toISOString() };
     } else {
@@ -304,10 +321,10 @@ export const adminStore = {
     const expireMs = settings.downloadLinkExpireHours * 3600 * 1000;
     let purgedCount = 0;
 
-    list.forEach((t) => {
-      const createdTime = new Date(t.createdAt).getTime();
-      if (t.status === 'pending' && now - createdTime > expireMs) {
-        t.status = 'expired';
+    list.forEach((transaction: TransactionRecord) => {
+      const createdTime = new Date(transaction.createdAt).getTime();
+      if (transaction.status === 'pending' && now - createdTime > expireMs) {
+        transaction.status = 'expired';
         purgedCount++;
       }
     });
@@ -339,18 +356,18 @@ export const adminStore = {
   },
 
   // Drop-off analytics calculation per story
-  getDropoffAnalytics(stories: { id: string; title: string; pages: any[] }[]) {
+  getDropoffAnalytics(stories: StoryAnalyticsInput[]): DropoffAnalytics[] {
     const logs = this.getReadingLogs();
 
     return stories.map((story) => {
-      const storyLogs = logs.filter((l) => l.storyId === story.id);
+      const storyLogs = logs.filter((log: UserReadingActivity) => log.storyId === story.id);
       const totalReaders = storyLogs.length || 1; // avoid divide by zero
 
       // Calculate how many readers reached each page
       const pageCounts: number[] = new Array(story.pages.length).fill(0);
       let completedCount = 0;
 
-      storyLogs.forEach((log) => {
+      storyLogs.forEach((log: UserReadingActivity) => {
         const lastPage = Math.min(log.lastPageRead, story.pages.length);
         for (let i = 0; i < lastPage; i++) {
           pageCounts[i] += 1;

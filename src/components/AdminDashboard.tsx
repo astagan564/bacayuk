@@ -22,23 +22,22 @@ import {
   MAX_PDF_MANUSCRIPT_LENGTH,
   PIPELINE_STEPS,
   chunkSentences,
-  createBlankPage,
   createStoryId,
   extractGlossaryCandidates,
   hasCompleteStoryImages,
-  includesGlossaryTerm,
-  inferIllustrationType,
   inferPipelineStatus,
   isPlaceholderCover,
   resolvedVisualPreset,
-  sentenceCaseTitle,
-  splitManuscriptIntoPageDrafts,
   splitTextIntoSentences,
   storybookApi,
-  targetAgeLabel,
+  buildDraftStoryFromAiDraft,
+  buildDraftStoryFromQuickCreate,
+  normalizeStoryForSave,
+  validateStory,
+  useStoryAiController,
   visualPresetLabel,
 } from '../features/book-studio';
-import type { AiBookDraft, BookCostEvent, QuickCreateForm } from '../features/book-studio';
+import type { BookCostEvent, QuickCreateForm } from '../features/book-studio';
 import { QuickCreateDialog } from '../features/book-studio/components/QuickCreateDialog';
 import { UsersTab } from '../features/admin/components/UsersTab';
 import { FinanceTab } from '../features/admin/components/FinanceTab';
@@ -124,15 +123,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [isExtractingPdf, setIsExtractingPdf] = useState(false);
   const [showAdvancedEditor, setShowAdvancedEditor] = useState(false);
   const [interactionPlaceMode, setInteractionPlaceMode] = useState(false);
-  const [isGeneratingTranslation, setIsGeneratingTranslation] = useState(false);
   const [isGeneratingBookDraft, setIsGeneratingBookDraft] = useState(false);
-  const [generatingEnhancement, setGeneratingEnhancement] = useState<'illustration' | 'glossary' | 'quiz_interactions' | null>(null);
-  const [generatingImagePageNumber, setGeneratingImagePageNumber] = useState<number | null>(null);
-  const [imageGenerationProgress, setImageGenerationProgress] = useState<{
-    completed: number;
-    total: number;
-    label: string;
-  } | null>(null);
 
   // New Coupon Form State
   const [newCouponCode, setNewCouponCode] = useState('');
@@ -212,223 +203,21 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     showToast(`Glosarium terdeteksi: ${merged.length} kata.`);
   };
 
-  const handleGenerateTranslation = async () => {
-    if (!editingStory) return;
-    if (!adminPin) {
-      showToast('PIN admin tidak tersedia untuk generate translation.');
-      return;
-    }
-
-    setIsGeneratingTranslation(true);
-    try {
-      const data = await storybookApi.translateStory(adminPin, editingStory);
-
-      const translations = Array.isArray(data.translations) ? data.translations : [];
-      const translatedPages = editingStory.pages.map((page) => {
-        const match = translations.find((item: { pageNumber?: number; titleEn?: string; textEn?: string }) => item.pageNumber === page.pageNumber);
-        return match?.textEn
-          ? { ...page, titleEn: match.titleEn || page.titleEn, textEn: match.textEn }
-          : page;
-      });
-
-      setEditingStory({
-        ...editingStory,
-        titleEn: data.titleEn || editingStory.titleEn,
-        pages: translatedPages,
-        pipelineStatus: 'enhanced',
-      });
-      showToast(`Translation dibuat untuk ${translations.length} halaman.`);
-    } catch (error) {
-      console.error('Translation generation failed:', error);
-      showToast(error instanceof Error ? error.message : 'Gagal membuat translation.');
-    } finally {
-      setIsGeneratingTranslation(false);
-    }
-  };
-
-  const handleGenerateEnhancement = async (
-    mode: 'illustration' | 'glossary' | 'quiz_interactions',
-    pageNumber?: number
-  ) => {
-    if (!editingStory) return;
-    if (!adminPin) {
-      showToast('PIN admin tidak tersedia untuk generate enhancement.');
-      return;
-    }
-
-    const sourcePages = pageNumber
-      ? editingStory.pages.filter((page) => page.pageNumber === pageNumber)
-      : editingStory.pages;
-
-    if (sourcePages.length === 0) {
-      showToast('Tidak ada halaman untuk diproses.');
-      return;
-    }
-
-    setGeneratingEnhancement(mode);
-    try {
-      const data = await storybookApi.generateEnhancement(adminPin, editingStory, mode, sourcePages);
-
-      if (mode === 'glossary') {
-        setEditingStory({
-          ...editingStory,
-          glossary: Array.isArray(data.glossary) ? data.glossary : [],
-          vocabularyQuiz: data.vocabularyQuiz || editingStory.vocabularyQuiz,
-          pipelineStatus: 'enhanced',
-        });
-        showToast(`Glosarium AI dibuat: ${Array.isArray(data.glossary) ? data.glossary.length : 0} kata.`);
-        return;
-      }
-
-      const enhancedPages = Array.isArray(data.pages) ? data.pages : [];
-      const nextPages = editingStory.pages.map((page) => {
-        const match = enhancedPages.find((item: { pageNumber?: number }) => item.pageNumber === page.pageNumber);
-        if (!match) return page;
-
-        if (mode === 'illustration') {
-          return {
-            ...page,
-            illustrationType: match.illustrationType || page.illustrationType,
-            illustrationPrompt: match.illustrationPrompt || page.illustrationPrompt,
-          };
-        }
-
-        return {
-          ...page,
-          interactiveElements: match.interactiveElements || page.interactiveElements || [],
-          quizQuestion: match.quizQuestion || page.quizQuestion,
-        };
-      });
-
-      const nextStory: Story = {
-        ...editingStory,
-        pages: nextPages,
-        pipelineStatus: mode === 'illustration' ? inferPipelineStatus(editingStory) : 'enhanced',
-      };
-      setEditingStory(nextStory);
-      showToast(`Enhancement AI diperbarui untuk ${enhancedPages.length} halaman.`);
-    } catch (error) {
-      console.error('Enhancement generation failed:', error);
-      showToast(error instanceof Error ? error.message : 'Gagal membuat enhancement.');
-    } finally {
-      setGeneratingEnhancement(null);
-    }
-  };
-
-  const requestGeneratedStoryImage = async (
-    story: Story,
-    request: { imageKind: 'cover' } | { imageKind: 'page'; page: StoryPage }
-  ): Promise<string> => {
-    if (!adminPin) throw new Error('PIN admin tidak tersedia untuk generate gambar.');
-    return storybookApi.generateImage(adminPin, story, request);
-  };
-
-  const handleGeneratePageImage = async (page: StoryPage, pageIndex: number) => {
-    if (!editingStory) return;
-    if (!adminPin) {
-      showToast('PIN admin tidak tersedia untuk generate gambar.');
-      return;
-    }
-
-    setGeneratingImagePageNumber(page.pageNumber);
-    try {
-      const imageUrl = await requestGeneratedStoryImage(editingStory, { imageKind: 'page', page });
-      setEditingStory((currentStory) => {
-        if (!currentStory) return currentStory;
-        const nextPages = currentStory.pages.map((item, index) => index === pageIndex
-          ? { ...item, imageUrl, illustrationType: 'custom' as const }
-          : item
-        );
-        const hasAllImages = !isPlaceholderCover(currentStory.coverImage)
-          && nextPages.every((item) => Boolean(item.imageUrl?.trim()));
-
-        return {
-          ...currentStory,
-          pages: nextPages,
-          pipelineStatus: hasAllImages ? 'illustrated' : 'story_complete',
-        };
-      });
-      showToast(`Gambar halaman ${page.pageNumber} berhasil dibuat.`);
-    } catch (error) {
-      console.error('Page image generation failed:', error);
-      showToast(error instanceof Error ? error.message : 'Gagal generate gambar halaman.');
-    } finally {
-      setGeneratingImagePageNumber(null);
-    }
-  };
-
-  const handleGenerateAllImages = async () => {
-    if (!editingStory) return;
-    if (!adminPin) {
-      showToast('PIN admin tidak tersedia untuk generate gambar.');
-      return;
-    }
-
-    const shouldGenerateCover = isPlaceholderCover(editingStory.coverImage);
-    const missingPages = editingStory.pages.filter((page) => !page.imageUrl?.trim());
-    const total = (shouldGenerateCover ? 1 : 0) + missingPages.length;
-
-    if (total === 0) {
-      showToast('Cover dan semua gambar halaman sudah tersedia.');
-      return;
-    }
-
-    let nextCoverImage = editingStory.coverImage;
-    let nextPages = [...editingStory.pages];
-    let completed = 0;
-    setImageGenerationProgress({ completed, total, label: shouldGenerateCover ? 'Menyiapkan cover' : `Menyiapkan halaman ${missingPages[0].pageNumber}` });
-
-    try {
-      if (shouldGenerateCover) {
-        nextCoverImage = await requestGeneratedStoryImage(editingStory, { imageKind: 'cover' });
-        completed += 1;
-        setEditingStory((currentStory) => currentStory ? {
-          ...currentStory,
-          coverImage: nextCoverImage,
-          pipelineStatus: 'story_complete',
-        } : currentStory);
-        setImageGenerationProgress({ completed, total, label: 'Cover selesai' });
-      }
-
-      for (const page of missingPages) {
-        setImageGenerationProgress({ completed, total, label: `Membuat halaman ${page.pageNumber} dari ${editingStory.pages.length}` });
-        const imageUrl = await requestGeneratedStoryImage(editingStory, { imageKind: 'page', page });
-        nextPages = nextPages.map((item) => item.pageNumber === page.pageNumber
-          ? { ...item, imageUrl, illustrationType: 'custom' as const }
-          : item
-        );
-        completed += 1;
-        setEditingStory((currentStory) => currentStory ? {
-          ...currentStory,
-          coverImage: nextCoverImage,
-          pages: currentStory.pages.map((item) => item.pageNumber === page.pageNumber
-            ? { ...item, imageUrl, illustrationType: 'custom' as const }
-            : item
-          ),
-          pipelineStatus: 'story_complete',
-        } : currentStory);
-        setImageGenerationProgress({ completed, total, label: `Halaman ${page.pageNumber} selesai` });
-      }
-
-      const allImagesReady = !isPlaceholderCover(nextCoverImage) && nextPages.every((page) => Boolean(page.imageUrl?.trim()));
-      setEditingStory((currentStory) => currentStory ? {
-        ...currentStory,
-        coverImage: nextCoverImage,
-        pipelineStatus: allImagesReady ? 'illustrated' : 'story_complete',
-      } : currentStory);
-      showToast(allImagesReady ? 'Cover dan semua gambar halaman selesai dibuat.' : `${completed} gambar selesai dibuat.`);
-    } catch (error) {
-      console.error('Bulk story image generation failed:', error);
-      setEditingStory((currentStory) => currentStory ? {
-        ...currentStory,
-        coverImage: nextCoverImage,
-        pipelineStatus: 'story_complete',
-      } : currentStory);
-      showToast(`${completed} dari ${total} gambar selesai. Klik lagi untuk melanjutkan.`);
-    } finally {
-      setImageGenerationProgress(null);
-    }
-  };
+  const {
+    isGeneratingTranslation,
+    generatingEnhancement,
+    generatingImagePageNumber,
+    imageGenerationProgress,
+    handleGenerateTranslation,
+    handleGenerateEnhancement,
+    handleGeneratePageImage,
+    handleGenerateAllImages,
+  } = useStoryAiController({
+    editingStory,
+    setEditingStory,
+    adminPin,
+    showToast,
+  });
 
   const handleCanvasInteractionClick = (
     e: React.MouseEvent<HTMLDivElement>,
@@ -458,120 +247,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     });
     setInteractionPlaceMode(false);
     showToast('Interaksi ditaruh di canvas.');
-  };
-
-  const buildDraftStoryFromQuickCreate = (form: QuickCreateForm): Story => {
-    const pageDrafts = splitManuscriptIntoPageDrafts(form.brief);
-    const fallbackTitle = form.title.trim() || sentenceCaseTitle(form.brief, 'Buku Cerita Baru');
-    const pages: StoryPage[] = pageDrafts.map((draft, index) => {
-      const basePage = createBlankPage(index + 1);
-      const illustrationType = inferIllustrationType(`${draft.title} ${draft.text}`);
-      const generatedElements: InteractiveElement[] = index === 0
-        ? [{
-            id: `elem_${Date.now()}_${index}`,
-            type: 'character',
-            label: 'Tokoh utama',
-            x: 50,
-            y: 62,
-            animation: 'bounce',
-            soundType: 'chime',
-            dialogue: 'Halo, ayo baca halaman ini.',
-            emoji: '✨',
-          }]
-        : [];
-
-      return {
-        ...basePage,
-        title: draft.title,
-        titleEn: '',
-        text: draft.text,
-        textEn: '',
-        illustrationType,
-        illustrationPrompt: `A clear ${illustrationType} story scene with one focal action and expressive child-friendly characters.`,
-        interactiveElements: generatedElements,
-        quizQuestion: index === pageDrafts.length - 1
-          ? {
-              question: 'Apa pesan baik dari cerita ini?',
-              options: ['Berani mencoba', 'Menyerah', 'Tidak peduli', 'Marah-marah'],
-              answerIndex: 0,
-              explanation: 'Cerita ini mengajak anak mencoba hal baik dengan berani dan lembut.',
-            }
-          : undefined,
-      };
-    });
-
-    return {
-      id: form.storyId || createStoryId(fallbackTitle),
-      title: fallbackTitle,
-      author: 'BacaYuk Studio',
-      category: 'Petualangan',
-      coverImage: 'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=600',
-      coverBg: 'from-warning to-warning',
-      themeColor: 'amber',
-      accentColor: 'orange',
-      moralMessage: form.moralMessage.trim() || 'Setiap perjalanan menjadi lebih indah saat dijalani dengan berani dan hati baik.',
-      targetAge: targetAgeLabel(form.targetAge),
-      description: pages[0]?.text.slice(0, 150) || 'Draft buku cerita baru dari naskah yang ditempel.',
-      status: 'draft',
-      pipelineStatus: 'story_complete',
-      accessStatus: 'free_member',
-      downloadEnabled: true,
-      ebookPrice: settings.defaultEbookPrice,
-      watermarkEnabled: true,
-      pages,
-      glossary: extractGlossaryCandidates(form.brief),
-    };
-  };
-
-  const buildDraftStoryFromAiDraft = (form: QuickCreateForm, draft: AiBookDraft): Story => {
-    const rawPages = Array.isArray(draft.pages) && draft.pages.length > 0
-      ? draft.pages
-      : splitManuscriptIntoPageDrafts(form.brief);
-    const pages: StoryPage[] = rawPages.slice(0, 12).map((page, index) => {
-      const basePage = createBlankPage(index + 1);
-      const title = page.title?.trim() || `Halaman ${index + 1}`;
-      const text = page.text?.trim() || '';
-      const illustrationType = page.illustrationType || inferIllustrationType(`${title} ${text}`);
-
-      return {
-        ...basePage,
-        title,
-        titleEn: page.titleEn?.trim() || '',
-        text,
-        textEn: page.textEn?.trim() || '',
-        illustrationType,
-        illustrationPrompt:
-          page.illustrationPrompt?.trim() ||
-          `A clear ${illustrationType} story scene with one focal action, expressive characters, and a child-safe colorful illustration style.`,
-        interactiveElements: page.interactiveElements || [],
-        quizQuestion: page.quizQuestion,
-      };
-    });
-    return {
-      id: form.storyId || createStoryId(draft.title || form.title || 'Buku Cerita Baru'),
-      title: draft.title?.trim() || form.title.trim() || 'Buku Cerita Baru',
-      author: 'BacaYuk Studio',
-      category: draft.category?.trim() || 'Petualangan',
-      coverImage: 'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=600',
-      coverBg: 'from-warning to-warning',
-      themeColor: 'amber',
-      accentColor: 'orange',
-      moralMessage:
-        draft.moralMessage?.trim() ||
-        'Setiap perjalanan menjadi lebih indah saat dijalani dengan berani dan hati baik.',
-      targetAge: targetAgeLabel(form.targetAge),
-      description: draft.description?.trim() || pages[0]?.text.slice(0, 150) || 'Draft buku cerita baru dari AI.',
-      status: 'draft',
-      pipelineStatus: 'story_complete',
-      accessStatus: 'free_member',
-      downloadEnabled: true,
-      ebookPrice: settings.defaultEbookPrice,
-      watermarkEnabled: true,
-      pages,
-      glossary: draft.glossary || [],
-      vocabularyQuiz: draft.vocabularyQuiz,
-      productionGuide: draft.productionGuide,
-    };
   };
 
   const extractTextFromPdfPageImage = async (imageBase64: string, storyId: string, storyTitle: string): Promise<string> => {
@@ -715,7 +390,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       ...form,
       visualPreset: resolvedVisualPreset(form),
     });
-    return buildDraftStoryFromAiDraft(form, draft);
+    return buildDraftStoryFromAiDraft(form, draft, settings.defaultEbookPrice);
   };
 
   const openDraftStory = (draftStory: Story) => {
@@ -764,7 +439,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     } catch (error) {
       console.error('AI book draft failed:', error);
       if (normalizedForm.brief.length >= 120) {
-        const draftStory = buildDraftStoryFromQuickCreate(normalizedForm);
+        const draftStory = buildDraftStoryFromQuickCreate(normalizedForm, settings.defaultEbookPrice);
         openDraftStory(draftStory);
         showToast('AI belum tersedia. Naskah tetap dipecah menjadi draft lokal untuk direview.');
       } else {
@@ -777,77 +452,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     }
   };
 
-  const normalizeStoryForSave = (story: Story): Story => {
-    const pages = story.pages.map((page, index) => ({
-      ...page,
-      pageNumber: index + 1,
-      title: page.title?.trim() || `Halaman ${index + 1}`,
-      titleEn: page.titleEn?.trim(),
-      text: page.text.trim(),
-      textEn: page.textEn?.trim(),
-      imageUrl: page.imageUrl?.trim(),
-      illustrationType: page.illustrationType || 'forest',
-      colors: page.colors || createBlankPage(index + 1).colors,
-    }));
-    const storyText = [
-      story.title,
-      story.description,
-      story.moralMessage,
-      ...pages.flatMap((page) => [page.title, page.titleEn || '', page.text, page.textEn || '']),
-    ].join('\n');
-
-    return {
-      ...story,
-      id: story.id.trim(),
-      title: story.title.trim(),
-      author: story.author.trim(),
-      category: story.category.trim(),
-      targetAge: story.targetAge.trim(),
-      description: story.description.trim(),
-      moralMessage: story.moralMessage.trim(),
-      coverImage: story.coverImage.trim(),
-      status: story.status || 'draft',
-      pages,
-      glossary: (story.glossary || []).filter(
-        (item) =>
-          item.wordEn.trim() &&
-          item.translationId.trim() &&
-          includesGlossaryTerm(storyText, [item.wordEn, item.translationId])
-      ),
-    };
-  };
-
-  const validateStory = (story: Story): string[] => {
-    const errors: string[] = [];
-    const normalized = normalizeStoryForSave(story);
-
-    if (!normalized.title) errors.push('Judul buku wajib diisi.');
-    if (!normalized.id.trim()) errors.push('ID buku wajib diisi.');
-    if (!normalized.author) errors.push('Nama penulis wajib diisi.');
-    if (!normalized.category) errors.push('Kategori wajib diisi.');
-    if (!normalized.description) errors.push('Deskripsi singkat wajib diisi.');
-    if (!normalized.coverImage) errors.push('URL cover wajib diisi.');
-    if (normalized.downloadEnabled !== false && (normalized.ebookPrice || 0) < 0) {
-      errors.push('Harga e-book tidak boleh negatif.');
-    }
-    if (normalized.pages.length === 0) errors.push('Buku minimal harus punya 1 halaman.');
-
-    normalized.pages.forEach((page, index) => {
-      if (!page.text) errors.push(`Teks Bahasa Indonesia halaman ${index + 1} masih kosong.`);
-      if (
-        page.illustrationType === 'custom' &&
-        !page.illustrationPrompt?.trim() &&
-        !page.customSvgPath?.trim() &&
-        !page.imageUrl?.trim()
-      ) {
-        errors.push(`Halaman ${index + 1} bertipe custom perlu prompt ilustrasi, path SVG, atau image URL.`);
-      }
-    });
-
-    return errors;
-  };
-
-  // Finance Filter
   const [financeTimeframe, setFinanceTimeframe] = useState<'all' | 'daily' | 'weekly' | 'monthly'>('all');
 
   // Search queries

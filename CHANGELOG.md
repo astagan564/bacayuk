@@ -18,11 +18,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Book Studio maintenance boundaries**: Centralized storybook API requests, types, constants, draft helpers, Quick Create, and the story editor under `src/features/book-studio` while retaining the brief-to-draft, enhancement, translation, and illustration workflow.
 - **Story editor composition**: Replaced the monolithic story editor with focused production-status, illustration-progress, page-canvas, metadata, bilingual-page, preview, interaction-and-quiz, and glossary components. The dialog now coordinates these sections without owning their detailed markup.
 - **Application shell maintenance boundaries**: Moved the global header and catalog/reader workspace into focused components while keeping navigation and reader state coordinated by the application shell.
-- **TypeScript configuration**: Enabled `strictNullChecks` and corrected the `@` path alias to resolve from `src`.
+- **TypeScript configuration**: Enabled full TypeScript `strict` mode and corrected the `@` path alias to resolve from `src`.
+- **Book Studio controller boundary**: Moved translation, enhancement, and resumable illustration lifecycle state out of `AdminDashboard` into a dedicated typed controller hook. Draft mapping, save normalization, and validation now live in a separate pure helper module.
 
 ### Fixed
 - **Duplicate story maker dialog**: Removed a duplicate `StoryMakerModal` render that could mount the same AI story creation interface twice.
 - **Direct-link navigation**: Replaced transient view-only navigation with URL-backed navigation so browser refresh and direct entry preserve the requested frontend section.
+- **Hidden draft typing errors**: Normalized manuscript and AI page drafts before Story mapping and removed implicit callback types from the Admin data store, allowing the complete project to pass strict TypeScript checks.
 
 ## [0.1.0] - 2026-08-10
 
