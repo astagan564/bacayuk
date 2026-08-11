@@ -1,6 +1,6 @@
 import type { ChangeEvent, Dispatch, FormEvent, SetStateAction } from 'react';
 import { AlertCircle, Settings, Sparkles, X } from 'lucide-react';
-import type { QuickCreateForm } from '@/features/book-studio/types';
+import type { PdfImportSummary, QuickCreateForm } from '@/features/book-studio/types';
 import { QuickCreateAdvancedFields } from '@/features/book-studio/components/quick-create/QuickCreateAdvancedFields';
 import { QuickCreateAudienceFields } from '@/features/book-studio/components/quick-create/QuickCreateAudienceFields';
 import { QuickCreateBriefSection } from '@/features/book-studio/components/quick-create/QuickCreateBriefSection';
@@ -9,7 +9,7 @@ import { QuickCreateSubmitFooter } from '@/features/book-studio/components/quick
 export interface QuickCreateDialogProps {
   form: QuickCreateForm;
   errors: string[];
-  pdfImport: { fileName: string; pageCount: number; characterCount: number } | null;
+  pdfImport: PdfImportSummary | null;
   pdfImportProgress: string | null;
   isExtractingPdf: boolean;
   isGenerating: boolean;

@@ -1,12 +1,6 @@
 import type { ChangeEvent, Dispatch, SetStateAction } from 'react';
 import { RefreshCw, Upload } from 'lucide-react';
-import type { QuickCreateForm } from '@/features/book-studio/types';
-
-interface PdfImportSummary {
-  fileName: string;
-  pageCount: number;
-  characterCount: number;
-}
+import type { PdfImportSummary, QuickCreateForm } from '@/features/book-studio/types';
 
 interface QuickCreateBriefSectionProps {
   form: QuickCreateForm;

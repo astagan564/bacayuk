@@ -43,6 +43,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Application route composition**: Replaced the remaining monolithic application root with focused Admin, Settings, Reader, modal, footer, story-bootstrap, toast, changelog, and copy-protection boundaries so route-specific controllers only mount for the active workspace.
 - **Story Maker boundary**: Split reader-facing AI story requests, typed response validation, local fallback generation, quota/controller state, choice controls, and modal presentation into a dedicated feature while retaining the original component compatibility export.
 - **Quick Create presentation boundary**: Split the Admin Quick Create dialog into focused manuscript/PDF import, audience and language, advanced metadata, and generation-summary sections while retaining its existing controller contract and workflow.
+- **Quick Create lifecycle boundary**: Split PDF extraction/OCR and AI/local draft generation into independent abortable controllers, with pure PDF title and manuscript assembly helpers behind the existing Quick Create facade.
 
 ### Fixed
 - **Duplicate story maker dialog**: Removed a duplicate `StoryMakerModal` render that could mount the same AI story creation interface twice.
@@ -61,6 +62,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Voice recorder resource cleanup**: Recording timers, microphone tracks, preview and narration audio, pending permission requests, and Blob URLs are now released safely when recording or playback ends, the recorder closes, or the page changes; duplicate permission/save/delete actions are also blocked while work is running.
 - **Application toast lifecycle**: Repeated notifications now replace their pending dismissal timer, and the timer is cleared when the application unmounts instead of leaving a delayed state callback behind.
 - **Cancelled Story Maker requests**: Closing the Story Maker now aborts pending AI generation and prevents a cancelled request from creating a story or consuming quota after the modal has unmounted; duplicate submissions are also blocked synchronously.
+- **Cancelled Quick Create work**: Closing or reopening Quick Create now cancels active PDF loading, page rendering, OCR, and AI draft requests, preventing stale progress or completed drafts from updating a closed dialog; duplicate imports and submissions are blocked while active.
 
 ## [0.1.0] - 2026-08-10
 

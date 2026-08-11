@@ -122,20 +122,26 @@ export const storybookApi = {
   async extractPdfPageText(
     adminPin: string,
     input: { imageBase64: string; storyId: string; storyTitle: string },
+    signal?: AbortSignal,
   ): Promise<string> {
     const data = await requestJson<{ text?: string }>(
       '/api/admin/extract-pdf-page-text', adminPin,
-      { method: 'POST', body: JSON.stringify(input) }, 'OCR halaman PDF gagal.',
+      { method: 'POST', body: JSON.stringify(input), signal }, 'OCR halaman PDF gagal.',
     );
     return typeof data.text === 'string' ? data.text.trim() : '';
   },
 
-  async generateDraft(adminPin: string, form: QuickCreateForm): Promise<AiBookDraft> {
+  async generateDraft(
+    adminPin: string,
+    form: QuickCreateForm,
+    signal?: AbortSignal,
+  ): Promise<AiBookDraft> {
     const data = await requestJson<{ draft?: AiBookDraft }>(
       '/api/admin/generate-book-draft',
       adminPin,
       {
         method: 'POST',
+        signal,
         body: JSON.stringify({
           ...form,
           visualPreset: form.visualPreset,

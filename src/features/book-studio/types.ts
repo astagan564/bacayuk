@@ -13,6 +13,12 @@ export interface QuickCreateForm {
   tabooContent: string;
 }
 
+export interface PdfImportSummary {
+  fileName: string;
+  pageCount: number;
+  characterCount: number;
+}
+
 export interface PageDraft {
   title: string;
   text: string;
@@ -53,4 +59,3 @@ export interface BookCostEvent {
   output_tokens: number | null;
   created_at: string;
 }
-
