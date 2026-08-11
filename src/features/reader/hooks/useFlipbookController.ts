@@ -7,6 +7,7 @@ import { playInteractionSound, playPageFlipSound } from '@/utils/soundEngine';
 import { speechEngine } from '@/utils/speechEngine';
 import { voiceRecordingsStore } from '@/utils/voiceRecordings';
 import { getPageNarration } from '@/features/reader/helpers/readerPageContent';
+import { revokeAudioBlobUrl } from '@/features/reader/helpers/audioResource';
 
 interface FlipbookControllerOptions {
   story: Story;
@@ -29,6 +30,7 @@ export function useFlipbookController({
   const [isVocabularyQuizOpen, setIsVocabularyQuizOpen] = useState(false);
 
   const activeAudioRef = useRef<HTMLAudioElement | null>(null);
+  const activeAudioUrlRef = useRef<string | null>(null);
   const activeResolveRef = useRef<(() => void) | null>(null);
   const audioRequestIdRef = useRef(0);
   const flipTimerRef = useRef<number | null>(null);
@@ -52,6 +54,8 @@ export function useFlipbookController({
     speechEngine.stop();
     activeAudioRef.current?.pause();
     activeAudioRef.current = null;
+    revokeAudioBlobUrl(activeAudioUrlRef.current);
+    activeAudioUrlRef.current = null;
     activeResolveRef.current?.();
     activeResolveRef.current = null;
   }, []);
@@ -121,12 +125,17 @@ export function useFlipbookController({
     const customAudioUrl = narration.allowCustomRecording
       ? await voiceRecordingsStore.getRecordingUrl(story.id, page.pageNumber)
       : null;
-    if (requestId !== audioRequestIdRef.current) return;
+    if (requestId !== audioRequestIdRef.current) {
+      revokeAudioBlobUrl(customAudioUrl);
+      return;
+    }
 
     await new Promise<void>((resolve) => {
       activeResolveRef.current = resolve;
       const finish = () => {
         activeAudioRef.current = null;
+        revokeAudioBlobUrl(activeAudioUrlRef.current);
+        activeAudioUrlRef.current = null;
         if (activeResolveRef.current !== resolve) return;
         activeResolveRef.current = null;
         resolve();
@@ -135,8 +144,12 @@ export function useFlipbookController({
       if (customAudioUrl) {
         const audio = new Audio(customAudioUrl);
         activeAudioRef.current = audio;
+        activeAudioUrlRef.current = customAudioUrl;
         audio.onended = finish;
         audio.onerror = () => {
+          activeAudioRef.current = null;
+          revokeAudioBlobUrl(activeAudioUrlRef.current);
+          activeAudioUrlRef.current = null;
           speechEngine.speak(narration.text, settings.speechRate, settings.speechPitch, {
             onEnd: finish,
             language: narration.language,

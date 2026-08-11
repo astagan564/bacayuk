@@ -6,7 +6,7 @@ import { RestReminderModal } from '@/components/RestReminderModal';
 import { StatsModal } from '@/components/StatsModal';
 import { StoryMakerModal } from '@/components/StoryMakerModal';
 import { ThumbnailGrid } from '@/components/ThumbnailGrid';
-import { VoiceRecorderModal } from '@/components/VoiceRecorderModal';
+import { VoiceRecorderModal } from '@/features/reader/components/voice-recorder/VoiceRecorderModal';
 import type { ReaderOverlayController } from '@/features/reader/hooks/useReaderOverlayController';
 import type { ReaderSessionController } from '@/features/reader/hooks/useReaderSessionController';
 
