@@ -9,6 +9,8 @@ export type { CustomerInfo } from './download/types';
 export { usePurchaseFlowController } from './hooks/usePurchaseFlowController';
 export { useOfflineDownloadController } from './hooks/useOfflineDownloadController';
 export type { OfflineDownloadController } from './hooks/useOfflineDownloadController';
+export { usePaymentGatewayController } from './hooks/usePaymentGatewayController';
+export type { PaymentGatewayController } from './hooks/usePaymentGatewayController';
 export type {
   PurchaseFlowController,
   PurchaseFlowState,

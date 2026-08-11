@@ -50,6 +50,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Book Studio AI lifecycle boundaries**: Split translation, enhancement, and image-generation workflows into focused controllers coordinated through one abortable single-flight operation boundary.
 - **Vocabulary quiz boundaries**: Moved vocabulary quiz session state, option ordering, question presentation, results, and empty-state rendering into focused Reader modules while retaining the original modal compatibility export.
 - **Admin finance presentation boundaries**: Split finance metrics, coupon creation and listing, and transaction history into focused typed Admin components while retaining the existing finance-controller contract.
+- **Payment checkout lifecycle boundaries**: Split customer and coupon state, Midtrans Snap orchestration, and verified receipt finalization into focused Commerce modules while retaining the existing payment-gateway facade.
 
 ### Fixed
 - **Duplicate story maker dialog**: Removed a duplicate `StoryMakerModal` render that could mount the same AI story creation interface twice.
@@ -72,6 +73,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Flipbook lifecycle races**: Synchronous page-flip locking now blocks overlapping rapid click, keyboard, and swipe transitions, while cancelled autoplay delays and narration resources are settled and released deterministically.
 - **Stale Book Studio AI results**: Closing or switching the edited story now aborts active AI requests, overlapping AI operations are rejected synchronously, and completed responses merge into the current draft instead of overwriting newer manual edits.
 - **Vocabulary quiz input lifecycle**: Synchronous answer and navigation locks prevent rapid taps from scoring or advancing twice, and active pronunciation now stops when the quiz advances, restarts, closes, or unmounts.
+- **Duplicate and stale checkout callbacks**: Payment creation now uses a synchronous single-session lock, aborts pending verification when the modal unmounts, and ignores repeated or stale Midtrans terminal callbacks before granting access.
 
 ## [0.1.0] - 2026-08-10
 
