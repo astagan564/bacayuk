@@ -1176,20 +1176,19 @@ JSON shape:
         continuityRules: productionGuide.continuityRules,
         negativePrompt: productionGuide.negativePrompt,
       }).slice(0, 7000);
-      const pages = Array.isArray(req.body?.pages)
-        ? req.body.pages
-            .map((item: unknown, index: number) => {
-              const page = asRecord(item);
-              return {
-                pageNumber: Number(page.pageNumber) || index + 1,
-                title: cleanOneLine(page.title, 100, `Halaman ${index + 1}`),
-                text: cleanAiText(page.text, 1800),
-                illustrationType: normalizeIllustrationType(page.illustrationType, `${page.title || ''} ${page.text || ''}`),
-              };
-            })
-            .filter((page) => page.text)
-            .slice(0, 12)
-        : [];
+      const rawPages: unknown[] = Array.isArray(req.body?.pages) ? req.body.pages : [];
+      const pages = rawPages
+        .map((item, index) => {
+          const page = asRecord(item);
+          return {
+            pageNumber: Number(page.pageNumber) || index + 1,
+            title: cleanOneLine(page.title, 100, `Halaman ${index + 1}`),
+            text: cleanAiText(page.text, 1800),
+            illustrationType: normalizeIllustrationType(page.illustrationType, `${page.title || ''} ${page.text || ''}`),
+          };
+        })
+        .filter((page) => page.text)
+        .slice(0, 12);
 
       if (!['illustration', 'glossary', 'quiz_interactions'].includes(mode as string)) {
         return res.status(400).json({ error: 'Mode enhancement tidak valid.' });
@@ -1530,18 +1529,17 @@ FINAL CHECK: The finished artwork must contain no visible written characters of 
 
     try {
       const title = typeof req.body?.title === 'string' ? req.body.title.trim().slice(0, 120) : 'BacaYuk Story';
-      const pages = Array.isArray(req.body?.pages)
-        ? req.body.pages
-            .map((page: unknown, index: number) => {
-              const item = page as Record<string, unknown>;
-              return {
-                pageNumber: Number(item.pageNumber) || index + 1,
-                title: typeof item.title === 'string' ? item.title.trim().slice(0, 120) : '',
-                text: typeof item.text === 'string' ? item.text.trim().slice(0, 1800) : '',
-              };
-            })
-            .filter((page) => page.text)
-        : [];
+      const rawPages: unknown[] = Array.isArray(req.body?.pages) ? req.body.pages : [];
+      const pages = rawPages
+        .map((page, index) => {
+          const item = page as Record<string, unknown>;
+          return {
+            pageNumber: Number(item.pageNumber) || index + 1,
+            title: typeof item.title === 'string' ? item.title.trim().slice(0, 120) : '',
+            text: typeof item.text === 'string' ? item.text.trim().slice(0, 1800) : '',
+          };
+        })
+        .filter((page) => page.text);
 
       if (pages.length === 0) {
         return res.status(400).json({ error: 'Tidak ada teks halaman untuk diterjemahkan.' });
