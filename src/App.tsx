@@ -8,21 +8,18 @@ import { InteractiveQuizModal } from './components/InteractiveQuizModal';
 import { RestReminderModal } from './components/RestReminderModal';
 import { StatsModal } from './components/StatsModal';
 import { VoiceRecorderModal } from './components/VoiceRecorderModal';
-import { PaymentGatewayModal } from './components/PaymentGatewayModal';
-import { OfflineDownloadModal } from './components/OfflineDownloadModal';
 import { ParentLoginModal } from './components/ParentLoginModal';
 import { BookCompletionModal } from './components/BookCompletionModal';
 import { UserSettingsView } from './components/UserSettings';
 import { ParentalGateModal } from './components/ParentalGateModal';
 import { ChangelogModal } from './components/ChangelogModal';
-import { VipOfferModal } from './components/VipOfferModal';
 import { AdminPinDialog } from './features/admin/components/AdminPinDialog';
 import { useAdminAccessController } from './features/admin/hooks/useAdminAccessController';
 import { useUserSessionController } from './features/account';
+import { PurchaseFlowModals, usePurchaseFlowController } from './features/commerce';
 import { ApplicationHeader } from './features/shell/components/ApplicationHeader';
 import { LibraryWorkspace, useReadingProgressController } from './features/reader';
 import { userAuthStore } from './utils/userAuthStore';
-import { paymentStore } from './utils/paymentStore';
 import { adminStore } from './utils/adminStore';
 import { storyStore } from './utils/storyStore';
 import { speechEngine } from './utils/speechEngine';
@@ -49,18 +46,10 @@ export default function App() {
 
   const [showStatsModal, setShowStatsModal] = useState<boolean>(false);
   
-  const [showVipOfferModal, setShowVipOfferModal] = useState<boolean>(false);
-  const [vipSubscriptionGate, setVipSubscriptionGate] = useState<boolean>(false);
-  const [vipSubscriptionPayment, setVipSubscriptionPayment] = useState<boolean>(false);
-
   const [voiceRecorderTarget, setVoiceRecorderTarget] = useState<{
     pageNum: number;
     pageText: string;
   } | null>(null);
-
-  const [paymentStoryTarget, setPaymentStoryTarget] = useState<Story | null>(null);
-  const [downloadStoryTarget, setDownloadStoryTarget] = useState<Story | null>(null);
-  const [parentalGateTarget, setParentalGateTarget] = useState<Story | null>(null);
 
   const [showChangelogModal, setShowChangelogModal] = useState<boolean>(false);
   const [showWhatsNewDropdown, setShowWhatsNewDropdown] = useState(false);
@@ -225,6 +214,11 @@ export default function App() {
   const [isThumbnailsOpen, setIsThumbnailsOpen] = useState(false);
   const [isStoryMakerOpen, setIsStoryMakerOpen] = useState(false);
   const [activeQuizPage, setActiveQuizPage] = useState<StoryPage | null>(null);
+  const handleVipActivated = useCallback(() => setIsStoryMakerOpen(true), []);
+  const purchaseFlow = usePurchaseFlowController({
+    onVipActivated: handleVipActivated,
+    showToast,
+  });
 
   const handleSelectStory = (story: Story, targetPage?: number) => {
     // Check if online reading is permitted (1 free book for guest, unlimited for logged-in parents)
@@ -386,17 +380,8 @@ export default function App() {
         onCompleteBook={(story) => {
           handleCompleteStory(story.id);
         }}
-        onOpenOfflineDownload={(story) => {
-          if (userAuthStore.isVip() || paymentStore.isStoryPurchased(story.id)) {
-            setDownloadStoryTarget(story);
-          } else {
-            setPaymentStoryTarget(story);
-          }
-        }}
-        onOpenPayment={(story) => {
-          if (userAuthStore.isVip()) setDownloadStoryTarget(story);
-          else setParentalGateTarget(story);
-        }}
+        onOpenOfflineDownload={purchaseFlow.requestOfflineDownload}
+        onOpenPayment={purchaseFlow.requestBookPurchase}
         onOpenQuiz={(story, pageIndex) => {
           const page = story.pages[pageIndex];
           if (page) setActiveQuizPage(page);
@@ -411,7 +396,7 @@ export default function App() {
             if ((user.aiStoriesUsed || 0) >= 10) showToast('Kuota buat cerita bulan ini sudah habis.');
             else setIsStoryMakerOpen(true);
           } else {
-            setShowVipOfferModal(true);
+            purchaseFlow.offerVip();
           }
         }}
         onOpenVoiceRecorder={(story, pageIndex) => {
@@ -499,42 +484,7 @@ export default function App() {
         />
       )}
 
-      {/* 14. Modals */}
-      {showVipOfferModal && (
-        <VipOfferModal
-          onClose={() => setShowVipOfferModal(false)}
-          onSubscribe={() => {
-            setShowVipOfferModal(false);
-            setVipSubscriptionGate(true); // Open parental gate before payment
-          }}
-        />
-      )}
-
-      {vipSubscriptionGate && (
-        <ParentalGateModal
-          onCancel={() => setVipSubscriptionGate(false)}
-          onSuccess={() => {
-            setVipSubscriptionGate(false);
-            setVipSubscriptionPayment(true);
-          }}
-        />
-      )}
-
-      {vipSubscriptionPayment && (
-        <PaymentGatewayModal
-          isVipOnly={true}
-          onClose={() => setVipSubscriptionPayment(false)}
-          onPaymentSuccess={(receipt) => {
-            setVipSubscriptionPayment(false);
-            setToastMessage('🎉 Pembayaran VIP Berhasil! Fitur AI telah terbuka.');
-            setTimeout(() => setToastMessage(null), 5000);
-            
-            // Activate VIP in store
-            userAuthStore.activateVip();
-            setIsStoryMakerOpen(true);
-          }}
-        />
-      )}
+      <PurchaseFlowModals flow={purchaseFlow} isNight={isNight} />
 
       {/* Reading Statistics Modal */}
       {showStatsModal && (
@@ -563,43 +513,6 @@ export default function App() {
         />
       )}
 
-      {/* Parental Gate Modal (Math Challenge for Parents before Payment) */}
-      {parentalGateTarget && (
-        <ParentalGateModal
-          onSuccess={() => {
-            const target = parentalGateTarget;
-            setParentalGateTarget(null);
-            setPaymentStoryTarget(target);
-          }}
-          onCancel={() => setParentalGateTarget(null)}
-          isNight={isNight}
-        />
-      )}
-
-      {/* Payment Gateway Modal (Midtrans Simulation) */}
-      {paymentStoryTarget && (
-        <PaymentGatewayModal
-          story={paymentStoryTarget}
-          onClose={() => setPaymentStoryTarget(null)}
-          onPaymentSuccess={(receipt) => {
-            const target = paymentStoryTarget;
-            setPaymentStoryTarget(null);
-            setDownloadStoryTarget(target);
-            showToast(`🎉 Pembayaran berhasil! Akses unduhan offline untuk ${receipt.storyTitle} telah aktif.`);
-          }}
-          isNight={isNight}
-        />
-      )}
-
-      {/* Offline Download Modal (PDF & EPUB with Social Watermark) */}
-      {downloadStoryTarget && (
-        <OfflineDownloadModal
-          story={downloadStoryTarget}
-          onClose={() => setDownloadStoryTarget(null)}
-          isNight={isNight}
-        />
-      )}
-
       {/* Book Completion Appreciation Celebration Modal */}
       {showCompletionModal && selectedStory && (
         <BookCompletionModal
@@ -622,11 +535,7 @@ export default function App() {
           }}
           onOpenOfflineDownload={() => {
             closeCompletionModal();
-            if (userAuthStore.isVip() || paymentStore.isStoryPurchased(selectedStory.id)) {
-              setDownloadStoryTarget(selectedStory);
-            } else {
-              setParentalGateTarget(selectedStory);
-            }
+            purchaseFlow.requestBookPurchase(selectedStory);
           }}
           isNight={isNight}
         />
