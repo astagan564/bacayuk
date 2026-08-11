@@ -2,7 +2,7 @@ import type { MouseEvent } from 'react';
 import type { GlossaryItem, InteractiveElement, ReadingSettings, Story, StoryPage } from '@/types';
 import type { VocabDefinition } from '@/data/vocabulary';
 import { StoryIllustration } from '@/components/Illustrations';
-import { InteractiveStoryText } from '@/components/InteractiveStoryText';
+import { InteractiveStoryText } from '@/features/reader/components/text/InteractiveStoryText';
 import { StoryInteractiveElements } from '@/features/reader/components/flipbook/StoryInteractiveElements';
 import {
   getDisplayedPageTitle,

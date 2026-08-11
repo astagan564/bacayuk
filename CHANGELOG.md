@@ -38,6 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Download generator boundary**: Split PDF rendering, EPUB document assembly, HTML escaping, and stored ZIP encoding into focused Commerce download modules while retaining the original `fileGenerators` compatibility exports.
 - **Admin data-store boundaries**: Split global settings, coupons, transactions, reading analytics, Supabase persistence, and cleanup maintenance into focused Admin modules while retaining the original `adminStore` compatibility facade.
 - **Offline download boundary**: Split offline-license state, token renewal, file-save handling, PDF/EPUB generation orchestration, and format presentation into focused Commerce modules while retaining the original modal compatibility export.
+- **Interactive story-text boundary**: Split bilingual presentation, Markdown parsing, inline formatting, and vocabulary/glossary highlighting into focused Reader modules while retaining the original component compatibility export.
 
 ### Fixed
 - **Duplicate story maker dialog**: Removed a duplicate `StoryMakerModal` render that could mount the same AI story creation interface twice.
@@ -52,6 +53,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Unmounted payment callbacks**: Async transaction and Midtrans callbacks no longer update checkout state after the payment modal has been closed.
 - **Reader media cleanup**: Reader navigation and unmounting now cancel pending page-flip and interaction timers, stale narration lookups, and active custom recordings so media cannot continue on the wrong page or story.
 - **Offline download lifecycle**: Closing the download modal now prevents pending generation and notice callbacks from updating unmounted UI, and PDF/EPUB generation can no longer run concurrently for the same modal.
+- **Mixed story lists**: Adjacent numbered and bulleted Markdown lists now retain both groups instead of silently dropping the preceding list.
 
 ## [0.1.0] - 2026-08-10
 

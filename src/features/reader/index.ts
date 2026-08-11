@@ -5,6 +5,8 @@ export { StorySelector } from './components/catalog/StorySelector';
 export type { StorySelectorProps, StoryLibraryView, StoryProgress } from './types/storyCatalog';
 export { ReaderOverlayModals } from './components/ReaderOverlayModals';
 export { ReaderNavigationControls } from './components/navigation/ReaderNavigationControls';
+export { InteractiveStoryText } from './components/text/InteractiveStoryText';
+export type { InteractiveStoryTextProps } from './types/interactiveStoryText';
 export { useReadingProgressController } from './hooks/useReadingProgressController';
 export { useReaderSettingsController } from './hooks/useReaderSettingsController';
 export { useReaderSessionController } from './hooks/useReaderSessionController';
