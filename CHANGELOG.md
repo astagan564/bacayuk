@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **TypeScript configuration**: Enabled full TypeScript `strict` mode and corrected the `@` path alias to resolve from `src`.
 - **Book Studio controller boundary**: Moved translation, enhancement, and resumable illustration lifecycle state out of `AdminDashboard` into a dedicated typed controller hook. Draft mapping, save normalization, and validation now live in a separate pure helper module.
 - **Quick Create controller boundary**: Moved Quick Create form state, PDF text extraction and OCR progress, AI draft generation, local manuscript fallback, and dialog reset behavior into a dedicated Book Studio controller. `AdminDashboard` now coordinates the resulting draft instead of implementing the import and generation workflow itself.
+- **Admin operations controller boundaries**: Moved coupon and transaction state, global settings and cleanup actions, and cost-ledger loading and calculations into dedicated typed controllers. Admin tabs now receive explicit state and actions through the Admin feature boundary instead of accessing persistence directly.
 
 ### Fixed
 - **Duplicate story maker dialog**: Removed a duplicate `StoryMakerModal` render that could mount the same AI story creation interface twice.

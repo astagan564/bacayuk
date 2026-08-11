@@ -1,7 +1,7 @@
 import type { FormEvent } from 'react';
-import type { AdminSettings,TransactionRecord } from '@/utils/adminStore'; import {adminStore} from '@/utils/adminStore'; import {CheckCircle2,Clock,Megaphone,RefreshCw} from 'lucide-react';
-interface Props{settings:AdminSettings;cronStatus:string|null;onSettingsChange:(s:AdminSettings)=>void;onCronStatusChange:(s:string|null)=>void;onTransactionsChange:(t:TransactionRecord[])=>void;onSubmit:(e:FormEvent)=>void;onToast:(m:string)=>void}
-export function AdminSettingsTab({settings,cronStatus,onSettingsChange:setSettings,onCronStatusChange:setCronStatus,onTransactionsChange:setTransactions,onSubmit:handleSaveSettings,onToast:showToast}:Props){return(
+import type { AdminSettings } from '@/utils/adminStore'; import {CheckCircle2,Clock,Megaphone,RefreshCw} from 'lucide-react';
+interface Props{settings:AdminSettings;cronStatus:string|null;onSettingsChange:(s:AdminSettings)=>void;onRunCleanup:()=>void;onSubmit:(e:FormEvent)=>void}
+export function AdminSettingsTab({settings,cronStatus,onSettingsChange:setSettings,onRunCleanup,onSubmit:handleSaveSettings}:Props){return(
 <form onSubmit={handleSaveSettings} className="flex flex-col gap-6">
   <div className="p-4 rounded-2xl border-2 border-default bg-surface flex flex-col gap-4">
     <h3 className="text-base font-black flex items-center gap-2">
@@ -152,12 +152,7 @@ export function AdminSettingsTab({settings,cronStatus,onSettingsChange:setSettin
 
           <button
             type="button"
-            onClick={() => {
-              const res = adminStore.runCronJobCleanup();
-              setCronStatus(`[${res.timestamp}] ${res.message}`);
-              showToast(`🧹 Pembersihan Cron Job berhasil! ${res.purgedCount} link kedaluwarsa dibersihkan.`);
-              setTransactions(adminStore.getTransactions());
-            }}
+            onClick={onRunCleanup}
             className="px-4 py-2 rounded-xl bg-brand-blue hover:opacity-90 text-white font-black text-xs shadow-md transition-all flex items-center gap-1.5"
           >
             <RefreshCw className="w-3.5 h-3.5" />
@@ -183,4 +178,3 @@ export function AdminSettingsTab({settings,cronStatus,onSettingsChange:setSettin
   </button>
 </form>
 );}
-

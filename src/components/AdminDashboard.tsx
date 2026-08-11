@@ -8,9 +8,6 @@ import bacaYukLogo from '../assets/bacayuk-logo.svg';
 import bacaYukMark from '../assets/bacayuk-mark.svg';
 import {
   adminStore,
-  AdminSettings,
-  DiscountCoupon,
-  TransactionRecord,
   UserReadingActivity,
 } from '../utils/adminStore';
 import { userAuthStore, UserAccount } from '../utils/userAuthStore';
@@ -30,14 +27,18 @@ import {
   useStoryAiController,
   visualPresetLabel,
 } from '../features/book-studio';
-import type { BookCostEvent } from '../features/book-studio';
 import { QuickCreateDialog } from '../features/book-studio/components/QuickCreateDialog';
-import { UsersTab } from '../features/admin/components/UsersTab';
-import { FinanceTab } from '../features/admin/components/FinanceTab';
-import { CostLedgerTab } from '../features/admin/components/CostLedgerTab';
-import { AdminSettingsTab } from '../features/admin/components/AdminSettingsTab';
-import { AnalyticsTab } from '../features/admin/components/AnalyticsTab';
-import { StoriesTab } from '../features/admin/components/StoriesTab';
+import {
+  AdminSettingsTab,
+  AnalyticsTab,
+  CostLedgerTab,
+  FinanceTab,
+  StoriesTab,
+  UsersTab,
+  useAdminFinanceController,
+  useAdminSettingsController,
+  useCostLedgerController,
+} from '../features/admin';
 import { StoryEditorDialog } from '../features/book-studio/components/StoryEditorDialog';
 import {
   X,
@@ -83,21 +84,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 }) => {
   const [internalActiveTab, setInternalActiveTab] = useState<AdminSection>('cms');
   const activeTab = activeSection ?? internalActiveTab;
-  const [cronStatus, setCronStatus] = useState<string | null>(null);
-
-  // Admin Settings State
-  const [settings, setSettings] = useState<AdminSettings>(() => adminStore.getSettings());
-  // Coupons State
-  const [coupons, setCoupons] = useState<DiscountCoupon[]>(() => adminStore.getCoupons());
-  // Transactions State
-  const [transactions, setTransactions] = useState<TransactionRecord[]>(() => adminStore.getTransactions());
-  const [costEvents, setCostEvents] = useState<BookCostEvent[]>([]);
-  const [costLedgerError, setCostLedgerError] = useState<string | null>(null);
   // Reading Logs
-  const [readingLogs, setReadingLogs] = useState<UserReadingActivity[]>(() => adminStore.getReadingLogs());
+  const [readingLogs] = useState<UserReadingActivity[]>(() => adminStore.getReadingLogs());
 
   // Show only the actual account currently signed in on this device.
-  const [userList, setUserList] = useState<UserAccount[]>(() => {
+  const [userList] = useState<UserAccount[]>(() => {
     const current = userAuthStore.getUser();
     return current && !LEGACY_DEMO_USER_IDS.has(current.id) ? [current] : [];
   });
@@ -110,18 +101,53 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [showAdvancedEditor, setShowAdvancedEditor] = useState(false);
   const [interactionPlaceMode, setInteractionPlaceMode] = useState(false);
 
-  // New Coupon Form State
-  const [newCouponCode, setNewCouponCode] = useState('');
-  const [newCouponType, setNewCouponType] = useState<'percent' | 'fixed'>('percent');
-  const [newCouponValue, setNewCouponValue] = useState(20);
-  const [showCouponForm, setShowCouponForm] = useState(false);
-
   // Toast / Feedback message
   const [toast, setToast] = useState<string | null>(null);
   const showToast = useCallback((msg: string) => {
     setToast(msg);
     setTimeout(() => setToast(null), 3000);
   }, []);
+
+  const {
+    coupons,
+    transactions,
+    newCouponCode,
+    newCouponType,
+    newCouponValue,
+    showCouponForm,
+    successfulTransactions: successTrxs,
+    pendingTransactions: pendingTrxs,
+    totalRevenue,
+    setNewCouponCode,
+    setNewCouponType,
+    setNewCouponValue,
+    setShowCouponForm,
+    refreshTransactions,
+    handleCreateCoupon,
+    handleToggleCoupon,
+    handleDeleteCoupon,
+    handleUpdateTransactionStatus: handleUpdateTrxStatus,
+  } = useAdminFinanceController({ showToast });
+
+  const {
+    settings,
+    cronStatus,
+    setSettings,
+    handleSaveSettings,
+    handleRunCleanup,
+  } = useAdminSettingsController({
+    onTransactionsRefresh: refreshTransactions,
+    showToast,
+  });
+
+  const {
+    error: costLedgerError,
+    totalAiCost,
+    totalPaymentFee,
+    netProfit,
+    storyRows: storyCostRows,
+    loadCostEvents,
+  } = useCostLedgerController({ adminPin, totalRevenue });
 
   const openDraftInEditor = useCallback((draftStory: Story) => {
     setEditingStory(draftStory);
@@ -153,20 +179,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     onDraftReady: openDraftInEditor,
     showToast,
   });
-
-  const loadCostEvents = async () => {
-    if (!adminPin) return;
-    try {
-      setCostEvents(await storybookApi.getCostEvents(adminPin));
-      setCostLedgerError(null);
-    } catch (error) {
-      setCostLedgerError(error instanceof Error ? error.message : 'Ledger biaya belum dapat dimuat.');
-    }
-  };
-
-  useEffect(() => {
-    void loadCostEvents();
-  }, [adminPin]);
 
   useEffect(() => {
     if (routeAction === 'new') {
@@ -267,18 +279,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     showToast('Interaksi ditaruh di canvas.');
   };
 
-  const [financeTimeframe, setFinanceTimeframe] = useState<'all' | 'daily' | 'weekly' | 'monthly'>('all');
-
   // Search queries
   const [userSearchQuery, setUserSearchQuery] = useState('');
-  const [trxSearchQuery, setTrxSearchQuery] = useState('');
-
-  // Handle saving global admin settings
-  const handleSaveSettings = (e: React.FormEvent) => {
-    e.preventDefault();
-    adminStore.saveSettings(settings);
-    showToast('Pengaturan berhasil disimpan.');
-  };
 
   // Handle editing/saving story in CMS
   const handleSaveStoryCMS = async (e: React.FormEvent) => {
@@ -318,51 +320,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     }
   };
 
-  // Handle Adding New Coupon
-  const handleCreateCoupon = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newCouponCode.trim()) return;
-
-    const code = newCouponCode.trim().toUpperCase();
-    const newCoupon: DiscountCoupon = {
-      code,
-      type: newCouponType,
-      value: Number(newCouponValue),
-      usageCount: 0,
-      isActive: true,
-    };
-
-    const updated = [newCoupon, ...coupons];
-    setCoupons(updated);
-    adminStore.saveCoupons(updated);
-    setNewCouponCode('');
-    setShowCouponForm(false);
-    showToast(`Kupon ${code} dibuat.`);
-  };
-
-  // Toggle Coupon Active Status
-  const handleToggleCoupon = (code: string) => {
-    const updated = coupons.map((c) => (c.code === code ? { ...c, isActive: !c.isActive } : c));
-    setCoupons(updated);
-    adminStore.saveCoupons(updated);
-  };
-
-  // Delete Coupon
-  const handleDeleteCoupon = (code: string) => {
-    const updated = coupons.filter((c) => c.code !== code);
-    setCoupons(updated);
-    adminStore.saveCoupons(updated);
-    showToast(`Kupon ${code} dihapus.`);
-  };
-
-  // Change Transaction Status
-  const handleUpdateTrxStatus = (id: string, newStatus: 'success' | 'pending' | 'expired') => {
-    adminStore.updateTransactionStatus(id, newStatus);
-    const updated = adminStore.getTransactions();
-    setTransactions(updated);
-    showToast(`Status transaksi #${id} menjadi ${newStatus}.`);
-  };
-
   // Export Users CSV
   const handleExportUsersCSV = () => {
     const headers = ['ID,Nama,Email,No_WhatsApp,Metode_Login,Tanggal_Daftar'];
@@ -381,39 +338,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     URL.revokeObjectURL(url);
     showToast('Data orang tua diekspor ke CSV.');
   };
-
-  // Calculate Financial Stats
-  const successTrxs = transactions.filter((t) => t.status === 'success');
-  const pendingTrxs = transactions.filter((t) => t.status === 'pending');
-  const totalRevenue = successTrxs.reduce((sum, t) => sum + t.amount, 0);
-  const totalAiCost = costEvents
-    .filter((event) => event.event_type !== 'payment_fee')
-    .reduce((sum, event) => sum + event.amount_idr, 0);
-  const totalPaymentFee = costEvents
-    .filter((event) => event.event_type === 'payment_fee')
-    .reduce((sum, event) => sum + event.amount_idr, 0);
-  const netProfit = totalRevenue - totalAiCost - totalPaymentFee;
-  const storyCostRows = Object.values(costEvents.reduce<Record<string, {
-    storyId: string;
-    title: string;
-    aiCost: number;
-    paymentFee: number;
-    imageCount: number;
-  }>>((rows, event) => {
-    const storyId = event.story_id || 'belum-tertaut';
-    const row = rows[storyId] || {
-      storyId,
-      title: event.story_title || 'Biaya belum ditautkan ke buku',
-      aiCost: 0,
-      paymentFee: 0,
-      imageCount: 0,
-    };
-    if (event.event_type === 'payment_fee') row.paymentFee += event.amount_idr;
-    else row.aiCost += event.amount_idr;
-    if (event.event_type === 'image_generation') row.imageCount += 1;
-    rows[storyId] = row;
-    return rows;
-  }, {})).sort((a, b) => (b.aiCost + b.paymentFee) - (a.aiCost + a.paymentFee));
 
   return (
     <div className="min-h-screen w-full flex overflow-hidden animate-fade-in bg-background text-primary">
@@ -548,7 +472,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
         {activeTab === 'costs' && <CostLedgerTab error={costLedgerError} totalRevenue={totalRevenue} totalAiCost={totalAiCost} totalPaymentFee={totalPaymentFee} netProfit={netProfit} storyRows={storyCostRows} onReload={() => void loadCostEvents()} />}
 
-        {activeTab === 'settings' && <AdminSettingsTab settings={settings} cronStatus={cronStatus} onSettingsChange={setSettings} onCronStatusChange={setCronStatus} onTransactionsChange={setTransactions} onSubmit={handleSaveSettings} onToast={showToast} />}
+        {activeTab === 'settings' && <AdminSettingsTab settings={settings} cronStatus={cronStatus} onSettingsChange={setSettings} onRunCleanup={handleRunCleanup} onSubmit={handleSaveSettings} />}
 
         {activeTab === 'analytics' && <AnalyticsTab stories={stories} />}
 
