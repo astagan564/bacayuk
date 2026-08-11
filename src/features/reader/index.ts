@@ -18,6 +18,15 @@ export { useReaderSessionController } from './hooks/useReaderSessionController';
 export type { ReaderSessionController } from './hooks/useReaderSessionController';
 export { useReaderOverlayController } from './hooks/useReaderOverlayController';
 export type { ReaderOverlayController } from './hooks/useReaderOverlayController';
+export { useFlipbookController } from './hooks/useFlipbookController';
+export type { FlipbookController } from './hooks/useFlipbookController';
+export { useReaderNarrationController } from './hooks/useReaderNarrationController';
+export type { ReaderNarrationController } from './hooks/useReaderNarrationController';
+export { useFlipbookPageNavigation } from './hooks/useFlipbookPageNavigation';
+export type { FlipbookPageNavigation } from './hooks/useFlipbookPageNavigation';
+export { useFlipbookInteractionController } from './hooks/useFlipbookInteractionController';
+export type { FlipbookInteractionController } from './hooks/useFlipbookInteractionController';
+export { useFlipbookAutoplay } from './hooks/useFlipbookAutoplay';
 export { readingProgressStore } from './stores/readingProgressStore';
 export type {
   CompletedStories,
