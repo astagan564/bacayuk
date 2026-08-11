@@ -1,11 +1,6 @@
-import { Story } from '../types';
-import momoStorybookPackage from '../../generated-books/momo-dan-bayangan-yang-takut-gelap/story.json';
-import lalaStorybookPackage from '../../generated-books/sepatu-merah-lala-ingin-berlari/story.json';
+import type { Story } from '../types';
 
-export const BUNDLED_CATALOG_STORIES: Story[] = [
-  momoStorybookPackage.story as Story,
-  lalaStorybookPackage.story as Story,
-];
+export const BUNDLED_CATALOG_STORIES: Story[] = [];
 
 export const mergeBundledCatalogStories = (stories: Story[]): Story[] => {
   const storyById = new Map(stories.map((story) => [story.id, story]));

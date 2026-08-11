@@ -52,6 +52,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Admin finance presentation boundaries**: Split finance metrics, coupon creation and listing, and transaction history into focused typed Admin components while retaining the existing finance-controller contract.
 - **Payment checkout lifecycle boundaries**: Split customer and coupon state, Midtrans Snap orchestration, and verified receipt finalization into focused Commerce modules while retaining the existing payment-gateway facade.
 - **Story metadata editor boundaries**: Split Book Studio identity, catalog preview, reader access, and offline-download settings into focused typed components coordinated through one functional draft-update boundary.
+- **Desktop reader control boundaries**: Split desktop page navigation, reading preferences, and reader tools into focused components while retaining the shared navigation controller and control contract.
 
 ### Fixed
 - **Duplicate story maker dialog**: Removed a duplicate `StoryMakerModal` render that could mount the same AI story creation interface twice.
@@ -75,6 +76,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Stale Book Studio AI results**: Closing or switching the edited story now aborts active AI requests, overlapping AI operations are rejected synchronously, and completed responses merge into the current draft instead of overwriting newer manual edits.
 - **Vocabulary quiz input lifecycle**: Synchronous answer and navigation locks prevent rapid taps from scoring or advancing twice, and active pronunciation now stops when the quiz advances, restarts, closes, or unmounts.
 - **Duplicate and stale checkout callbacks**: Payment creation now uses a synchronous single-session lock, aborts pending verification when the modal unmounts, and ignores repeated or stale Midtrans terminal callbacks before granting access.
+- **Supabase catalog source**: Removed stale build-time imports for two generated books that now live in Supabase, restoring TypeScript and production builds after their local packages were intentionally removed.
 
 ## [0.1.0] - 2026-08-10
 
