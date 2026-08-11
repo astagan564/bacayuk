@@ -36,6 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Commerce flow state machine**: Replaced separate VIP, parental-gate, book-payment, and download modal booleans with one typed purchase flow and a dedicated Commerce modal composer.
 - **Payment gateway boundary**: Moved typed transaction and verification requests, Midtrans Snap loading, checkout state, purchase recording, and focused checkout/success views into the Commerce feature.
 - **Download generator boundary**: Split PDF rendering, EPUB document assembly, HTML escaping, and stored ZIP encoding into focused Commerce download modules while retaining the original `fileGenerators` compatibility exports.
+- **Admin data-store boundaries**: Split global settings, coupons, transactions, reading analytics, Supabase persistence, and cleanup maintenance into focused Admin modules while retaining the original `adminStore` compatibility facade.
 
 ### Fixed
 - **Duplicate story maker dialog**: Removed a duplicate `StoryMakerModal` render that could mount the same AI story creation interface twice.
