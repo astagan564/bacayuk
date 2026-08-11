@@ -27,6 +27,10 @@ export type { FlipbookPageNavigation } from './hooks/useFlipbookPageNavigation';
 export { useFlipbookInteractionController } from './hooks/useFlipbookInteractionController';
 export type { FlipbookInteractionController } from './hooks/useFlipbookInteractionController';
 export { useFlipbookAutoplay } from './hooks/useFlipbookAutoplay';
+export { VocabularyQuizModal } from './components/vocabulary-quiz/VocabularyQuizModal';
+export type { VocabularyQuizModalProps } from './types/vocabularyQuiz';
+export { useVocabularyQuizController } from './hooks/useVocabularyQuizController';
+export type { VocabularyQuizController } from './hooks/useVocabularyQuizController';
 export { readingProgressStore } from './stores/readingProgressStore';
 export type {
   CompletedStories,
