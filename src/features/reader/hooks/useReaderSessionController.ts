@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import { useNavigate, useRouterState } from '@tanstack/react-router';
 import type { Story } from '@/types';
-import type { FlipbookHandle } from '@/components/Flipbook3D';
+import type { FlipbookHandle } from '@/features/reader/types/flipbook';
 import type { UserAccount } from '@/utils/userAuthStore';
 import { speechEngine } from '@/utils/speechEngine';
 import { storyStore } from '@/utils/storyStore';

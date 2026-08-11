@@ -1,8 +1,9 @@
 import type { RefObject } from 'react';
 import type { PersonalLibrary } from '@/features/account';
 import type { ReadingSettings, Story } from '../../../types';
-import { Flipbook3D, type FlipbookHandle } from '../../../components/Flipbook3D';
 import { StorySelector } from '../../../components/StorySelector';
+import { Flipbook3D } from '@/features/reader/components/flipbook/Flipbook3D';
+import type { FlipbookHandle } from '@/features/reader/types/flipbook';
 import { ReaderNavigationControls } from '@/features/reader/components/navigation/ReaderNavigationControls';
 
 interface LibraryWorkspaceProps {
