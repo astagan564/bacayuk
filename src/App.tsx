@@ -19,12 +19,11 @@ import { VipOfferModal } from './components/VipOfferModal';
 import { AdminPinDialog } from './features/admin/components/AdminPinDialog';
 import { useAdminAccessController } from './features/admin/hooks/useAdminAccessController';
 import { ApplicationHeader } from './features/shell/components/ApplicationHeader';
-import { LibraryWorkspace } from './features/reader/components/LibraryWorkspace';
+import { LibraryWorkspace, useReadingProgressController } from './features/reader';
 import { userAuthStore, UserAccount } from './utils/userAuthStore';
 import { paymentStore } from './utils/paymentStore';
 import { adminStore } from './utils/adminStore';
 import { storyStore } from './utils/storyStore';
-import { userSettingsStore } from './utils/userSettingsStore';
 import { speechEngine } from './utils/speechEngine';
 import { PersonalLibrary, personalLibraryStore } from './utils/personalLibraryStore';
 import packageJson from '../package.json';
@@ -48,65 +47,6 @@ export default function App() {
   const [selectedStory, setSelectedStory] = useState<Story | null>(null);
   const [currentPageIndex, setCurrentPageIndex] = useState<number>(0);
 
-  // Bookmarks stored in localStorage as { [storyId: string]: number }
-  const [bookmarks, setBookmarks] = useState<Record<string, number>>(() => {
-    try {
-      const saved = localStorage.getItem('buku_cerita_bookmarks');
-      return saved ? JSON.parse(saved) : {};
-    } catch {
-      return {};
-    }
-  });
-
-  // Reading time tracking in seconds per story { [storyId: string]: number }
-  const [readingTimes, setReadingTimes] = useState<Record<string, number>>(() => {
-    try {
-      const saved = localStorage.getItem('buku_cerita_reading_times');
-      return saved ? JSON.parse(saved) : {};
-    } catch {
-      return {};
-    }
-  });
-
-  // Completed stories tracking { [storyId: string]: boolean }
-  const [completedStories, setCompletedStories] = useState<Record<string, boolean>>(() => {
-    try {
-      const saved = localStorage.getItem('buku_cerita_completed_stories');
-      return saved ? JSON.parse(saved) : {};
-    } catch {
-      return {};
-    }
-  });
-
-  const [showCompletionModal, setShowCompletionModal] = useState<boolean>(false);
-
-  const markStoryCompleted = (storyId: string) => {
-    setCompletedStories((prev) => {
-      const updated = { ...prev, [storyId]: true };
-      try {
-        localStorage.setItem('buku_cerita_completed_stories', JSON.stringify(updated));
-      } catch (e) {
-        console.warn('Failed to save completed stories:', e);
-      }
-      return updated;
-    });
-
-    // Reset bookmark for this story so it doesn't get stuck on "Lanjutkan Halaman X"
-    setBookmarks((prev) => {
-      const updated = { ...prev };
-      delete updated[storyId];
-      try {
-        localStorage.setItem('buku_cerita_bookmarks', JSON.stringify(updated));
-      } catch (e) {
-        console.warn('Failed to reset bookmark:', e);
-      }
-      return updated;
-    });
-  };
-
-  const [continuousReadingSeconds, setContinuousReadingSeconds] = useState<number>(0);
-  const [showRestReminder, setShowRestReminder] = useState<boolean>(false);
-  const [showRestParentalGate, setShowRestParentalGate] = useState<boolean>(false);
   const [showStatsModal, setShowStatsModal] = useState<boolean>(false);
   
   const [showVipOfferModal, setShowVipOfferModal] = useState<boolean>(false);
@@ -208,6 +148,31 @@ export default function App() {
     showToast,
   });
 
+  const {
+    bookmarks,
+    readingTimes,
+    completedStories,
+    showRestReminder,
+    showRestParentalGate,
+    showCompletionModal,
+    saveBookmark: handleSaveBookmark,
+    toggleCurrentBookmark: handleToggleBookmark,
+    completeStory: handleCompleteStory,
+    resetStats: handleResetStats,
+    requestRestReminder,
+    requestRestContinuation,
+    cancelRestContinuation,
+    continueAfterRest,
+    dismissRestReminder,
+    closeCompletionModal,
+  } = useReadingProgressController({
+    selectedStory,
+    currentPageIndex,
+    currentUser,
+    isReaderOpen: Boolean(readerStoryId),
+    showToast,
+  });
+
   // Anti-Right Click & Copy Protection Handlers
   useEffect(() => {
     const settings = adminStore.getSettings();
@@ -237,77 +202,6 @@ export default function App() {
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, []);
-
-  // Interval timer tracking active reading duration
-  useEffect(() => {
-    if (!selectedStory || showRestReminder || !readerStoryId) return;
-
-    const interval = setInterval(() => {
-      const userSettings = userSettingsStore.getSettings();
-      const eyeRestMinutes = userSettings.restIntervalMinutes || adminStore.getSettings().eyeRestIntervalMinutes || 20;
-      const targetSeconds = eyeRestMinutes * 60;
-
-      if (document.visibilityState === 'visible') {
-        setReadingTimes((prev) => {
-          const newTime = (prev[selectedStory.id] || 0) + 1;
-          const updated = { ...prev, [selectedStory.id]: newTime };
-          try {
-            localStorage.setItem('buku_cerita_reading_times', JSON.stringify(updated));
-          } catch (e) {
-            console.warn('Failed to save reading time:', e);
-          }
-          return updated;
-        });
-
-        setContinuousReadingSeconds((prev) => {
-          const updated = prev + 1;
-          if (updated >= targetSeconds) {
-            setShowRestReminder(true);
-          }
-          return updated;
-        });
-      }
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [selectedStory, showRestReminder]);
-
-  // Log active reading activity for Admin Dashboard reading logs
-  useEffect(() => {
-    if (selectedStory) {
-      adminStore.logUserReading({
-        userId: currentUser ? currentUser.id : 'guest_session',
-        userName: currentUser ? currentUser.name : 'Pengunjung Tamu',
-        userEmail: currentUser ? currentUser.email : 'guest@bukucerita.id',
-        storyId: selectedStory.id,
-        storyTitle: selectedStory.title,
-        lastPageRead: currentPageIndex + 1,
-        totalPages: selectedStory.pages.length,
-        isCompleted: completedStories[selectedStory.id] || false,
-        updatedAt: new Date().toISOString(),
-      });
-    }
-  }, [selectedStory, currentPageIndex, currentUser, completedStories]);
-
-  const handleResetStats = () => {
-    setReadingTimes({});
-    try {
-      localStorage.removeItem('buku_cerita_reading_times');
-    } catch (e) {
-      console.warn('Failed to reset reading times:', e);
-    }
-    showToast('📊 Catatan statistik membaca telah direset');
-  };
-
-  const handleSaveBookmark = (storyId: string, pageIndex: number) => {
-    const updated = { ...bookmarks, [storyId]: pageIndex };
-    setBookmarks(updated);
-    try {
-      localStorage.setItem('buku_cerita_bookmarks', JSON.stringify(updated));
-    } catch (e) {
-      console.warn('Failed to save bookmark:', e);
-    }
-  };
 
   const [settings, setSettings] = useState<ReadingSettings>({
     autoPlay: false,
@@ -415,26 +309,6 @@ export default function App() {
     }
   };
 
-  const handleToggleBookmark = () => {
-    if (!selectedStory) return;
-    const currentSaved = bookmarks[selectedStory.id];
-    if (currentSaved === currentPageIndex) {
-      // Remove bookmark
-      const updated = { ...bookmarks };
-      delete updated[selectedStory.id];
-      setBookmarks(updated);
-      try {
-        localStorage.setItem('buku_cerita_bookmarks', JSON.stringify(updated));
-      } catch (e) {
-        console.warn('Failed to delete bookmark:', e);
-      }
-      showToast('🔖 Penanda halaman dihapus');
-    } else {
-      handleSaveBookmark(selectedStory.id, currentPageIndex);
-      showToast(`🔖 Halaman ${currentPageIndex + 1} ditandai!`);
-    }
-  };
-
   const handleUpdateSettings = (newSettings: Partial<ReadingSettings>) => {
     setSettings((prev) => ({ ...prev, ...newSettings }));
   };
@@ -534,8 +408,7 @@ export default function App() {
         stories={stories}
         onBackToLibrary={handleBackToLibrary}
         onCompleteBook={(story) => {
-          markStoryCompleted(story.id);
-          setShowCompletionModal(true);
+          handleCompleteStory(story.id);
         }}
         onOpenOfflineDownload={(story) => {
           if (userAuthStore.isVip() || paymentStore.isStoryPurchased(story.id)) {
@@ -571,7 +444,7 @@ export default function App() {
         }}
         onPageChange={handlePageChange}
         onSelectStory={handleSelectStory}
-        onTestRestReminder={() => setShowRestReminder(true)}
+        onTestRestReminder={requestRestReminder}
         onToggleBookmark={handleToggleBookmark}
         onToggleFavorite={handleToggleStoryFavorite}
         onToggleThumbnails={() => setIsThumbnailsOpen(!isThumbnailsOpen)}
@@ -623,12 +496,9 @@ export default function App() {
       {showRestReminder && (
         <RestReminderModal
           restMinutes={adminStore.getSettings().eyeRestIntervalMinutes || 20}
-          onCloseAndContinue={() => {
-            setShowRestParentalGate(true);
-          }}
+          onCloseAndContinue={requestRestContinuation}
           onCloseAndGoLibrary={() => {
-            setShowRestReminder(false);
-            setContinuousReadingSeconds(0);
+            dismissRestReminder();
             handleBackToLibrary();
           }}
           isNight={isNight}
@@ -638,13 +508,8 @@ export default function App() {
       {/* Parental Gate for Rest Reminder */}
       {showRestParentalGate && (
         <ParentalGateModal
-          onSuccess={() => {
-            setShowRestParentalGate(false);
-            setShowRestReminder(false);
-            setContinuousReadingSeconds(0);
-            showToast('✅ Berhasil diverifikasi. Silakan lanjutkan membaca!');
-          }}
-          onCancel={() => setShowRestParentalGate(false)}
+          onSuccess={continueAfterRest}
+          onCancel={cancelRestContinuation}
           isNight={isNight}
         />
       )}
@@ -763,24 +628,24 @@ export default function App() {
       {showCompletionModal && selectedStory && (
         <BookCompletionModal
           story={selectedStory}
-          onClose={() => setShowCompletionModal(false)}
+          onClose={closeCompletionModal}
           onReadAgain={() => {
-            setShowCompletionModal(false);
+            closeCompletionModal();
             setCurrentPageIndex(0);
           }}
           onBackToCatalog={() => {
-            setShowCompletionModal(false);
+            closeCompletionModal();
             handleBackToLibrary();
           }}
           onOpenQuiz={() => {
-            setShowCompletionModal(false);
+            closeCompletionModal();
             const lastPage = selectedStory.pages[selectedStory.pages.length - 1];
             if (lastPage) {
               setActiveQuizPage(lastPage);
             }
           }}
           onOpenOfflineDownload={() => {
-            setShowCompletionModal(false);
+            closeCompletionModal();
             if (userAuthStore.isVip() || paymentStore.isStoryPurchased(selectedStory.id)) {
               setDownloadStoryTarget(selectedStory);
             } else {
