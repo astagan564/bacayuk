@@ -1,6 +1,6 @@
-import { OfflineDownloadModal } from '@/components/OfflineDownloadModal';
 import { ParentalGateModal } from '@/components/ParentalGateModal';
 import { VipOfferModal } from '@/components/VipOfferModal';
+import { OfflineDownloadModal } from '@/features/commerce/components/download/OfflineDownloadModal';
 import { PaymentGatewayModal } from '@/features/commerce/components/payment/PaymentGatewayModal';
 import type { PurchaseFlowController } from '@/features/commerce/hooks/usePurchaseFlowController';
 
