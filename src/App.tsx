@@ -1,8 +1,8 @@
 import React, { lazy, Suspense, useState, useEffect, useRef } from 'react';
+import { useNavigate, useRouterState } from '@tanstack/react-router';
 import { Story, StoryPage, ReadingSettings } from './types';
-import { Flipbook3D, FlipbookHandle } from './components/Flipbook3D';
-import { NavigationControls } from './components/NavigationControls';
-import { StorySelector } from './components/StorySelector';
+import type { AdminSection } from './components/AdminDashboard';
+import { FlipbookHandle } from './components/Flipbook3D';
 import { ThumbnailGrid } from './components/ThumbnailGrid';
 import { StoryMakerModal } from './components/StoryMakerModal';
 import { InteractiveQuizModal } from './components/InteractiveQuizModal';
@@ -17,6 +17,8 @@ import { UserSettingsView } from './components/UserSettings';
 import { ParentalGateModal } from './components/ParentalGateModal';
 import { ChangelogModal } from './components/ChangelogModal';
 import { VipOfferModal } from './components/VipOfferModal';
+import { ApplicationHeader } from './features/shell/components/ApplicationHeader';
+import { LibraryWorkspace } from './features/reader/components/LibraryWorkspace';
 import { userAuthStore, UserAccount } from './utils/userAuthStore';
 import { paymentStore } from './utils/paymentStore';
 import { adminStore } from './utils/adminStore';
@@ -25,16 +27,31 @@ import { userSettingsStore } from './utils/userSettingsStore';
 import { speechEngine } from './utils/speechEngine';
 import { PersonalLibrary, personalLibraryStore } from './utils/personalLibraryStore';
 import packageJson from '../package.json';
-import bacaYukLogo from './assets/bacayuk-logo.svg';
-import bacaYukMark from './assets/bacayuk-mark.svg';
 import confetti from 'canvas-confetti';
-import { Sparkles, BookOpen, Award, Sun, Moon, Bookmark, BarChart3, Clock, User, LogOut, ShieldCheck, Settings, Bell } from 'lucide-react';
+import { ShieldCheck } from 'lucide-react';
 
 const AdminDashboard = lazy(() =>
   import('./components/AdminDashboard').then((module) => ({ default: module.AdminDashboard }))
 );
 
 export default function App() {
+  const navigate = useNavigate();
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
+  const isAdminRoute = pathname === '/admin' || pathname.startsWith('/admin/');
+  const isSettingsRoute = pathname === '/settings';
+  const readerStoryId = pathname.match(/^\/read\/([^/]+)$/)?.[1];
+  const adminStoryRoute = pathname.match(/^\/admin\/stories\/([^/]+)\/(edit|canvas)$/);
+  const adminSection: AdminSection = pathname.startsWith('/admin/users')
+    ? 'users'
+    : pathname.startsWith('/admin/finance')
+      ? 'finance'
+      : pathname.startsWith('/admin/costs')
+        ? 'costs'
+        : pathname.startsWith('/admin/settings')
+          ? 'settings'
+          : pathname.startsWith('/admin/analytics')
+            ? 'analytics'
+            : 'cms';
   const flipbookRef = useRef<FlipbookHandle>(null);
   const readingViewRef = useRef<HTMLDivElement>(null);
   const [stories, setStories] = useState<Story[]>(() => storyStore.getLocalStories());
@@ -103,6 +120,10 @@ export default function App() {
   const [showAdminPinPrompt, setShowAdminPinPrompt] = useState<boolean>(false);
   const [adminPin, setAdminPin] = useState<string>('');
   const [showStatsModal, setShowStatsModal] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (isAdminRoute && !adminPin) setShowAdminPinPrompt(true);
+  }, [adminPin, isAdminRoute]);
   
   const [showVipOfferModal, setShowVipOfferModal] = useState<boolean>(false);
   const [vipSubscriptionGate, setVipSubscriptionGate] = useState<boolean>(false);
@@ -121,7 +142,6 @@ export default function App() {
   const [personalLibrary, setPersonalLibrary] = useState<PersonalLibrary>(() => personalLibraryStore.load(userAuthStore.getUser()?.id));
   const [loginStoryTarget, setLoginStoryTarget] = useState<Story | null>(null);
   const [showLoginModal, setShowLoginModal] = useState<boolean>(false);
-  const [currentView, setCurrentView] = useState<'main' | 'admin' | 'userSettings'>('main');
   const [showChangelogModal, setShowChangelogModal] = useState<boolean>(false);
   const [showWhatsNewDropdown, setShowWhatsNewDropdown] = useState(false);
   const [hasUnreadChangelog, setHasUnreadChangelog] = useState(() => {
@@ -196,7 +216,7 @@ export default function App() {
         const adminStories = await storyStore.loadAdminStories(pin);
         setStories(adminStories);
         setShowAdminPinPrompt(false);
-        setCurrentView('admin');
+        if (!isAdminRoute) void navigate({ to: '/admin' });
         return;
       }
 
@@ -240,7 +260,7 @@ export default function App() {
 
   // Interval timer tracking active reading duration
   useEffect(() => {
-    if (!selectedStory || showRestReminder || currentView !== 'main') return;
+    if (!selectedStory || showRestReminder || !readerStoryId) return;
 
     const interval = setInterval(() => {
       const userSettings = userSettingsStore.getSettings();
@@ -361,7 +381,23 @@ export default function App() {
     if (initialPage > 0) {
       showToast(`📖 Melanjutkan dari Halaman ${initialPage + 1}`);
     }
+
+    if (readerStoryId !== story.id) {
+      void navigate({ to: '/read/$storyId', params: { storyId: story.id } });
+    }
   };
+
+  useEffect(() => {
+    if (!readerStoryId) {
+      if (pathname === '/' && selectedStory) setSelectedStory(null);
+      return;
+    }
+
+    const decodedStoryId = decodeURIComponent(readerStoryId);
+    if (selectedStory?.id === decodedStoryId) return;
+    const routeStory = stories.find((story) => story.id === decodedStoryId);
+    if (routeStory) handleSelectStory(routeStory);
+  }, [pathname, readerStoryId, selectedStory?.id, stories]);
 
   const handleToggleStoryFavorite = (storyId: string) => {
     setPersonalLibrary((previous) => {
@@ -374,6 +410,7 @@ export default function App() {
   const handleBackToLibrary = () => {
     setSelectedStory(null);
     speechEngine.stop();
+    void navigate({ to: '/' });
   };
 
   const handlePageChange = (newIndex: number) => {
@@ -437,14 +474,35 @@ export default function App() {
     });
     setSelectedStory(newStory);
     setCurrentPageIndex(0);
+    void navigate({ to: '/read/$storyId', params: { storyId: newStory.id } });
   };
 
-  if (currentView === 'admin') {
+  if (isAdminRoute && adminPin) {
     return (
       <Suspense fallback={<div className="min-h-screen bg-surface" />}>
         <AdminDashboard
           stories={stories}
-          adminPin={adminPin}
+        adminPin={adminPin}
+        activeSection={adminSection}
+        routeAction={pathname === '/admin/stories/new' ? 'new' : adminStoryRoute?.[2] as 'edit' | 'canvas' | undefined}
+        routeStoryId={adminStoryRoute?.[1] ? decodeURIComponent(adminStoryRoute[1]) : undefined}
+        onSectionChange={(section) => {
+          const sectionPaths: Record<AdminSection, '/admin/stories' | '/admin/users' | '/admin/finance' | '/admin/costs' | '/admin/settings' | '/admin/analytics'> = {
+            cms: '/admin/stories',
+            users: '/admin/users',
+            finance: '/admin/finance',
+            costs: '/admin/costs',
+            settings: '/admin/settings',
+            analytics: '/admin/analytics',
+          };
+          void navigate({ to: sectionPaths[section] });
+        }}
+        onOpenQuickCreate={() => void navigate({ to: '/admin/stories/new' })}
+        onOpenStoryEditor={(storyId, mode) => void navigate({
+          to: mode === 'canvas' ? '/admin/stories/$storyId/canvas' : '/admin/stories/$storyId/edit',
+          params: { storyId },
+        })}
+        onCloseRouteAction={() => void navigate({ to: '/admin/stories' })}
           onUpdateStories={async (updatedStories) => {
           try {
             const savedStories = await storyStore.saveStories(updatedStories, adminPin || undefined);
@@ -457,7 +515,7 @@ export default function App() {
         onBackToHome={async () => {
           const publicStories = await storyStore.loadStories();
           setStories(publicStories);
-          setCurrentView('main');
+          void navigate({ to: '/' });
         }}
         isNight={isNight}
         />
@@ -465,10 +523,10 @@ export default function App() {
     );
   }
 
-  if (currentView === 'userSettings') {
+  if (isSettingsRoute) {
     return (
       <UserSettingsView 
-        onBack={() => setCurrentView('main')}
+        onBack={() => void navigate({ to: '/' })}
         isNight={isNight}
       />
     );
@@ -478,168 +536,34 @@ export default function App() {
     <div
       className={`min-h-screen flex flex-col ${selectedStory ? 'justify-start' : 'justify-between'} font-sans transition-colors duration-500`}
       >
-      {/* Top Main Navigation Bar */}
       {!selectedStory && (
-      <header
-        className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border-b flex items-center justify-between gap-2 z-40 transition-colors duration-500 backdrop-blur-xl header-surface"
-      >
-        <div
-          onClick={handleBackToLibrary}
-            className="flex min-w-0 flex-1 items-center gap-2 sm:gap-2.5 cursor-pointer transition-opacity hover:opacity-85"
-        >
-          <img src={bacaYukMark} alt="BacaYuk" className="h-10 w-10 shrink-0 sm:hidden" />
-          <div className="hidden min-w-0 flex-col justify-center sm:flex">
-            <img src={bacaYukLogo} alt="BacaYuk" className="h-10 w-auto max-w-[150px]" />
-            <p
-              className="ml-[48px] -mt-2 text-[11px] font-semibold text-secondary"
-            >
-              Perpustakaan cerita keluarga
-            </p>
-          </div>
-        </div>
-
-        <div className="flex min-w-0 items-center justify-end gap-1 sm:gap-2">
-          {/* Parent Auth Profile Status */}
-          {currentUser ? (
-            <div className={`${selectedStory ? 'hidden sm:flex' : 'flex'} items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-xl text-xs font-bold auth-chip`}>
-              <User className="w-4 h-4 shrink-0" />
-              <span className="hidden md:inline truncate max-w-[120px]">{currentUser.name}</span>
-              <button
-                onClick={async () => {
-                  try {
-                    await userAuthStore.logout();
-                    setCurrentUser(null);
-                    showToast('👋 Berhasil keluar dari Akun Orang Tua');
-                  } catch (error) {
-                    console.error('Failed to sign out:', error);
-                    showToast('Keluar akun gagal. Coba lagi.');
-                  }
-                }}
-                className="p-1 hover:bg-black/10 rounded-lg text-inherit transition-colors ml-0.5"
-                title="Keluar Akun Orang Tua"
-              >
-                <LogOut className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          ) : (
-            <button
-              onClick={() => setShowLoginModal(true)}
-              className={`btn-primary ${selectedStory ? 'hidden sm:flex' : 'flex'} items-center gap-1.5 px-2.5 sm:px-3 py-1.5 text-xs shrink-0`}
-              title="Daftar/Masuk Akun Gratis Orang Tua"
-            >
-              <User className="w-4 h-4" />
-              <span className="hidden sm:inline">Masuk orang tua</span>
-            </button>
-          )}
-
-          {/* What's New Button */}
-          <div className={`${selectedStory ? 'hidden sm:block' : 'block'} relative`}>
-            <button
-              onClick={toggleWhatsNew}
-              className="relative flex items-center justify-center p-2 rounded-xl transition-colors icon-btn-surface"
-              title="Apa yang Baru?"
-            >
-              <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
-              {hasUnreadChangelog && (
-                <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-error rounded-full border border-default animate-pulse"></span>
-              )}
-            </button>
-            
-            {showWhatsNewDropdown && (
-              <>
-                <div 
-                  className="fixed inset-0 z-40" 
-                  onClick={() => setShowWhatsNewDropdown(false)}
-                />
-                <div className="absolute right-0 top-full mt-2 w-64 sm:w-72 rounded-2xl shadow-xl overflow-hidden z-50 app-modal">
-                  <div className="p-3 sm:p-4 border-b border-default bg-surface/50">
-                    <h3 className="text-sm sm:text-base font-bold flex items-center gap-2 text-primary">
-                      <Sparkles className="w-4 h-4 text-warning" />
-                      Update Terbaru v{packageJson.version}
-                    </h3>
-                  </div>
-                  <div className="p-3 sm:p-4 text-xs sm:text-sm space-y-2 text-secondary">
-                    <ul className="list-disc pl-4 space-y-1">
-                      <li><strong>Buat buku lebih cepat</strong> dari ide atau naskah singkat.</li>
-                      <li><strong>Mode baca baru</strong> menampilkan gambar kiri dan teks kanan.</li>
-                      <li><strong>Terjemahan, suara, kuis, dan ilustrasi</strong> kini lebih akurat.</li>
-                    </ul>
-                  </div>
-                  <div className="p-3 border-t border-default bg-surface/50">
-                    <button
-                      onClick={() => {
-                        setShowWhatsNewDropdown(false);
-                        setShowChangelogModal(true);
-                      }}
-                      className="w-full py-2 px-4 btn-secondary text-xs sm:text-sm"
-                    >
-                      Lihat detail
-                    </button>
-                  </div>
-                </div>
-              </>
-            )}
-          </div>
-
-          {/* User Settings Button */}
-          <button
-            onClick={() => setCurrentView('userSettings')}
-            className={`${selectedStory ? 'hidden md:flex' : 'flex'} items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition-transform hover:scale-[1.02] shrink-0 auth-chip hover:bg-surface`}
-            title="Pengaturan Orang Tua"
-          >
-            <Settings className="w-4 h-4" />
-            <span className="hidden sm:inline">Pengaturan</span>
-          </button>
-
-          {/* Admin Dashboard Button */}
-          <button
-            onClick={() => setShowAdminPinPrompt(true)}
-            className={`${selectedStory ? 'hidden md:flex' : 'hidden sm:flex'} items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition-transform hover:scale-[1.02] shrink-0 auth-chip hover:bg-surface text-secondary`}
-            title="Buka Panel Kontrol Admin Internal"
-          >
-            <ShieldCheck className="w-4 h-4" />
-            <span className="hidden sm:inline">Admin</span>
-          </button>
-
-          {/* Stats Modal Toggle Button */}
-          <button
-            onClick={() => setShowStatsModal(true)}
-            className={`${selectedStory ? 'hidden md:flex' : 'hidden sm:flex'} items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 hover:scale-[1.02] auth-chip hover:bg-surface`}
-            title="Lihat Statistik Membaca Anak"
-          >
-            <BarChart3 className="w-4 h-4" />
-            <span className="hidden sm:inline">Statistik</span>
-          </button>
-
-          {/* Day / Night Theme Toggle Button */}
-          <button
-            onClick={handleToggleTheme}
-            className="flex items-center justify-center gap-2 w-10 sm:w-auto px-0 sm:px-3 py-2 sm:py-1.5 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 hover:scale-[1.02] shrink-0 auth-chip hover:bg-surface"
-            title={isNight ? 'Beralih ke Mode Siang' : 'Beralih ke Mode Malam'}
-          >
-            {isNight ? (
-              <>
-                <Moon className="w-4 h-4 fill-current" />
-                <span className="hidden sm:inline">Malam</span>
-              </>
-            ) : (
-              <>
-                <Sun className="w-4 h-4" />
-                <span className="hidden sm:inline">Siang</span>
-              </>
-            )}
-          </button>
-
-          {selectedStory && (
-            <button
-              onClick={handleBackToLibrary}
-              className="hidden sm:inline-flex px-3.5 py-1.5 rounded-xl font-bold text-xs sm:text-sm transition-colors shadow-sm auth-chip hover:bg-surface"
-            >
-              Pilih Cerita
-            </button>
-          )}
-        </div>
-      </header>
+        <ApplicationHeader
+          currentUser={currentUser}
+          hasUnreadChangelog={hasUnreadChangelog}
+          isNight={isNight}
+          isWhatsNewOpen={showWhatsNewDropdown}
+          onAdmin={() => void navigate({ to: '/admin' })}
+          onChangelog={() => {
+            setShowWhatsNewDropdown(false);
+            setShowChangelogModal(true);
+          }}
+          onCloseWhatsNew={() => setShowWhatsNewDropdown(false)}
+          onHome={handleBackToLibrary}
+          onLogin={() => setShowLoginModal(true)}
+          onLogout={() => {
+            void userAuthStore.logout().then(() => {
+              setCurrentUser(null);
+              showToast('👋 Berhasil keluar dari Akun Orang Tua');
+            }).catch((error) => {
+              console.error('Failed to sign out:', error);
+              showToast('Keluar akun gagal. Coba lagi.');
+            });
+          }}
+          onSettings={() => void navigate({ to: '/settings' })}
+          onStats={() => setShowStatsModal(true)}
+          onToggleTheme={handleToggleTheme}
+          onToggleWhatsNew={toggleWhatsNew}
+        />
       )}
 
       {/* Toast Notification Banner */}
@@ -649,115 +573,64 @@ export default function App() {
         </div>
       )}
 
-      {/* Main Content Area */}
-      <main className={`flex-1 w-full flex flex-col items-center ${selectedStory ? 'justify-start py-2 sm:py-3 lg:h-[100dvh] lg:min-h-0' : 'justify-center py-4'}`}>
-        {!selectedStory ? (
-          /* Shelf / Story Selector View */
-          <StorySelector
-            stories={stories}
-            bookmarks={bookmarks}
-            completedStories={completedStories}
-            readingTimes={readingTimes}
-            favoriteStoryIds={personalLibrary.favoriteStoryIds}
-            recentStoryIds={personalLibrary.recentStoryIds}
-            onSelectStory={handleSelectStory}
-            onToggleFavorite={handleToggleStoryFavorite}
-            onOpenStoryMaker={() => {
-              const user = userAuthStore.getUser();
-
-              if (!user) {
-                setToastMessage('🔒 Silakan Masuk (Login) Akun Orang Tua terlebih dahulu untuk menggunakan fitur AI.');
-                setTimeout(() => setToastMessage(null), 4000);
-                setShowLoginModal(true);
-                return;
-              }
-
-              const isVipUser = userAuthStore.isVip();
-              if (isVipUser) {
-                if ((user.aiStoriesUsed || 0) >= 10) {
-                  setToastMessage('Kuota buat cerita bulan ini sudah habis.');
-                  setTimeout(() => setToastMessage(null), 5000);
-                  return;
-                }
-                setIsStoryMakerOpen(true);
-              } else {
-                setShowVipOfferModal(true);
-              }
-            }}
-            onOpenStatsModal={() => setShowStatsModal(true)}
-            onOpenPaymentModal={(story) => {
-              if (userAuthStore.isVip()) {
-                setDownloadStoryTarget(story);
-              } else {
-                setParentalGateTarget(story);
-              }
-            }}
-            onOpenOfflineDownloadModal={(story) => {
-              if (userAuthStore.isVip()) {
-                setDownloadStoryTarget(story);
-              } else {
-                setDownloadStoryTarget(story); // OfflineDownloadModal will handle purchase check inside, wait actually StorySelector handles it
-              }
-            }}
-            onTestRestReminder={() => setShowRestReminder(true)}
-            isNight={isNight}
-          />
-        ) : (
-          /* Interactive Flipbook Reading View */
-          <div ref={readingViewRef} className="w-full reader-fade-in flex flex-col lg:h-full lg:min-h-0 lg:flex-row lg:items-stretch lg:gap-3 lg:px-4 lg:py-2">
-            {/* Flipbook column */}
-            <div className="flex-1 min-w-0 flex flex-col items-center lg:h-full lg:min-h-0">
-              <Flipbook3D
-                ref={flipbookRef}
-                story={selectedStory}
-                currentPageIndex={currentPageIndex}
-                onPageChange={handlePageChange}
-                settings={settings}
-                onCompleteBook={() => {
-                  markStoryCompleted(selectedStory.id);
-                  setShowCompletionModal(true);
-                }}
-              />
-              {/* Mobile bottom spacer — prevents content hiding behind the fixed bar */}
-              <div className="lg:hidden h-36 max-[380px]:h-48 w-full shrink-0" />
-            </div>
-
-            {/* Sidebar (desktop) + Bottom bar (mobile) */}
-            <NavigationControls
-              title={selectedStory.title}
-              currentPageIndex={currentPageIndex}
-              totalPages={selectedStory.pages.length}
-              onPageChange={handlePageChange}
-              settings={settings}
-              onUpdateSettings={handleUpdateSettings}
-              onToggleThumbnails={() => setIsThumbnailsOpen(!isThumbnailsOpen)}
-              onBackToLibrary={handleBackToLibrary}
-              isBookmarked={bookmarks[selectedStory.id] === currentPageIndex}
-              savedBookmarkPage={bookmarks[selectedStory.id]}
-              onToggleBookmark={handleToggleBookmark}
-              onOpenVoiceRecorder={() => {
-                const currentPage = selectedStory.pages[currentPageIndex];
-                if (currentPage) {
-                  setVoiceRecorderTarget({
-                    pageNum: currentPage.pageNumber,
-                    pageText: currentPage.text,
-                  });
-                }
-              }}
-              onOpenOfflineDownload={() => {
-                if (userAuthStore.isVip() || paymentStore.isStoryPurchased(selectedStory.id)) {
-                  setDownloadStoryTarget(selectedStory);
-                } else {
-                  setPaymentStoryTarget(selectedStory);
-                }
-              }}
-              isBackCover={currentPageIndex >= selectedStory.pages.length}
-              onReadPage={selectedStory.pages[currentPageIndex] ? () => flipbookRef.current?.readCurrentPage() : undefined}
-              onOpenQuiz={selectedStory.pages[currentPageIndex]?.quizQuestion ? () => setActiveQuizPage(selectedStory.pages[currentPageIndex]) : undefined}
-            />
-          </div>
-        )}
-      </main>
+      <LibraryWorkspace
+        bookmarks={bookmarks}
+        completedStories={completedStories}
+        currentPageIndex={currentPageIndex}
+        flipbookRef={flipbookRef}
+        isNight={isNight}
+        isThumbnailsOpen={isThumbnailsOpen}
+        personalLibrary={personalLibrary}
+        readingTimes={readingTimes}
+        readingViewRef={readingViewRef}
+        selectedStory={selectedStory}
+        settings={settings}
+        stories={stories}
+        onBackToLibrary={handleBackToLibrary}
+        onCompleteBook={(story) => {
+          markStoryCompleted(story.id);
+          setShowCompletionModal(true);
+        }}
+        onOpenOfflineDownload={(story) => {
+          if (userAuthStore.isVip() || paymentStore.isStoryPurchased(story.id)) {
+            setDownloadStoryTarget(story);
+          } else {
+            setPaymentStoryTarget(story);
+          }
+        }}
+        onOpenPayment={(story) => {
+          if (userAuthStore.isVip()) setDownloadStoryTarget(story);
+          else setParentalGateTarget(story);
+        }}
+        onOpenQuiz={(story, pageIndex) => {
+          const page = story.pages[pageIndex];
+          if (page) setActiveQuizPage(page);
+        }}
+        onOpenStats={() => setShowStatsModal(true)}
+        onOpenStoryMaker={() => {
+          const user = userAuthStore.getUser();
+          if (!user) {
+            showToast('🔒 Silakan Masuk (Login) Akun Orang Tua terlebih dahulu untuk menggunakan fitur AI.');
+            setShowLoginModal(true);
+          } else if (userAuthStore.isVip()) {
+            if ((user.aiStoriesUsed || 0) >= 10) showToast('Kuota buat cerita bulan ini sudah habis.');
+            else setIsStoryMakerOpen(true);
+          } else {
+            setShowVipOfferModal(true);
+          }
+        }}
+        onOpenVoiceRecorder={(story, pageIndex) => {
+          const page = story.pages[pageIndex];
+          if (page) setVoiceRecorderTarget({ pageNum: page.pageNumber, pageText: page.text });
+        }}
+        onPageChange={handlePageChange}
+        onSelectStory={handleSelectStory}
+        onTestRestReminder={() => setShowRestReminder(true)}
+        onToggleBookmark={handleToggleBookmark}
+        onToggleFavorite={handleToggleStoryFavorite}
+        onToggleThumbnails={() => setIsThumbnailsOpen(!isThumbnailsOpen)}
+        onUpdateSettings={handleUpdateSettings}
+      />
 
       {/* Footer */}
       {!selectedStory && (
@@ -851,17 +724,20 @@ export default function App() {
               }}
             />
             <div className="flex gap-2 mt-2">
-              <button 
+              <button
                 onClick={() => {
                   const input = document.querySelector('input[type="password"]') as HTMLInputElement;
                   verifyAdminPinAndOpen(input?.value || '');
-                }} 
+                }}
                 className="btn-primary flex-1 py-3 text-xs"
               >
                 Masuk
               </button>
               <button 
-                onClick={() => setShowAdminPinPrompt(false)} 
+                onClick={() => {
+                  setShowAdminPinPrompt(false);
+                  if (isAdminRoute) void navigate({ to: '/' });
+                }}
                 className="flex-1 py-3 rounded-xl font-bold text-xs btn-secondary"
               >
                 Batal
@@ -906,13 +782,6 @@ export default function App() {
             userAuthStore.activateVip();
             setIsStoryMakerOpen(true);
           }}
-        />
-      )}
-
-      {isStoryMakerOpen && (
-        <StoryMakerModal
-          onClose={() => setIsStoryMakerOpen(false)}
-          onStoryCreated={handleStoryCreated}
         />
       )}
 
@@ -991,7 +860,7 @@ export default function App() {
           }}
           onBackToCatalog={() => {
             setShowCompletionModal(false);
-            setSelectedStory(null);
+            handleBackToLibrary();
           }}
           onOpenQuiz={() => {
             setShowCompletionModal(false);

@@ -1,0 +1,122 @@
+import type { RefObject } from 'react';
+import type { PersonalLibrary } from '../../../utils/personalLibraryStore';
+import type { ReadingSettings, Story } from '../../../types';
+import { Flipbook3D, type FlipbookHandle } from '../../../components/Flipbook3D';
+import { NavigationControls } from '../../../components/NavigationControls';
+import { StorySelector } from '../../../components/StorySelector';
+
+interface LibraryWorkspaceProps {
+  bookmarks: Record<string, number>;
+  completedStories: Record<string, boolean>;
+  currentPageIndex: number;
+  flipbookRef: RefObject<FlipbookHandle | null>;
+  isNight: boolean;
+  isThumbnailsOpen: boolean;
+  personalLibrary: PersonalLibrary;
+  readingTimes: Record<string, number>;
+  readingViewRef: RefObject<HTMLDivElement | null>;
+  selectedStory: Story | null;
+  settings: ReadingSettings;
+  stories: Story[];
+  onBackToLibrary: () => void;
+  onCompleteBook: (story: Story) => void;
+  onOpenOfflineDownload: (story: Story) => void;
+  onOpenPayment: (story: Story) => void;
+  onOpenQuiz: (story: Story, pageIndex: number) => void;
+  onOpenStats: () => void;
+  onOpenStoryMaker: () => void;
+  onOpenVoiceRecorder: (story: Story, pageIndex: number) => void;
+  onPageChange: (pageIndex: number) => void;
+  onSelectStory: (story: Story, pageIndex?: number) => void;
+  onTestRestReminder: () => void;
+  onToggleBookmark: () => void;
+  onToggleFavorite: (storyId: string) => void;
+  onToggleThumbnails: () => void;
+  onUpdateSettings: (settings: Partial<ReadingSettings>) => void;
+}
+
+export function LibraryWorkspace({
+  bookmarks,
+  completedStories,
+  currentPageIndex,
+  flipbookRef,
+  isNight,
+  isThumbnailsOpen,
+  personalLibrary,
+  readingTimes,
+  readingViewRef,
+  selectedStory,
+  settings,
+  stories,
+  onBackToLibrary,
+  onCompleteBook,
+  onOpenOfflineDownload,
+  onOpenPayment,
+  onOpenQuiz,
+  onOpenStats,
+  onOpenStoryMaker,
+  onOpenVoiceRecorder,
+  onPageChange,
+  onSelectStory,
+  onTestRestReminder,
+  onToggleBookmark,
+  onToggleFavorite,
+  onToggleThumbnails,
+  onUpdateSettings,
+}: LibraryWorkspaceProps) {
+  return (
+    <main className={`flex-1 w-full flex flex-col items-center ${selectedStory ? 'justify-start py-2 sm:py-3 lg:h-[100dvh] lg:min-h-0' : 'justify-center py-4'}`}>
+      {!selectedStory ? (
+        <StorySelector
+          stories={stories}
+          bookmarks={bookmarks}
+          completedStories={completedStories}
+          readingTimes={readingTimes}
+          favoriteStoryIds={personalLibrary.favoriteStoryIds}
+          recentStoryIds={personalLibrary.recentStoryIds}
+          onSelectStory={onSelectStory}
+          onToggleFavorite={onToggleFavorite}
+          onOpenStoryMaker={onOpenStoryMaker}
+          onOpenStatsModal={onOpenStats}
+          onOpenPaymentModal={onOpenPayment}
+          onOpenOfflineDownloadModal={onOpenOfflineDownload}
+          onTestRestReminder={onTestRestReminder}
+          isNight={isNight}
+        />
+      ) : (
+        <div ref={readingViewRef} className="w-full reader-fade-in flex flex-col lg:h-full lg:min-h-0 lg:flex-row lg:items-stretch lg:gap-3 lg:px-4 lg:py-2">
+          <div className="flex-1 min-w-0 flex flex-col items-center lg:h-full lg:min-h-0">
+            <Flipbook3D
+              ref={flipbookRef}
+              story={selectedStory}
+              currentPageIndex={currentPageIndex}
+              onPageChange={onPageChange}
+              settings={settings}
+              onCompleteBook={() => onCompleteBook(selectedStory)}
+            />
+            <div className="lg:hidden h-36 max-[380px]:h-48 w-full shrink-0" />
+          </div>
+
+          <NavigationControls
+            title={selectedStory.title}
+            currentPageIndex={currentPageIndex}
+            totalPages={selectedStory.pages.length}
+            onPageChange={onPageChange}
+            settings={settings}
+            onUpdateSettings={onUpdateSettings}
+            onToggleThumbnails={onToggleThumbnails}
+            onBackToLibrary={onBackToLibrary}
+            isBookmarked={bookmarks[selectedStory.id] === currentPageIndex}
+            savedBookmarkPage={bookmarks[selectedStory.id]}
+            onToggleBookmark={onToggleBookmark}
+            onOpenVoiceRecorder={() => onOpenVoiceRecorder(selectedStory, currentPageIndex)}
+            onOpenOfflineDownload={() => onOpenOfflineDownload(selectedStory)}
+            isBackCover={currentPageIndex >= selectedStory.pages.length}
+            onReadPage={selectedStory.pages[currentPageIndex] ? () => flipbookRef.current?.readCurrentPage() : undefined}
+            onOpenQuiz={selectedStory.pages[currentPageIndex]?.quizQuestion ? () => onOpenQuiz(selectedStory, currentPageIndex) : undefined}
+          />
+        </div>
+      )}
+    </main>
+  );
+}

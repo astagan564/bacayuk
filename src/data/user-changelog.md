@@ -1,3 +1,19 @@
+## Halaman kini lebih mudah dibuka kembali - 2026-08-11
+
+### Setiap area memiliki alamat halaman sendiri
+- Katalog, pengaturan orang tua, halaman membaca, dan menu-menu Admin kini memiliki alamat URL yang jelas.
+- Halaman dapat disimpan sebagai bookmark atau dibuka kembali melalui riwayat browser tanpa harus mengulang navigasi dari halaman depan.
+- Admin dapat membuka langsung daftar buku, pengguna, pembayaran, biaya dan margin, retensi baca, atau pengaturan.
+
+### Alur pembuatan buku lebih mudah dilanjutkan
+- Buat dengan AI, edit buku, dan canvas buku sekarang memiliki alamat halaman masing-masing.
+- Membuka ulang atau membagikan alamat internal suatu pekerjaan tidak lagi selalu mengembalikan Admin ke halaman awal dashboard.
+
+### Aplikasi lebih siap dirawat ke depannya
+- Bagian katalog, pembaca, header, panel Admin, dan Book Studio telah dipisahkan berdasarkan fungsinya.
+- Perubahan pada satu area kini lebih terisolasi sehingga pengembangan berikutnya dapat dilakukan dengan risiko lebih kecil terhadap area lain.
+- Dialog pembuatan cerita yang sebelumnya dapat terpasang dua kali dalam satu halaman sudah diperbaiki.
+
 ## Buku AI dan pengalaman membaca baru - 2026-08-10
 
 ### Biaya dan margin kini terlihat di Admin

@@ -5,6 +5,24 @@ All notable changes to the **BacaYuk** project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased] - 2026-08-11
+
+### Added
+- **Addressable frontend routes**: Added file-based routing for the catalog, parent settings, story reader, and Admin sections. Pages such as `/settings`, `/read/:storyId`, `/admin/stories`, `/admin/users`, `/admin/finance`, `/admin/costs`, `/admin/analytics`, and `/admin/settings` can now be bookmarked and opened directly.
+- **Addressable Book Studio workflows**: Added dedicated URLs for AI Quick Create, story editing, and story canvas at `/admin/stories/new`, `/admin/stories/:storyId/edit`, and `/admin/stories/:storyId/canvas`.
+- **Frontend route generation**: Added TanStack Router and its Vite plugin so the typed route tree and route-specific production chunks are generated during development and build.
+
+### Changed
+- **Feature-based frontend architecture**: Split the frontend into focused Admin, Book Studio, reader, and application-shell modules instead of keeping all behavior and markup in `App.tsx` and `AdminDashboard.tsx`.
+- **Admin maintenance boundaries**: Moved Stories, Users, Payments, Cost & Margin, Settings, and Reading Retention into independent tab components with explicit typed inputs and actions.
+- **Book Studio maintenance boundaries**: Centralized storybook API requests, types, constants, draft helpers, Quick Create, and the story editor under `src/features/book-studio` while retaining the brief-to-draft, enhancement, translation, and illustration workflow.
+- **Application shell maintenance boundaries**: Moved the global header and catalog/reader workspace into focused components while keeping navigation and reader state coordinated by the application shell.
+- **TypeScript configuration**: Enabled `strictNullChecks` and corrected the `@` path alias to resolve from `src`.
+
+### Fixed
+- **Duplicate story maker dialog**: Removed a duplicate `StoryMakerModal` render that could mount the same AI story creation interface twice.
+- **Direct-link navigation**: Replaced transient view-only navigation with URL-backed navigation so browser refresh and direct entry preserve the requested frontend section.
+
 ## [0.1.0] - 2026-08-10
 
 ### Added
