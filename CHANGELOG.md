@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Feature-based frontend architecture**: Split the frontend into focused Admin, Book Studio, reader, and application-shell modules instead of keeping all behavior and markup in `App.tsx` and `AdminDashboard.tsx`.
 - **Admin maintenance boundaries**: Moved Stories, Users, Payments, Cost & Margin, Settings, and Reading Retention into independent tab components with explicit typed inputs and actions.
 - **Book Studio maintenance boundaries**: Centralized storybook API requests, types, constants, draft helpers, Quick Create, and the story editor under `src/features/book-studio` while retaining the brief-to-draft, enhancement, translation, and illustration workflow.
+- **Story editor composition**: Replaced the monolithic story editor with focused production-status, illustration-progress, page-canvas, metadata, bilingual-page, preview, interaction-and-quiz, and glossary components. The dialog now coordinates these sections without owning their detailed markup.
 - **Application shell maintenance boundaries**: Moved the global header and catalog/reader workspace into focused components while keeping navigation and reader state coordinated by the application shell.
 - **TypeScript configuration**: Enabled `strictNullChecks` and corrected the `@` path alias to resolve from `src`.
 
