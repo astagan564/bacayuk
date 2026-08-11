@@ -1,7 +1,6 @@
-import React, { lazy, Suspense, useState, useEffect, useRef } from 'react';
+import React, { lazy, Suspense, useCallback, useState, useEffect, useRef } from 'react';
 import { useNavigate, useRouterState } from '@tanstack/react-router';
 import { Story, StoryPage, ReadingSettings } from './types';
-import type { AdminSection } from './features/admin';
 import { FlipbookHandle } from './components/Flipbook3D';
 import { ThumbnailGrid } from './components/ThumbnailGrid';
 import { StoryMakerModal } from './components/StoryMakerModal';
@@ -17,6 +16,8 @@ import { UserSettingsView } from './components/UserSettings';
 import { ParentalGateModal } from './components/ParentalGateModal';
 import { ChangelogModal } from './components/ChangelogModal';
 import { VipOfferModal } from './components/VipOfferModal';
+import { AdminPinDialog } from './features/admin/components/AdminPinDialog';
+import { useAdminAccessController } from './features/admin/hooks/useAdminAccessController';
 import { ApplicationHeader } from './features/shell/components/ApplicationHeader';
 import { LibraryWorkspace } from './features/reader/components/LibraryWorkspace';
 import { userAuthStore, UserAccount } from './utils/userAuthStore';
@@ -28,10 +29,11 @@ import { speechEngine } from './utils/speechEngine';
 import { PersonalLibrary, personalLibraryStore } from './utils/personalLibraryStore';
 import packageJson from '../package.json';
 import confetti from 'canvas-confetti';
-import { ShieldCheck } from 'lucide-react';
 
-const AdminDashboard = lazy(() =>
-  import('./components/AdminDashboard').then((module) => ({ default: module.AdminDashboard }))
+const AdminRouteWorkspace = lazy(() =>
+  import('./features/admin/components/AdminRouteWorkspace').then((module) => ({
+    default: module.AdminRouteWorkspace,
+  }))
 );
 
 export default function App() {
@@ -40,18 +42,6 @@ export default function App() {
   const isAdminRoute = pathname === '/admin' || pathname.startsWith('/admin/');
   const isSettingsRoute = pathname === '/settings';
   const readerStoryId = pathname.match(/^\/read\/([^/]+)$/)?.[1];
-  const adminStoryRoute = pathname.match(/^\/admin\/stories\/([^/]+)\/(edit|canvas)$/);
-  const adminSection: AdminSection = pathname.startsWith('/admin/users')
-    ? 'users'
-    : pathname.startsWith('/admin/finance')
-      ? 'finance'
-      : pathname.startsWith('/admin/costs')
-        ? 'costs'
-        : pathname.startsWith('/admin/settings')
-          ? 'settings'
-          : pathname.startsWith('/admin/analytics')
-            ? 'analytics'
-            : 'cms';
   const flipbookRef = useRef<FlipbookHandle>(null);
   const readingViewRef = useRef<HTMLDivElement>(null);
   const [stories, setStories] = useState<Story[]>(() => storyStore.getLocalStories());
@@ -117,13 +107,7 @@ export default function App() {
   const [continuousReadingSeconds, setContinuousReadingSeconds] = useState<number>(0);
   const [showRestReminder, setShowRestReminder] = useState<boolean>(false);
   const [showRestParentalGate, setShowRestParentalGate] = useState<boolean>(false);
-  const [showAdminPinPrompt, setShowAdminPinPrompt] = useState<boolean>(false);
-  const [adminPin, setAdminPin] = useState<string>('');
   const [showStatsModal, setShowStatsModal] = useState<boolean>(false);
-
-  useEffect(() => {
-    if (isAdminRoute && !adminPin) setShowAdminPinPrompt(true);
-  }, [adminPin, isAdminRoute]);
   
   const [showVipOfferModal, setShowVipOfferModal] = useState<boolean>(false);
   const [vipSubscriptionGate, setVipSubscriptionGate] = useState<boolean>(false);
@@ -195,38 +179,34 @@ export default function App() {
 
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  const showToast = (msg: string) => {
+  const showToast = useCallback((msg: string) => {
     setToastMessage(msg);
     setTimeout(() => {
       setToastMessage((prev) => (prev === msg ? null : prev));
     }, 3000);
-  };
+  }, []);
 
-  const verifyAdminPinAndOpen = async (pin: string) => {
-    try {
-      const response = await fetch('/api/verify-admin-pin', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pin }),
-      });
-      const result = await response.json();
+  const handleAdminAccessGranted = useCallback(() => {
+    if (!isAdminRoute) void navigate({ to: '/admin' });
+  }, [isAdminRoute, navigate]);
 
-      if (response.ok && result.ok) {
-        setAdminPin(pin);
-        const adminStories = await storyStore.loadAdminStories(pin);
-        setStories(adminStories);
-        setShowAdminPinPrompt(false);
-        if (!isAdminRoute) void navigate({ to: '/admin' });
-        return;
-      }
+  const handleAdminAccessCancelled = useCallback(() => {
+    if (isAdminRoute) void navigate({ to: '/' });
+  }, [isAdminRoute, navigate]);
 
-      showToast(result.error || '❌ PIN Admin salah!');
-    } catch {
-      showToast('❌ Tidak dapat memverifikasi PIN Admin.');
-    }
-
-    setShowAdminPinPrompt(false);
-  };
+  const {
+    adminPin,
+    showPrompt: showAdminPinPrompt,
+    isVerifying: isVerifyingAdminPin,
+    verifyPin: verifyAdminPinAndOpen,
+    cancelAccess: cancelAdminAccess,
+  } = useAdminAccessController({
+    isAdminRoute,
+    onStoriesLoaded: setStories,
+    onAccessGranted: handleAdminAccessGranted,
+    onAccessCancelled: handleAdminAccessCancelled,
+    showToast,
+  });
 
   // Anti-Right Click & Copy Protection Handlers
   useEffect(() => {
@@ -480,43 +460,10 @@ export default function App() {
   if (isAdminRoute && adminPin) {
     return (
       <Suspense fallback={<div className="min-h-screen bg-surface" />}>
-        <AdminDashboard
+        <AdminRouteWorkspace
           stories={stories}
-        adminPin={adminPin}
-        activeSection={adminSection}
-        routeAction={pathname === '/admin/stories/new' ? 'new' : adminStoryRoute?.[2] as 'edit' | 'canvas' | undefined}
-        routeStoryId={adminStoryRoute?.[1] ? decodeURIComponent(adminStoryRoute[1]) : undefined}
-        onSectionChange={(section) => {
-          const sectionPaths: Record<AdminSection, '/admin/stories' | '/admin/users' | '/admin/finance' | '/admin/costs' | '/admin/settings' | '/admin/analytics'> = {
-            cms: '/admin/stories',
-            users: '/admin/users',
-            finance: '/admin/finance',
-            costs: '/admin/costs',
-            settings: '/admin/settings',
-            analytics: '/admin/analytics',
-          };
-          void navigate({ to: sectionPaths[section] });
-        }}
-        onOpenQuickCreate={() => void navigate({ to: '/admin/stories/new' })}
-        onOpenStoryEditor={(storyId, mode) => void navigate({
-          to: mode === 'canvas' ? '/admin/stories/$storyId/canvas' : '/admin/stories/$storyId/edit',
-          params: { storyId },
-        })}
-        onCloseRouteAction={() => void navigate({ to: '/admin/stories' })}
-          onUpdateStories={async (updatedStories) => {
-          try {
-            const savedStories = await storyStore.saveStories(updatedStories, adminPin || undefined);
-            setStories(savedStories);
-          } catch (error) {
-            setStories(storyStore.getLocalStories());
-            throw error;
-          }
-        }}
-        onBackToHome={async () => {
-          const publicStories = await storyStore.loadStories();
-          setStories(publicStories);
-          void navigate({ to: '/' });
-        }}
+          adminPin={adminPin}
+          onStoriesChange={setStories}
         />
       </Suspense>
     );
@@ -704,47 +651,11 @@ export default function App() {
 
       {/* Admin PIN Prompt Modal */}
       {showAdminPinPrompt && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-overlay backdrop-blur-sm animate-fade-in">
-          <div className="w-full max-w-sm rounded-2xl p-6 shadow-2xl overflow-hidden z-50 flex flex-col gap-4 app-modal">
-            <h3 className="text-lg font-extrabold font-sans mb-0 text-center flex items-center justify-center gap-2">
-              <ShieldCheck className="w-5 h-5 text-brand-blue" />
-              Otentikasi Admin
-            </h3>
-            <p className="text-xs text-center opacity-80">Area Admin</p>
-            <input 
-              type="password" 
-              autoFocus
-              className="w-full px-4 py-3 rounded-xl border-default text-center font-extrabold tracking-[0.5em] text-lg focus:outline-none reader-field"
-              placeholder="••••"
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  verifyAdminPinAndOpen(e.currentTarget.value);
-                }
-              }}
-            />
-            <div className="flex gap-2 mt-2">
-              <button
-                onClick={() => {
-                  const input = document.querySelector('input[type="password"]') as HTMLInputElement;
-                  verifyAdminPinAndOpen(input?.value || '');
-                }}
-                className="btn-primary flex-1 py-3 text-xs"
-              >
-                Masuk
-              </button>
-              <button 
-                onClick={() => {
-                  setShowAdminPinPrompt(false);
-                  if (isAdminRoute) void navigate({ to: '/' });
-                }}
-                className="flex-1 py-3 rounded-xl font-bold text-xs btn-secondary"
-              >
-                Batal
-              </button>
-            </div>
-            <p className="text-[10px] text-center opacity-50 mt-1">Masukkan PIN anda</p>
-          </div>
-        </div>
+        <AdminPinDialog
+          isVerifying={isVerifyingAdminPin}
+          onVerify={verifyAdminPinAndOpen}
+          onCancel={cancelAdminAccess}
+        />
       )}
 
       {/* 14. Modals */}

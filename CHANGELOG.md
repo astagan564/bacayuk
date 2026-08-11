@@ -24,12 +24,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Admin operations controller boundaries**: Moved coupon and transaction state, global settings and cleanup actions, and cost-ledger loading and calculations into dedicated typed controllers. Admin tabs now receive explicit state and actions through the Admin feature boundary instead of accessing persistence directly.
 - **Book editor controller boundary**: Moved manual and AI draft opening, route-driven edit/canvas state, validation, persistence, deletion, glossary refresh, canvas interactions, and AI enhancement lifecycle into the Book Studio feature. `AdminDashboard` now composes the editor instead of implementing its workflow.
 - **Admin feature composition**: Moved the complete catalog, Quick Create, and editor composition into a dedicated Book Studio workspace. Admin navigation, user activity state, CSV export, and shared section types now live behind the Admin feature boundary.
+- **Admin route and access boundary**: Moved Admin URL interpretation, section navigation, story persistence, lazy dashboard loading, PIN verification API calls, and access state out of `App.tsx` into the Admin feature.
 
 ### Fixed
 - **Duplicate story maker dialog**: Removed a duplicate `StoryMakerModal` render that could mount the same AI story creation interface twice.
 - **Direct-link navigation**: Replaced transient view-only navigation with URL-backed navigation so browser refresh and direct entry preserve the requested frontend section.
 - **Hidden draft typing errors**: Normalized manuscript and AI page drafts before Story mapping and removed implicit callback types from the Admin data store, allowing the complete project to pass strict TypeScript checks.
 - **Admin CSV escaping**: Escaped embedded quotes in exported parent-account fields so names and contact data cannot corrupt CSV columns.
+- **Admin PIN retry flow**: Kept the controlled PIN dialog open after failed verification and disabled duplicate submissions while a verification request is running.
 
 ## [0.1.0] - 2026-08-10
 

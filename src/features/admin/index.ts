@@ -1,10 +1,13 @@
 export { AdminSettingsTab } from './components/AdminSettingsTab';
 export { AdminSidebar } from './components/AdminSidebar';
+export { AdminRouteWorkspace } from './components/AdminRouteWorkspace';
+export { AdminPinDialog } from './components/AdminPinDialog';
 export { AnalyticsTab } from './components/AnalyticsTab';
 export { CostLedgerTab } from './components/CostLedgerTab';
 export { FinanceTab } from './components/FinanceTab';
 export { UsersTab } from './components/UsersTab';
 export { useAdminFinanceController } from './hooks/useAdminFinanceController';
+export { useAdminAccessController } from './hooks/useAdminAccessController';
 export { useAdminSettingsController } from './hooks/useAdminSettingsController';
 export { useAdminUsersController } from './hooks/useAdminUsersController';
 export { useCostLedgerController } from './hooks/useCostLedgerController';

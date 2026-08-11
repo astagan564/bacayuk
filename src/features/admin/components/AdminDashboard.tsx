@@ -1,19 +1,17 @@
 import React, { useCallback, useState } from 'react';
-import type { Story } from '../types';
-import { BookStudioAdminWorkspace } from '../features/book-studio';
-import {
-  AdminSidebar,
-  AdminSettingsTab,
-  AnalyticsTab,
-  CostLedgerTab,
-  FinanceTab,
-  UsersTab,
-  useAdminFinanceController,
-  useAdminSettingsController,
-  useAdminUsersController,
-  useCostLedgerController,
-} from '../features/admin';
-import type { AdminSection } from '../features/admin';
+import type { Story } from '@/types';
+import { BookStudioAdminWorkspace } from '@/features/book-studio';
+import { AdminSidebar } from '@/features/admin/components/AdminSidebar';
+import { AdminSettingsTab } from '@/features/admin/components/AdminSettingsTab';
+import { AnalyticsTab } from '@/features/admin/components/AnalyticsTab';
+import { CostLedgerTab } from '@/features/admin/components/CostLedgerTab';
+import { FinanceTab } from '@/features/admin/components/FinanceTab';
+import { UsersTab } from '@/features/admin/components/UsersTab';
+import { useAdminFinanceController } from '@/features/admin/hooks/useAdminFinanceController';
+import { useAdminSettingsController } from '@/features/admin/hooks/useAdminSettingsController';
+import { useAdminUsersController } from '@/features/admin/hooks/useAdminUsersController';
+import { useCostLedgerController } from '@/features/admin/hooks/useCostLedgerController';
+import type { AdminSection } from '@/features/admin/types';
 import {
   CheckCircle2,
 } from 'lucide-react';
