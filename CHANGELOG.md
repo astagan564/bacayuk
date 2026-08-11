@@ -46,6 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Quick Create lifecycle boundary**: Split PDF extraction/OCR and AI/local draft generation into independent abortable controllers, with pure PDF title and manuscript assembly helpers behind the existing Quick Create facade.
 - **Flipbook controller boundaries**: Split page navigation and gestures, narration audio, interactive overlays, and autoplay sequencing into focused Reader hooks while retaining the existing flipbook facade contract.
 - **Mobile reader control boundaries**: Split the mobile bottom navigation, tools sheet, reader actions, and display settings into focused Reader components while retaining the existing navigation controller and public control contract.
+- **Page canvas editor boundaries**: Split Book Studio page selection, story-content canvas, interaction placement, and page-generation settings into focused typed components while retaining the existing editor workflow contract.
 
 ### Fixed
 - **Duplicate story maker dialog**: Removed a duplicate `StoryMakerModal` render that could mount the same AI story creation interface twice.
