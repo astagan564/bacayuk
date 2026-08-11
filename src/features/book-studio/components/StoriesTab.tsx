@@ -1,5 +1,5 @@
 import { Edit, Plus, Sparkles, Trash2 } from 'lucide-react';
-import type { Story } from '../../../types';
+import type { Story } from '@/types';
 
 interface StoriesTabProps {
   defaultEbookPrice: number;

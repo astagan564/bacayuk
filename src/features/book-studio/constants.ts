@@ -1,8 +1,6 @@
 import type { Story } from '@/types';
 import type { QuickCreateForm } from './types';
 
-export const LEGACY_DEMO_USER_IDS = new Set(['usr_g_8812', 'usr_wa_9941', 'usr_em_1204']);
-
 export const DEFAULT_QUICK_CREATE_FORM: QuickCreateForm = {
   storyId: '', brief: '', targetAge: '6-8', primaryLanguage: 'id', title: '', moralMessage: '',
   characterHints: '', pageCount: 10, visualPreset: 'auto', tabooContent: '',
@@ -18,4 +16,3 @@ export const PIPELINE_STEPS: Array<{ id: NonNullable<Story['pipelineStatus']>; l
   { id: 'enhanced', label: 'Enhanced' },
   { id: 'ready_to_publish', label: 'Ready to Publish' },
 ];
-

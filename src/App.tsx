@@ -1,7 +1,7 @@
 import React, { lazy, Suspense, useState, useEffect, useRef } from 'react';
 import { useNavigate, useRouterState } from '@tanstack/react-router';
 import { Story, StoryPage, ReadingSettings } from './types';
-import type { AdminSection } from './components/AdminDashboard';
+import type { AdminSection } from './features/admin';
 import { FlipbookHandle } from './components/Flipbook3D';
 import { ThumbnailGrid } from './components/ThumbnailGrid';
 import { StoryMakerModal } from './components/StoryMakerModal';
@@ -517,7 +517,6 @@ export default function App() {
           setStories(publicStories);
           void navigate({ to: '/' });
         }}
-        isNight={isNight}
         />
       </Suspense>
     );

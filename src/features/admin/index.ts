@@ -1,10 +1,12 @@
 export { AdminSettingsTab } from './components/AdminSettingsTab';
+export { AdminSidebar } from './components/AdminSidebar';
 export { AnalyticsTab } from './components/AnalyticsTab';
 export { CostLedgerTab } from './components/CostLedgerTab';
 export { FinanceTab } from './components/FinanceTab';
-export { StoriesTab } from './components/StoriesTab';
 export { UsersTab } from './components/UsersTab';
 export { useAdminFinanceController } from './hooks/useAdminFinanceController';
 export { useAdminSettingsController } from './hooks/useAdminSettingsController';
+export { useAdminUsersController } from './hooks/useAdminUsersController';
 export { useCostLedgerController } from './hooks/useCostLedgerController';
 export type { StoryCostRow } from './hooks/useCostLedgerController';
+export type { AdminSection } from './types';
