@@ -18,14 +18,14 @@ import { ChangelogModal } from './components/ChangelogModal';
 import { VipOfferModal } from './components/VipOfferModal';
 import { AdminPinDialog } from './features/admin/components/AdminPinDialog';
 import { useAdminAccessController } from './features/admin/hooks/useAdminAccessController';
+import { useUserSessionController } from './features/account';
 import { ApplicationHeader } from './features/shell/components/ApplicationHeader';
 import { LibraryWorkspace, useReadingProgressController } from './features/reader';
-import { userAuthStore, UserAccount } from './utils/userAuthStore';
+import { userAuthStore } from './utils/userAuthStore';
 import { paymentStore } from './utils/paymentStore';
 import { adminStore } from './utils/adminStore';
 import { storyStore } from './utils/storyStore';
 import { speechEngine } from './utils/speechEngine';
-import { PersonalLibrary, personalLibraryStore } from './utils/personalLibraryStore';
 import packageJson from '../package.json';
 import confetti from 'canvas-confetti';
 
@@ -62,38 +62,11 @@ export default function App() {
   const [downloadStoryTarget, setDownloadStoryTarget] = useState<Story | null>(null);
   const [parentalGateTarget, setParentalGateTarget] = useState<Story | null>(null);
 
-  const [currentUser, setCurrentUser] = useState<UserAccount | null>(() => userAuthStore.getUser());
-  const [personalLibrary, setPersonalLibrary] = useState<PersonalLibrary>(() => personalLibraryStore.load(userAuthStore.getUser()?.id));
-  const [loginStoryTarget, setLoginStoryTarget] = useState<Story | null>(null);
-  const [showLoginModal, setShowLoginModal] = useState<boolean>(false);
   const [showChangelogModal, setShowChangelogModal] = useState<boolean>(false);
   const [showWhatsNewDropdown, setShowWhatsNewDropdown] = useState(false);
   const [hasUnreadChangelog, setHasUnreadChangelog] = useState(() => {
     return localStorage.getItem('bacayuk_last_seen_version') !== packageJson.version;
   });
-
-  useEffect(() => {
-    setPersonalLibrary(personalLibraryStore.load(currentUser?.id));
-  }, [currentUser?.id]);
-
-  useEffect(() => {
-    let active = true;
-    const applyAuthenticatedUser = (user: UserAccount | null) => {
-      if (!active) return;
-      setCurrentUser(user);
-      if (user?.email) void paymentStore.syncPurchasesFromSupabase(user.email);
-    };
-    const subscription = userAuthStore.onAuthStateChange(applyAuthenticatedUser);
-    void userAuthStore.initialize().then(applyAuthenticatedUser).catch((error) => {
-      console.error('Failed to initialize Supabase Auth session:', error);
-      applyAuthenticatedUser(null);
-    });
-
-    return () => {
-      active = false;
-      subscription.unsubscribe();
-    };
-  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -125,6 +98,29 @@ export default function App() {
       setToastMessage((prev) => (prev === msg ? null : prev));
     }, 3000);
   }, []);
+
+  const handlePendingStoryReady = useCallback((story: Story) => {
+    setSelectedStory(story);
+    setCurrentPageIndex(0);
+    speechEngine.stop();
+    void navigate({ to: '/read/$storyId', params: { storyId: story.id } });
+  }, [navigate]);
+
+  const {
+    currentUser,
+    personalLibrary,
+    pendingStory: loginStoryTarget,
+    showLoginModal,
+    requestLogin,
+    closeLogin,
+    handleLoginSuccess,
+    logout,
+    recordRecentStory,
+    toggleFavorite: handleToggleStoryFavorite,
+  } = useUserSessionController({
+    onPendingStoryReady: handlePendingStoryReady,
+    showToast,
+  });
 
   const handleAdminAccessGranted = useCallback(() => {
     if (!isAdminRoute) void navigate({ to: '/admin' });
@@ -233,7 +229,7 @@ export default function App() {
   const handleSelectStory = (story: Story, targetPage?: number) => {
     // Check if online reading is permitted (1 free book for guest, unlimited for logged-in parents)
     if (!userAuthStore.canReadStoryOnline(story.id)) {
-      setLoginStoryTarget(story);
+      requestLogin(story);
       return;
     }
 
@@ -241,11 +237,7 @@ export default function App() {
     userAuthStore.recordStoryRead(story.id, story.title);
 
     setSelectedStory(story);
-    setPersonalLibrary((previous) => {
-      const next = personalLibraryStore.recordRecent(previous, story.id);
-      personalLibraryStore.save(next, currentUser?.id);
-      return next;
-    });
+    recordRecentStory(story.id);
     speechEngine.stop();
 
     const savedPage = targetPage !== undefined ? targetPage : bookmarks[story.id];
@@ -272,14 +264,6 @@ export default function App() {
     const routeStory = stories.find((story) => story.id === decodedStoryId);
     if (routeStory) handleSelectStory(routeStory);
   }, [pathname, readerStoryId, selectedStory?.id, stories]);
-
-  const handleToggleStoryFavorite = (storyId: string) => {
-    setPersonalLibrary((previous) => {
-      const next = personalLibraryStore.toggleFavorite(previous, storyId);
-      personalLibraryStore.save(next, currentUser?.id);
-      return next;
-    });
-  };
 
   const handleBackToLibrary = () => {
     setSelectedStory(null);
@@ -369,16 +353,8 @@ export default function App() {
           }}
           onCloseWhatsNew={() => setShowWhatsNewDropdown(false)}
           onHome={handleBackToLibrary}
-          onLogin={() => setShowLoginModal(true)}
-          onLogout={() => {
-            void userAuthStore.logout().then(() => {
-              setCurrentUser(null);
-              showToast('👋 Berhasil keluar dari Akun Orang Tua');
-            }).catch((error) => {
-              console.error('Failed to sign out:', error);
-              showToast('Keluar akun gagal. Coba lagi.');
-            });
-          }}
+          onLogin={() => requestLogin()}
+          onLogout={() => void logout()}
           onSettings={() => void navigate({ to: '/settings' })}
           onStats={() => setShowStatsModal(true)}
           onToggleTheme={handleToggleTheme}
@@ -430,7 +406,7 @@ export default function App() {
           const user = userAuthStore.getUser();
           if (!user) {
             showToast('🔒 Silakan Masuk (Login) Akun Orang Tua terlebih dahulu untuk menggunakan fitur AI.');
-            setShowLoginModal(true);
+            requestLogin();
           } else if (userAuthStore.isVip()) {
             if ((user.aiStoriesUsed || 0) >= 10) showToast('Kuota buat cerita bulan ini sudah habis.');
             else setIsStoryMakerOpen(true);
@@ -662,24 +638,8 @@ export default function App() {
       {(showLoginModal || loginStoryTarget) && (
         <ParentLoginModal
           attemptedStoryTitle={loginStoryTarget?.title}
-          onClose={() => {
-            setShowLoginModal(false);
-            setLoginStoryTarget(null);
-          }}
-          onLoginSuccess={async (user) => {
-            await paymentStore.syncPurchasesFromSupabase(user.email);
-            setCurrentUser(user);
-            setShowLoginModal(false);
-            showToast(`Selamat datang, ${user.name}! Seluruh koleksi cerita kini terbuka.`);
-            if (loginStoryTarget) {
-              const pendingStory = loginStoryTarget;
-              setLoginStoryTarget(null);
-              // Open story after login
-              userAuthStore.recordStoryRead(pendingStory.id, pendingStory.title);
-              setSelectedStory(pendingStory);
-              setCurrentPageIndex(0);
-            }
-          }}
+          onClose={closeLogin}
+          onLoginSuccess={handleLoginSuccess}
           isNight={isNight}
         />
       )}

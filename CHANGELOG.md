@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Admin feature composition**: Moved the complete catalog, Quick Create, and editor composition into a dedicated Book Studio workspace. Admin navigation, user activity state, CSV export, and shared section types now live behind the Admin feature boundary.
 - **Admin route and access boundary**: Moved Admin URL interpretation, section navigation, story persistence, lazy dashboard loading, PIN verification API calls, and access state out of `App.tsx` into the Admin feature.
 - **Reader progress controller boundary**: Moved bookmark, reading-time, completion, rest-reminder, and Admin activity-log state into the Reader feature, with browser persistence isolated behind a typed store.
+- **Account session boundary**: Moved authentication initialization, purchase synchronization, login/logout state, pending-story access, favorites, and recently-read persistence into a dedicated Account feature.
 
 ### Fixed
 - **Duplicate story maker dialog**: Removed a duplicate `StoryMakerModal` render that could mount the same AI story creation interface twice.
@@ -34,6 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Admin CSV escaping**: Escaped embedded quotes in exported parent-account fields so names and contact data cannot corrupt CSV columns.
 - **Admin PIN retry flow**: Kept the controlled PIN dialog open after failed verification and disabled duplicate submissions while a verification request is running.
 - **Reader progress storage validation**: Ignore malformed bookmark, duration, and completion values from browser storage instead of allowing invalid data to enter reader state.
+- **Post-login reader route**: Opening a locked story after successful parent login now navigates to its addressable `/read/:storyId` URL and records it in the signed-in account's recent library.
 
 ## [0.1.0] - 2026-08-10
 

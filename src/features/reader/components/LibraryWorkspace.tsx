@@ -1,5 +1,5 @@
 import type { RefObject } from 'react';
-import type { PersonalLibrary } from '../../../utils/personalLibraryStore';
+import type { PersonalLibrary } from '@/features/account';
 import type { ReadingSettings, Story } from '../../../types';
 import { Flipbook3D, type FlipbookHandle } from '../../../components/Flipbook3D';
 import { NavigationControls } from '../../../components/NavigationControls';
