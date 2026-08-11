@@ -1,6 +1,8 @@
 export { LibraryWorkspace } from './components/LibraryWorkspace';
 export { Flipbook3D } from './components/flipbook/Flipbook3D';
 export type { FlipbookHandle, FlipbookProps } from './types/flipbook';
+export { StorySelector } from './components/catalog/StorySelector';
+export type { StorySelectorProps, StoryLibraryView, StoryProgress } from './types/storyCatalog';
 export { ReaderOverlayModals } from './components/ReaderOverlayModals';
 export { ReaderNavigationControls } from './components/navigation/ReaderNavigationControls';
 export { useReadingProgressController } from './hooks/useReadingProgressController';

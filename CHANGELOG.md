@@ -31,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Reader overlay composition**: Moved thumbnail, Story Maker, quiz, rest reminder, parental gate, statistics, voice recorder, and completion modal state and rendering behind the Reader feature boundary.
 - **Reader navigation composition**: Replaced the monolithic reader navigation component with a focused controller, desktop sidebar, mobile navigation and tools sheet, plus shared accessible control primitives under the Reader feature.
 - **Flipbook composition**: Split flipbook audio, autoplay, keyboard, click, and swipe behavior from story spread, interactive element, back-cover, and vocabulary overlay rendering under the Reader feature.
+- **Story catalog composition**: Replaced the monolithic catalog selector with a typed collection controller and focused promo, hero, personal-library tabs, category filter, cover, story-card, and empty-state components under the Reader feature.
 - **Account session boundary**: Moved authentication initialization, purchase synchronization, login/logout state, pending-story access, favorites, and recently-read persistence into a dedicated Account feature.
 - **Commerce flow state machine**: Replaced separate VIP, parental-gate, book-payment, and download modal booleans with one typed purchase flow and a dedicated Commerce modal composer.
 

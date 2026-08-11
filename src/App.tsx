@@ -236,7 +236,6 @@ export default function App() {
         completedStories={readerSession.completedStories}
         currentPageIndex={readerSession.currentPageIndex}
         flipbookRef={readerSession.flipbookRef}
-        isNight={isNight}
         isThumbnailsOpen={readerOverlays.isThumbnailsOpen}
         personalLibrary={personalLibrary}
         readingTimes={readerSession.readingTimes}

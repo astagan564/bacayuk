@@ -1,6 +1,7 @@
 import React from 'react';
 import { Story } from '../types';
 import { BarChart3, Clock, BookOpen, Award, Flame, X, RotateCcw, CheckCircle2 } from 'lucide-react';
+import { formatReadingDuration } from '@/features/reader/helpers/readingDuration';
 
 interface StatsModalProps {
   stories: Story[];
@@ -10,21 +11,6 @@ interface StatsModalProps {
   onResetStats?: () => void;
   isNight?: boolean;
 }
-
-export const formatDuration = (totalSeconds: number): string => {
-  if (!totalSeconds || totalSeconds <= 0) return '0 dtk';
-  const hours = Math.floor(totalSeconds / 3600);
-  const minutes = Math.floor((totalSeconds % 3600) / 60);
-  const seconds = totalSeconds % 60;
-
-  if (hours > 0) {
-    return `${hours} jam ${minutes} mnt`;
-  }
-  if (minutes > 0) {
-    return `${minutes} mnt ${seconds} dtk`;
-  }
-  return `${seconds} dtk`;
-};
 
 export const StatsModal: React.FC<StatsModalProps> = ({
   stories,
@@ -84,7 +70,7 @@ export const StatsModal: React.FC<StatsModalProps> = ({
                 <Clock className="w-4 h-4" />
               </div>
               <span className="text-2xl sm:text-3xl font-black tracking-tight">
-                {formatDuration(totalSeconds)}
+                {formatReadingDuration(totalSeconds)}
               </span>
               <span className="text-[10px] font-semibold opacity-75">Waktu membaca total</span>
             </div>
@@ -109,7 +95,7 @@ export const StatsModal: React.FC<StatsModalProps> = ({
                 {mostReadStory ? (mostReadStory as Story).title : 'Belum Ada'}
               </span>
               <span className="text-[10px] font-semibold opacity-75">
-                {maxTime > 0 ? formatDuration(maxTime) : 'Belum dibaca'}
+                {maxTime > 0 ? formatReadingDuration(maxTime) : 'Belum dibaca'}
               </span>
             </div>
           </div>
@@ -146,7 +132,7 @@ export const StatsModal: React.FC<StatsModalProps> = ({
                     </div>
 
                     <div className="flex flex-col items-end shrink-0">
-                      <span className="text-sm font-black text-primary">{formatDuration(seconds)}</span>
+                      <span className="text-sm font-black text-primary">{formatReadingDuration(seconds)}</span>
                       {percentage > 0 && (
                         <span className="text-[10px] font-extrabold text-success">{percentage}% total</span>
                       )}

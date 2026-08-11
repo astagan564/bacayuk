@@ -1,7 +1,7 @@
 import type { RefObject } from 'react';
 import type { PersonalLibrary } from '@/features/account';
 import type { ReadingSettings, Story } from '../../../types';
-import { StorySelector } from '../../../components/StorySelector';
+import { StorySelector } from '@/features/reader/components/catalog/StorySelector';
 import { Flipbook3D } from '@/features/reader/components/flipbook/Flipbook3D';
 import type { FlipbookHandle } from '@/features/reader/types/flipbook';
 import { ReaderNavigationControls } from '@/features/reader/components/navigation/ReaderNavigationControls';
@@ -11,7 +11,6 @@ interface LibraryWorkspaceProps {
   completedStories: Record<string, boolean>;
   currentPageIndex: number;
   flipbookRef: RefObject<FlipbookHandle | null>;
-  isNight: boolean;
   isThumbnailsOpen: boolean;
   personalLibrary: PersonalLibrary;
   readingTimes: Record<string, number>;
@@ -41,7 +40,6 @@ export function LibraryWorkspace({
   completedStories,
   currentPageIndex,
   flipbookRef,
-  isNight,
   isThumbnailsOpen,
   personalLibrary,
   readingTimes,
@@ -82,7 +80,6 @@ export function LibraryWorkspace({
           onOpenPaymentModal={onOpenPayment}
           onOpenOfflineDownloadModal={onOpenOfflineDownload}
           onTestRestReminder={onTestRestReminder}
-          isNight={isNight}
         />
       ) : (
         <div ref={readingViewRef} className="w-full reader-fade-in flex flex-col lg:h-full lg:min-h-0 lg:flex-row lg:items-stretch lg:gap-3 lg:px-4 lg:py-2">
