@@ -4,7 +4,6 @@ import { InteractiveQuizModal } from '@/components/InteractiveQuizModal';
 import { ParentalGateModal } from '@/components/ParentalGateModal';
 import { RestReminderModal } from '@/components/RestReminderModal';
 import { StatsModal } from '@/components/StatsModal';
-import { StoryMakerModal } from '@/components/StoryMakerModal';
 import { ThumbnailGrid } from '@/components/ThumbnailGrid';
 import { VoiceRecorderModal } from '@/features/reader/components/voice-recorder/VoiceRecorderModal';
 import type { ReaderOverlayController } from '@/features/reader/hooks/useReaderOverlayController';
@@ -40,13 +39,6 @@ export function ReaderOverlayModals({
           onSelectPage={session.changePage}
           onClose={overlays.closeThumbnails}
           isNight={isNight}
-        />
-      )}
-
-      {overlays.isStoryMakerOpen && (
-        <StoryMakerModal
-          onClose={overlays.closeStoryMaker}
-          onStoryCreated={session.createStory}
         />
       )}
 

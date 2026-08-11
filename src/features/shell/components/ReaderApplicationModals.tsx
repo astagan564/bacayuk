@@ -5,6 +5,7 @@ import { ParentLoginModal } from '@/components/ParentLoginModal';
 import { PurchaseFlowModals } from '@/features/commerce';
 import type { PurchaseFlowController } from '@/features/commerce';
 import { ReaderOverlayModals } from '@/features/reader';
+import { StoryMakerModal } from '@/features/story-maker';
 import type {
   ReaderOverlayController,
   ReaderSessionController,
@@ -51,6 +52,12 @@ export function ReaderApplicationModals({
         onRequestDownload={purchaseFlow.requestBookPurchase}
         showToast={showToast}
       />
+      {overlays.isStoryMakerOpen && (
+        <StoryMakerModal
+          onClose={overlays.closeStoryMaker}
+          onStoryCreated={session.createStory}
+        />
+      )}
       <PurchaseFlowModals flow={purchaseFlow} isNight={isNight} />
       {(showLoginModal || loginStoryTarget) && (
         <ParentLoginModal
