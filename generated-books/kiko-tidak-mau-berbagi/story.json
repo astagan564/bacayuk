@@ -1,0 +1,338 @@
+{
+  "schemaVersion": "1.0",
+  "story": {
+    "id": "kiko-tidak-mau-berbagi",
+    "title": "Kiko Tidak Mau Berbagi",
+    "author": "BacaYuk Studio",
+    "category": "Persahabatan & Kebaikan",
+    "coverImage": "https://sibwrdbmoasrpcpjgrst.supabase.co/storage/v1/object/public/story-images/kiko-tidak-mau-berbagi/cover.webp",
+    "coverBg": "from-yellow-300 via-orange-300 to-sky-300",
+    "themeColor": "yellow",
+    "accentColor": "orange",
+    "moralMessage": "Berbagi membuat kebahagiaan menjadi lebih besar.",
+    "targetAge": "4-6 Tahun",
+    "description": "Kiko tidak mau meminjamkan krayon barunya. Namun ketika krayon birunya patah, teman-temannya justru membantunya.",
+    "accessStatus": "free_member",
+    "downloadEnabled": false,
+    "ebookPrice": 0,
+    "watermarkEnabled": true,
+    "status": "published",
+    "pipelineStatus": "ready_to_publish",
+    "pages": [
+      {
+        "pageNumber": 1,
+        "title": "Kotak Krayon Baru",
+        "text": "Hari itu, Kiko membawa kotak krayon baru ke sekolah. Warnanya lengkap dan cerah.",
+        "textEn": "",
+        "illustrationType": "custom",
+        "illustrationPrompt": "Kiko, a cheerful Indonesian boy around five years old with warm brown skin, short wavy black hair and large dark-brown eyes, proudly holds a new rectangular box of colorful crayons inside a bright kindergarten classroom, warm cheerful atmosphere, soft hand-painted 2D children's picture-book illustration, rounded shapes, subtle paper texture, no text.",
+        "imageUrl": "https://sibwrdbmoasrpcpjgrst.supabase.co/storage/v1/object/public/story-images/kiko-tidak-mau-berbagi/page-01.webp",
+        "colors": {
+          "bgGradFrom": "from-yellow-100",
+          "bgGradTo": "to-orange-100",
+          "textBg": "bg-white/85",
+          "accentColor": "yellow",
+          "borderAccent": "border-yellow-300"
+        }
+      },
+      {
+        "pageNumber": 2,
+        "title": "Krayon Kesayangan",
+        "text": "Ada merah, kuning, hijau, biru, dan banyak warna lainnya. Kiko tersenyum bangga.",
+        "textEn": "",
+        "illustrationType": "classroom",
+        "illustrationPrompt": "Close view of Kiko, the same five-year-old Indonesian boy with short wavy black hair and yellow T-shirt, carefully arranging many bright crayons in a neat box on a small classroom table, his face proud and excited, soft hand-painted 2D children's picture-book illustration, no text.",
+        "imageUrl": "https://sibwrdbmoasrpcpjgrst.supabase.co/storage/v1/object/public/story-images/kiko-tidak-mau-berbagi/page-02.webp",
+        "colors": {
+          "bgGradFrom": "from-orange-100",
+          "bgGradTo": "to-rose-100",
+          "textBg": "bg-white/85",
+          "accentColor": "orange",
+          "borderAccent": "border-orange-300"
+        }
+      },
+      {
+        "pageNumber": 3,
+        "title": "Boleh Meminjam?",
+        "text": "Sita datang mendekat. “Kiko, boleh aku meminjam warna biru?” tanyanya.",
+        "textEn": "",
+        "illustrationType": "classroom",
+        "illustrationPrompt": "Kiko, unchanged with warm brown skin, short wavy black hair and yellow T-shirt, sits at a small classroom table while Sita, a friendly Indonesian girl around five years old with two short black pigtails and a pink dress, politely asks to borrow the blue crayon, gentle classroom scene, soft hand-painted 2D children's picture-book illustration, no text.",
+        "imageUrl": "https://sibwrdbmoasrpcpjgrst.supabase.co/storage/v1/object/public/story-images/kiko-tidak-mau-berbagi/page-03.webp",
+        "colors": {
+          "bgGradFrom": "from-sky-100",
+          "bgGradTo": "to-pink-100",
+          "textBg": "bg-white/85",
+          "accentColor": "sky",
+          "borderAccent": "border-sky-300"
+        }
+      },
+      {
+        "pageNumber": 4,
+        "title": "Kiko Menolak",
+        "text": "Kiko segera menutup kotaknya. “Tidak boleh. Ini krayonku,” katanya.",
+        "textEn": "",
+        "illustrationType": "classroom",
+        "illustrationPrompt": "Kiko, the same Indonesian boy with yellow T-shirt, closes his colorful crayon box protectively with both hands while Sita looks slightly disappointed but calm, bright kindergarten classroom, safe emotional expression, soft hand-painted 2D children's picture-book illustration, no text.",
+        "imageUrl": "https://sibwrdbmoasrpcpjgrst.supabase.co/storage/v1/object/public/story-images/kiko-tidak-mau-berbagi/page-04.webp",
+        "colors": {
+          "bgGradFrom": "from-rose-100",
+          "bgGradTo": "to-yellow-100",
+          "textBg": "bg-white/85",
+          "accentColor": "rose",
+          "borderAccent": "border-rose-300"
+        }
+      },
+      {
+        "pageNumber": 5,
+        "title": "Menggambar Sendiri",
+        "text": "Kiko mulai menggambar sendirian. Ia membuat gambar langit, pohon, dan rumah.",
+        "textEn": "",
+        "illustrationType": "classroom",
+        "illustrationPrompt": "Kiko, unchanged with short wavy black hair and yellow T-shirt, draws alone on a sheet of paper at a small classroom table using colorful crayons, while other children nearby draw together, bright friendly kindergarten setting, soft hand-painted 2D children's picture-book illustration, no text.",
+        "imageUrl": "https://sibwrdbmoasrpcpjgrst.supabase.co/storage/v1/object/public/story-images/kiko-tidak-mau-berbagi/page-05.webp",
+        "colors": {
+          "bgGradFrom": "from-green-100",
+          "bgGradTo": "to-sky-100",
+          "textBg": "bg-white/85",
+          "accentColor": "green",
+          "borderAccent": "border-green-300"
+        }
+      },
+      {
+        "pageNumber": 6,
+        "title": "Krayon Biru Patah",
+        "text": "Tiba-tiba, krayon biru Kiko patah. “Oh, tidak!” seru Kiko.",
+        "textEn": "",
+        "illustrationType": "classroom",
+        "illustrationPrompt": "Kiko, the same five-year-old Indonesian boy, looks surprised and worried as his blue crayon breaks into two pieces on the classroom table, colorful drawing paper nearby, safe gentle emotion, soft hand-painted 2D children's picture-book illustration, no text.",
+        "imageUrl": "https://sibwrdbmoasrpcpjgrst.supabase.co/storage/v1/object/public/story-images/kiko-tidak-mau-berbagi/page-06.webp",
+        "colors": {
+          "bgGradFrom": "from-blue-100",
+          "bgGradTo": "to-purple-100",
+          "textBg": "bg-white/85",
+          "accentColor": "blue",
+          "borderAccent": "border-blue-300"
+        }
+      },
+      {
+        "pageNumber": 7,
+        "title": "Kiko Kebingungan",
+        "text": "Tanpa warna biru, langit dalam gambar Kiko belum selesai. Kiko merasa sedih.",
+        "textEn": "",
+        "illustrationType": "classroom",
+        "illustrationPrompt": "Kiko sits quietly at the classroom table looking sad at an unfinished drawing with a blank sky, the broken blue crayon beside the paper, soft caring kindergarten atmosphere, hand-painted 2D children's picture-book illustration, no text.",
+        "imageUrl": "https://sibwrdbmoasrpcpjgrst.supabase.co/storage/v1/object/public/story-images/kiko-tidak-mau-berbagi/page-07.webp",
+        "colors": {
+          "bgGradFrom": "from-sky-100",
+          "bgGradTo": "to-gray-100",
+          "textBg": "bg-white/85",
+          "accentColor": "sky",
+          "borderAccent": "border-sky-300"
+        }
+      },
+      {
+        "pageNumber": 8,
+        "title": "Teman-Teman Membantu",
+        "text": "Sita melihat Kiko. Ia memberikan krayon birunya. “Pakai saja punyaku,” katanya.",
+        "textEn": "",
+        "illustrationType": "classroom",
+        "illustrationPrompt": "Sita, the same friendly Indonesian girl with two short black pigtails and pink dress, kindly offers her blue crayon to Kiko, who looks surprised and grateful, classroom table with drawings, warm friendship moment, soft hand-painted 2D children's picture-book illustration, no text.",
+        "imageUrl": "https://sibwrdbmoasrpcpjgrst.supabase.co/storage/v1/object/public/story-images/kiko-tidak-mau-berbagi/page-08.webp",
+        "colors": {
+          "bgGradFrom": "from-pink-100",
+          "bgGradTo": "to-sky-100",
+          "textBg": "bg-white/85",
+          "accentColor": "pink",
+          "borderAccent": "border-pink-300"
+        }
+      },
+      {
+        "pageNumber": 9,
+        "title": "Kiko Terkejut",
+        "text": "Kiko terdiam. Tadi ia tidak mau berbagi. Namun Sita tetap mau membantunya.",
+        "textEn": "",
+        "illustrationType": "classroom",
+        "illustrationPrompt": "Kiko holds the blue crayon Sita offered and looks thoughtful, while Sita smiles gently beside him, other children continue drawing in the background, warm reflective classroom scene, soft hand-painted 2D children's picture-book illustration, no text.",
+        "imageUrl": "https://sibwrdbmoasrpcpjgrst.supabase.co/storage/v1/object/public/story-images/kiko-tidak-mau-berbagi/page-09.webp",
+        "colors": {
+          "bgGradFrom": "from-amber-100",
+          "bgGradTo": "to-mint-100",
+          "textBg": "bg-white/85",
+          "accentColor": "amber",
+          "borderAccent": "border-amber-300"
+        }
+      },
+      {
+        "pageNumber": 10,
+        "title": "Kiko Meminta Maaf",
+        "text": "“Maafkan aku, Sita,” kata Kiko. “Seharusnya aku mau berbagi.”",
+        "textEn": "",
+        "illustrationType": "classroom",
+        "illustrationPrompt": "Kiko, the same Indonesian boy with yellow T-shirt, sincerely apologizes to Sita with a gentle expression, hands together near his chest, Sita listens kindly, bright safe classroom, soft hand-painted 2D children's picture-book illustration, no text.",
+        "imageUrl": "https://sibwrdbmoasrpcpjgrst.supabase.co/storage/v1/object/public/story-images/kiko-tidak-mau-berbagi/page-10.webp",
+        "colors": {
+          "bgGradFrom": "from-yellow-100",
+          "bgGradTo": "to-pink-100",
+          "textBg": "bg-white/85",
+          "accentColor": "yellow",
+          "borderAccent": "border-yellow-300"
+        }
+      },
+      {
+        "pageNumber": 11,
+        "title": "Menggambar Bersama",
+        "text": "Kiko membuka kotak krayonnya. “Ayo kita menggambar bersama!” katanya.",
+        "textEn": "",
+        "illustrationType": "classroom",
+        "illustrationPrompt": "Kiko opens his colorful crayon box and invites Sita and two other kindergarten friends to draw together around one table, everyone smiling and sharing crayons, cheerful classroom, soft hand-painted 2D children's picture-book illustration, no text.",
+        "imageUrl": "https://sibwrdbmoasrpcpjgrst.supabase.co/storage/v1/object/public/story-images/kiko-tidak-mau-berbagi/page-11.webp",
+        "colors": {
+          "bgGradFrom": "from-green-100",
+          "bgGradTo": "to-yellow-100",
+          "textBg": "bg-white/85",
+          "accentColor": "green",
+          "borderAccent": "border-green-300"
+        }
+      },
+      {
+        "pageNumber": 12,
+        "title": "Kebahagiaan yang Bertambah",
+        "text": "Kini gambar mereka menjadi lebih indah. Kiko belajar bahwa berbagi tidak membuat miliknya berkurang. Berbagi membuat kebahagiaan bertambah.",
+        "textEn": "",
+        "illustrationType": "classroom",
+        "illustrationPrompt": "Kiko, Sita and their two friends proudly hold up one large colorful collaborative drawing together in the bright kindergarten classroom, colorful crayons spread neatly on the table, everyone joyful, warm satisfying ending, soft hand-painted 2D children's picture-book illustration, no text.",
+        "imageUrl": "https://sibwrdbmoasrpcpjgrst.supabase.co/storage/v1/object/public/story-images/kiko-tidak-mau-berbagi/page-12.webp",
+        "colors": {
+          "bgGradFrom": "from-orange-100",
+          "bgGradTo": "to-sky-100",
+          "textBg": "bg-white/85",
+          "accentColor": "orange",
+          "borderAccent": "border-orange-300"
+        },
+        "quizQuestion": {
+          "question": "Apa yang dipelajari Kiko?",
+          "options": [
+            "Krayon harus selalu disimpan sendiri",
+            "Berbagi dapat membuat kebahagiaan bertambah",
+            "Menggambar harus dilakukan sendirian",
+            "Warna biru tidak penting"
+          ],
+          "answerIndex": 1,
+          "explanation": "Kiko belajar bahwa berbagi membuat semua teman dapat bermain dan merasa bahagia bersama."
+        }
+      }
+    ],
+    "productionGuide": {
+      "visualPreset": "soft-2d-cartoon",
+      "aspectRatio": "3:4",
+      "characterBible": [
+        {
+          "id": "kiko",
+          "name": "Kiko",
+          "role": "main",
+          "speciesOrIdentity": "Anak laki-laki Indonesia",
+          "ageAppearance": "Sekitar 5 tahun",
+          "bodyAndFace": "Tubuh kecil, wajah bulat, mata cokelat tua besar, hidung kecil, pipi lembut",
+          "skinFurOrHair": "Kulit cokelat hangat, rambut hitam pendek sedikit bergelombang",
+          "outfit": "Kaus kuning cerah dan celana pendek biru denim",
+          "accessories": [
+            "Tas kecil warna hijau dengan gambar matahari"
+          ],
+          "signatureColors": [
+            "#9A6045",
+            "#252525",
+            "#F5C94A",
+            "#4D86B8",
+            "#79B88A"
+          ],
+          "personality": [
+            "aktif",
+            "imajinatif",
+            "mudah bersemangat",
+            "sedang belajar berbagi"
+          ],
+          "expressionGuide": [
+            "Bangga: dada sedikit membusung dan senyum lebar",
+            "Sedih: alis menurun dan bahu sedikit turun",
+            "Menyesal: wajah lembut dan tangan saling menggenggam",
+            "Bahagia: mata berbinar dan senyum terbuka"
+          ],
+          "immutableTraits": [
+            "Rambut selalu hitam pendek dan sedikit bergelombang",
+            "Kaus selalu kuning",
+            "Celana selalu biru denim",
+            "Tas selalu hijau dengan gambar matahari"
+          ]
+        },
+        {
+          "id": "sita",
+          "name": "Sita",
+          "role": "supporting",
+          "speciesOrIdentity": "Anak perempuan Indonesia",
+          "ageAppearance": "Sekitar 5 tahun",
+          "bodyAndFace": "Tubuh kecil, wajah bulat, mata cokelat besar dan senyum lembut",
+          "skinFurOrHair": "Kulit cokelat muda, rambut hitam dengan dua kuncir pendek",
+          "outfit": "Gaun merah muda dengan kerah putih",
+          "accessories": [
+            "Jepit rambut berbentuk bunga putih"
+          ],
+          "signatureColors": [
+            "#A96D52",
+            "#252525",
+            "#F29BAA",
+            "#FFFFFF"
+          ],
+          "personality": [
+            "sabar",
+            "ramah",
+            "suka membantu",
+            "pemaaf"
+          ],
+          "expressionGuide": [
+            "Meminta: tangan terbuka dan senyum sopan",
+            "Peduli: kepala sedikit miring dan mata lembut",
+            "Bahagia: senyum lebar dan tubuh condong ke teman"
+          ],
+          "immutableTraits": [
+            "Rambut selalu dikuncir dua",
+            "Jepit bunga putih selalu terlihat",
+            "Gaun selalu merah muda dengan kerah putih"
+          ]
+        }
+      ],
+      "palette": [
+        "#F5C94A",
+        "#F29BAA",
+        "#4D86B8",
+        "#79B88A",
+        "#F28C50",
+        "#FFFFFF"
+      ],
+      "coverPrompt": "Kiko, a cheerful Indonesian boy around five years old with warm brown skin, short slightly wavy black hair, large dark-brown eyes, bright yellow T-shirt and blue denim shorts, opens a colorful crayon box while sharing crayons with Sita, a friendly Indonesian girl with two short black pigtails and a pink dress, several children draw together around a classroom table, joyful friendship and sharing theme, soft hand-painted 2D children's picture-book cover illustration, rounded shapes, subtle paper texture, edge-to-edge portrait composition, no typography or readable text.",
+      "continuityRules": [
+        "Gunakan desain, proporsi, pakaian, dan warna pada character bible tanpa perubahan.",
+        "Kiko selalu memakai kaus kuning, celana pendek denim biru, dan membawa tas hijau bergambar matahari.",
+        "Sita selalu memiliki dua kuncir pendek, jepit bunga putih, dan gaun merah muda berkerah putih.",
+        "Kotak krayon Kiko selalu berbentuk persegi panjang dengan banyak krayon warna-warni.",
+        "Pertahankan ruang kelas sebagai tempat yang cerah, aman, rapi, dan ramah anak.",
+        "Gunakan gaya lukisan 2D lembut, bentuk membulat, tekstur kertas halus, dan warna cerah.",
+        "Jangan memasukkan tulisan, huruf, angka, balon percakapan, logo, atau watermark ke dalam ilustrasi."
+      ],
+      "negativePrompt": "photorealistic, 3D render, horror, danger, violence, crying intensely, aggressive children, broken furniture, messy unsafe classroom, readable text, letters, numbers, caption, speech bubble, logo, signature, watermark, extra limbs, duplicate children, changed clothing, changed hairstyle, inconsistent proportions"
+    }
+  },
+  "review": {
+    "status": "needs_review",
+    "checklist": [
+      "Bacakan naskah dengan lantang dan pastikan panjang kalimat nyaman untuk usia 4-6 tahun.",
+      "Pastikan Kiko dan Sita konsisten dalam pakaian, warna, wajah, dan gaya rambut.",
+      "Pastikan kotak krayon dan warna biru terlihat jelas pada adegan yang relevan.",
+      "Pastikan konflik terasa ringan dan tidak membuat Kiko terlihat sebagai anak yang buruk.",
+      "Pastikan pesan berbagi disampaikan melalui tindakan, bukan hanya nasihat.",
+      "Pastikan seluruh gambar bebas tulisan, logo, dan watermark sebelum dipublikasikan.",
+      "Tinjau pertanyaan pemahaman pada halaman terakhir."
+    ],
+    "warnings": []
+  }
+}
