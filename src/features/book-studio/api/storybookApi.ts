@@ -48,12 +48,13 @@ export const storybookApi = {
     return Array.isArray(data.events) ? data.events : [];
   },
 
-  translateStory(adminPin: string, story: Story) {
+  translateStory(adminPin: string, story: Story, signal?: AbortSignal) {
     return requestJson<{ titleEn?: string; translations?: TranslationRow[] }>(
       '/api/admin/translate-story',
       adminPin,
       {
         method: 'POST',
+        signal,
         body: JSON.stringify({
           title: story.title,
           pages: story.pages.map(({ pageNumber, title, text }) => ({ pageNumber, title, text })),
@@ -68,12 +69,14 @@ export const storybookApi = {
     story: Story,
     mode: 'illustration' | 'glossary' | 'quiz_interactions',
     pages: StoryPage[],
+    signal?: AbortSignal,
   ) {
     return requestJson<EnhancementResponse>(
       '/api/admin/generate-book-enhancement',
       adminPin,
       {
         method: 'POST',
+        signal,
         body: JSON.stringify({
           mode,
           title: story.title,
@@ -92,6 +95,7 @@ export const storybookApi = {
     adminPin: string,
     story: Story,
     request: { imageKind: 'cover' } | { imageKind: 'page'; page: StoryPage },
+    signal?: AbortSignal,
   ): Promise<string> {
     const page = request.imageKind === 'page' ? request.page : undefined;
     const data = await requestJson<{ imageUrl?: string }>(
@@ -99,6 +103,7 @@ export const storybookApi = {
       adminPin,
       {
         method: 'POST',
+        signal,
         body: JSON.stringify({
           imageKind: request.imageKind,
           storyId: story.id,
