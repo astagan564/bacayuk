@@ -51,6 +51,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Vocabulary quiz boundaries**: Moved vocabulary quiz session state, option ordering, question presentation, results, and empty-state rendering into focused Reader modules while retaining the original modal compatibility export.
 - **Admin finance presentation boundaries**: Split finance metrics, coupon creation and listing, and transaction history into focused typed Admin components while retaining the existing finance-controller contract.
 - **Payment checkout lifecycle boundaries**: Split customer and coupon state, Midtrans Snap orchestration, and verified receipt finalization into focused Commerce modules while retaining the existing payment-gateway facade.
+- **Story metadata editor boundaries**: Split Book Studio identity, catalog preview, reader access, and offline-download settings into focused typed components coordinated through one functional draft-update boundary.
 
 ### Fixed
 - **Duplicate story maker dialog**: Removed a duplicate `StoryMakerModal` render that could mount the same AI story creation interface twice.
