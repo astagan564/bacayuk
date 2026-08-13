@@ -1,4 +1,5 @@
 import jsPDF from 'jspdf';
+import bacayukLogoUrl from '@/assets/bacayuk-logo.svg';
 import type { Story } from '@/types';
 import type { CustomerInfo } from '@/features/commerce/download/types';
 
@@ -21,26 +22,53 @@ function cleanPdfText(value: string | undefined): string {
     .trim();
 }
 
-async function loadPrintableImage(url: string | undefined): Promise<PrintableImage | null> {
+async function loadPrintableImage(
+  url: string | undefined,
+  backgroundColor = '#ffffff',
+): Promise<PrintableImage | null> {
   if (!url?.trim()) return null;
 
   try {
     const response = await fetch(url, { mode: 'cors' });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    const bitmap = await createImageBitmap(await response.blob());
-    const longestSide = Math.max(bitmap.width, bitmap.height);
+    const blob = await response.blob();
+    let source: CanvasImageSource;
+    let sourceWidth: number;
+    let sourceHeight: number;
+    let closeSource: () => void = () => {};
+    try {
+      const bitmap = await createImageBitmap(blob);
+      source = bitmap;
+      sourceWidth = bitmap.width;
+      sourceHeight = bitmap.height;
+      closeSource = () => bitmap.close();
+    } catch {
+      const objectUrl = URL.createObjectURL(blob);
+      const image = await new Promise<HTMLImageElement>((resolve, reject) => {
+        const element = new Image();
+        element.onload = () => resolve(element);
+        element.onerror = () => reject(new Error('Format gambar tidak dapat dibaca.'));
+        element.src = objectUrl;
+      });
+      source = image;
+      sourceWidth = image.naturalWidth;
+      sourceHeight = image.naturalHeight;
+      closeSource = () => URL.revokeObjectURL(objectUrl);
+    }
+
+    const longestSide = Math.max(sourceWidth, sourceHeight);
     const scale = Math.min(1, 2200 / longestSide);
-    const width = Math.max(1, Math.round(bitmap.width * scale));
-    const height = Math.max(1, Math.round(bitmap.height * scale));
+    const width = Math.max(1, Math.round(sourceWidth * scale));
+    const height = Math.max(1, Math.round(sourceHeight * scale));
     const canvas = document.createElement('canvas');
     canvas.width = width;
     canvas.height = height;
     const context = canvas.getContext('2d');
     if (!context) throw new Error('Canvas tidak tersedia.');
-    context.fillStyle = '#ffffff';
+    context.fillStyle = backgroundColor;
     context.fillRect(0, 0, width, height);
-    context.drawImage(bitmap, 0, 0, width, height);
-    bitmap.close();
+    context.drawImage(source, 0, 0, width, height);
+    closeSource();
     return {
       dataUrl: canvas.toDataURL('image/jpeg', 0.9),
       width,
@@ -243,17 +271,68 @@ function addGlossaryPages(doc: jsPDF, story: Story, customer: CustomerInfo, firs
     }
     doc.setFillColor(255, 253, 248);
     doc.setDrawColor(224, 217, 203);
-    doc.roundedRect(SAFE_MARGIN, y, PAGE_WIDTH - SAFE_MARGIN * 2, 26, 4, 4, 'FD');
+    doc.roundedRect(SAFE_MARGIN, y, PAGE_WIDTH - SAFE_MARGIN * 2, 27, 4, 4, 'FD');
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(12);
+    doc.setFontSize(11.5);
     doc.setTextColor(43, 83, 59);
-    doc.text(cleanPdfText(item.wordEn), SAFE_MARGIN + 7, y + 10);
+    doc.text(cleanPdfText(item.wordEn), SAFE_MARGIN + 7, y + 7.5);
+
+    doc.setFontSize(8.5);
+    doc.setTextColor(91, 84, 72);
+    doc.text('Cara baca', SAFE_MARGIN + 7, y + 15.5);
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(9.5);
+    const phonetic = item.phonetic ? `[${cleanPdfText(item.phonetic)}]` : '-';
+    doc.text(phonetic, SAFE_MARGIN + 28, y + 15.5);
+
+    doc.setFont('helvetica', 'bold');
+    doc.text('Artinya', SAFE_MARGIN + 7, y + 23);
+    doc.setFont('helvetica', 'normal');
     doc.setTextColor(66, 61, 53);
-    const phonetic = item.phonetic ? ` [${cleanPdfText(item.phonetic)}]` : '';
-    doc.text(`${cleanPdfText(item.translationId)}${phonetic}`, SAFE_MARGIN + 7, y + 19);
+    doc.text(cleanPdfText(item.translationId), SAFE_MARGIN + 28, y + 23);
     y += 31;
+  });
+  addLicenseFooter(doc, story, customer, pageNumber);
+}
+
+function addClosingPage(
+  doc: jsPDF,
+  story: Story,
+  customer: CustomerInfo,
+  logo: PrintableImage | null,
+  pageNumber: number,
+) {
+  doc.addPage();
+  doc.setFillColor(246, 242, 233);
+  doc.rect(0, 0, PAGE_WIDTH, PAGE_HEIGHT, 'F');
+  doc.setFillColor(225, 237, 226);
+  doc.circle(28, 35, 24, 'F');
+  doc.setFillColor(249, 226, 155);
+  doc.circle(184, 258, 31, 'F');
+
+  if (logo) {
+    doc.addImage(logo.dataUrl, 'JPEG', 40, 90, 130, 39, undefined, 'FAST');
+  } else {
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(34);
+    doc.setTextColor(22, 75, 115);
+    doc.text('BacaYuk', PAGE_WIDTH / 2, 119, { align: 'center' });
+  }
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(11);
+  doc.setTextColor(91, 84, 72);
+  doc.text('Dibuat oleh BacaYuk untuk', PAGE_WIDTH / 2, 151, { align: 'center' });
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(18);
+  doc.setTextColor(37, 78, 57);
+  doc.text(cleanPdfText(customer.name), PAGE_WIDTH / 2, 164, { align: 'center', maxWidth: 170 });
+
+  doc.setFont('helvetica', 'italic');
+  doc.setFontSize(9);
+  doc.setTextColor(103, 95, 81);
+  doc.text(`Terima kasih telah membaca ${cleanPdfText(story.title)}.`, PAGE_WIDTH / 2, 181, {
+    align: 'center',
+    maxWidth: 170,
   });
   addLicenseFooter(doc, story, customer, pageNumber);
 }
@@ -268,13 +347,16 @@ export async function generateStoryPDF(story: Story, customer: CustomerInfo): Pr
     creator: 'BacaYuk',
   });
 
-  const [cover, ...pageImages] = await Promise.all([
+  const [cover, logo, ...pageImages] = await Promise.all([
     loadPrintableImage(story.coverImage),
+    loadPrintableImage(bacayukLogoUrl, '#f6f2e9'),
     ...story.pages.map((page) => loadPrintableImage(page.imageUrl)),
   ]);
 
   addCover(doc, story, customer, cover);
   story.pages.forEach((_, index) => addStoryPage(doc, story, customer, index, pageImages[index]));
   addGlossaryPages(doc, story, customer, story.pages.length + 2);
+  const glossaryPageCount = story.glossary?.length ? Math.ceil(story.glossary.length / 7) : 0;
+  addClosingPage(doc, story, customer, logo, story.pages.length + glossaryPageCount + 2);
   return doc.output('blob');
 }
