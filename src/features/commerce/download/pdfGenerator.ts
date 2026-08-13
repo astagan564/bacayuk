@@ -76,8 +76,10 @@ function drawImageCover(
   }
 
   doc.saveGraphicsState();
-  doc.rect(x, y, width, height);
-  doc.clip();
+  // jsPDF keeps the current path alive after clip(). Discarding it is required;
+  // otherwise every element drawn afterwards (story panel and license footer)
+  // remains clipped to the illustration rectangle.
+  doc.rect(x, y, width, height, null).clip().discardPath();
   doc.addImage(image.dataUrl, 'JPEG', renderX, renderY, renderWidth, renderHeight, undefined, 'FAST');
   doc.restoreGraphicsState();
 }
