@@ -34,7 +34,7 @@ export function registerAccountRoutes(app: Express) {
       const [profiles, readingActivity, paymentOrders, entitlements, legacyTransactions, legacyReceipts] = await Promise.all([
         selectRows(supabase.from('users').select('id, name, email, phone, login_method, created_at').eq('id', user.id)),
         selectRows(supabase.from('user_reading_activities').select('story_id, story_title, last_page_read, total_pages, is_completed, updated_at').eq('user_id', user.id)),
-        selectRows(supabase.from('payment_orders').select('order_id, purchase_type, story_id, story_title, amount, discount_amount, coupon_code, status, payment_method, paid_at, created_at').eq('user_id', user.id)),
+        selectRows(supabase.from('payment_orders').select('order_id, purchase_type, story_id, story_title, amount, charged_amount, customer_fee_amount, discount_amount, coupon_code, status, payment_method, paid_at, created_at').eq('user_id', user.id)),
         selectRows(supabase.from('user_entitlements').select('entitlement_type, story_id, story_title, source_order_id, payment_method, amount, starts_at, expires_at, token_expires_at, download_count, download_limit, created_at').eq('user_id', user.id)),
         email ? selectRows(supabase.from('transaction_records').select('id, story_id, story_title, payment_method, amount, discount_amount, coupon_code, status, created_at, paid_at').ilike('customer_email', email)) : Promise.resolve([]),
         email ? selectRows(supabase.from('purchase_receipts').select('id, story_id, story_title, transaction_id, payment_method, amount, purchased_at, download_count, token_expires_at').ilike('customer_email', email)) : Promise.resolve([]),

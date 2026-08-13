@@ -31,6 +31,7 @@ export function PaymentCheckoutPanel({ controller }: PaymentCheckoutPanelProps) 
             <p className="text-2xl font-extrabold tabular-nums">
               Rp {controller.finalPrice.toLocaleString('id-ID')}
             </p>
+            <p className="mt-1 text-[10px] font-semibold text-secondary">Harga produk</p>
           </div>
         </div>
       </div>
@@ -100,6 +101,9 @@ export function PaymentCheckoutPanel({ controller }: PaymentCheckoutPanelProps) 
           <span>Pembayaran diverifikasi di server</span>
         </div>
         Setelah pembayaran selesai, BacaYuk mengecek status transaksi sebelum membuka akses unduhan.
+        <p className="mt-2 border-t border-brand-green/20 pt-2">
+          Midtrans dapat menambahkan biaya layanan dan pajak sesuai metode pembayaran. Total akhir selalu ditampilkan di halaman Midtrans sebelum Anda membayar.
+        </p>
       </div>
 
       <button

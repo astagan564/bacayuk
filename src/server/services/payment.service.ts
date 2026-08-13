@@ -99,6 +99,14 @@ export interface PaymentOrderRow extends ResolvedTransactionOrder {
   status: 'pending' | 'paid' | 'failed' | 'expired' | 'refunded';
 }
 
+export function getMidtransAmountBreakdown(orderAmount: number, grossAmount: number) {
+  return {
+    orderAmount,
+    grossAmount,
+    customerFeeAmount: Math.max(0, grossAmount - orderAmount),
+  };
+}
+
 export interface EntitlementRow {
   id: number;
   user_id: string;
@@ -211,6 +219,29 @@ export async function getPaymentOrderForUser(orderId: string, userId: string): P
     .maybeSingle();
   if (error) throw new Error(`Failed to load payment order: ${error.message}`);
   if (!data) throw new Error('Payment order tidak ditemukan untuk akun ini.');
+  return {
+    orderId: data.order_id,
+    userId: data.user_id,
+    purchaseType: data.purchase_type,
+    storyId: data.story_id,
+    storyTitle: data.story_title,
+    amount: data.amount,
+    discountAmount: data.discount_amount,
+    couponCode: data.coupon_code,
+    customerName: data.customer_name,
+    customerEmail: data.customer_email,
+    status: data.status,
+  } as PaymentOrderRow;
+}
+
+export async function getPaymentOrder(orderId: string): Promise<PaymentOrderRow> {
+  const { data, error } = await getSupabaseAdminClient()
+    .from('payment_orders')
+    .select('*')
+    .eq('order_id', orderId)
+    .maybeSingle();
+  if (error) throw new Error(`Failed to load payment order: ${error.message}`);
+  if (!data) throw new Error('Payment order tidak ditemukan.');
   return {
     orderId: data.order_id,
     userId: data.user_id,

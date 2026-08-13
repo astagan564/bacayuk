@@ -44,6 +44,9 @@ export interface CreateTransactionResponse {
 
 export interface VerifyTransactionResponse {
   isPaid: boolean;
+  orderAmount?: number;
+  grossAmount?: number;
+  customerFeeAmount?: number;
   entitlement?: PurchaseReceipt | null;
   error?: string;
 }

@@ -4,7 +4,9 @@ import { estimateMidtransFee, recordCostEvent } from '../services/costTracking.s
 import {
   consumeDownloadEntitlement,
   finalizePaymentEntitlement,
+  getMidtransAmountBreakdown,
   getCoreClient,
+  getPaymentOrder,
   getPaymentOrderForUser,
   getSnapClient,
   listUserEntitlements,
@@ -36,6 +38,32 @@ function sendRouteError(res: Response, error: unknown) {
   }
   const message = error instanceof Error ? error.message : 'Permintaan tidak dapat diproses.';
   return res.status(400).json({ error: message });
+}
+
+async function recordMidtransCost(
+  order: Awaited<ReturnType<typeof getPaymentOrder>>,
+  grossAmount: number,
+  paymentMethod: string,
+) {
+  const amount = getMidtransAmountBreakdown(order.amount, grossAmount);
+  const estimatedProviderFee = estimateMidtransFee(order.amount, paymentMethod);
+  const estimatedMerchantFee = Math.max(0, estimatedProviderFee - amount.customerFeeAmount);
+  await recordCostEvent({
+    referenceId: `midtrans-fee:${order.orderId}`,
+    storyId: order.purchaseType === 'book' ? order.storyId : undefined,
+    eventType: 'payment_fee',
+    provider: 'Midtrans',
+    model: paymentMethod || undefined,
+    amountIdr: estimatedMerchantFee,
+    metadata: {
+      orderId: order.orderId,
+      orderAmount: amount.orderAmount,
+      grossAmount: amount.grossAmount,
+      customerFeeAmount: amount.customerFeeAmount,
+      estimatedProviderFee,
+      paymentMethod,
+    },
+  });
 }
 
 export function registerPaymentRoutes(app: Express) {
@@ -118,8 +146,8 @@ export function registerPaymentRoutes(app: Express) {
         (transactionStatus === 'capture' && fraudStatus === 'accept') ||
         transactionStatus === 'settlement';
       const grossAmount = Math.max(0, Number(status.gross_amount || 0));
-      if (!Number.isInteger(grossAmount) || grossAmount !== paymentOrder.amount) {
-        return res.status(409).json({ error: 'Nominal pembayaran tidak sesuai dengan order.', isPaid: false });
+      if (!Number.isInteger(grossAmount) || grossAmount < paymentOrder.amount) {
+        return res.status(409).json({ error: 'Nominal pembayaran kurang dari nilai order.', isPaid: false });
       }
 
       let entitlement: EntitlementRow | null = null;
@@ -129,15 +157,7 @@ export function registerPaymentRoutes(app: Express) {
           grossAmount,
           status.payment_type || 'midtrans',
         );
-        await recordCostEvent({
-          referenceId: `midtrans-fee:${cleanOrderId}`,
-          storyId: paymentOrder.purchaseType === 'book' ? paymentOrder.storyId : undefined,
-          eventType: 'payment_fee',
-          provider: 'Midtrans',
-          model: status.payment_type || undefined,
-          amountIdr: estimateMidtransFee(grossAmount, status.payment_type || ''),
-          metadata: { orderId: cleanOrderId, grossAmount, paymentType: status.payment_type || '' },
-        });
+        await recordMidtransCost(paymentOrder, grossAmount, status.payment_type || 'midtrans');
       }
 
       res.json({
@@ -146,7 +166,9 @@ export function registerPaymentRoutes(app: Express) {
         transactionStatus,
         fraudStatus,
         paymentType: status.payment_type,
+        orderAmount: paymentOrder.amount,
         grossAmount,
+        customerFeeAmount: Math.max(0, grossAmount - paymentOrder.amount),
         entitlement: entitlement ? entitlementToReceipt(entitlement) : null,
       });
     } catch (error) {
@@ -213,11 +235,13 @@ export function registerPaymentRoutes(app: Express) {
       const grossAmount = Math.max(0, Number(status.gross_amount || 0));
       const orderId = status.order_id;
       if (isPaid && Number.isInteger(grossAmount) && grossAmount > 0 && orderId) {
+        const paymentOrder = await getPaymentOrder(orderId);
         await finalizePaymentEntitlement(
           orderId,
           grossAmount,
           status.payment_type || 'midtrans',
         );
+        await recordMidtransCost(paymentOrder, grossAmount, status.payment_type || 'midtrans');
       }
       console.log('Midtrans notification:', {
         orderId: status.order_id,
