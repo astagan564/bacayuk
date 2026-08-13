@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useNavigate } from '@tanstack/react-router';
 import type { Story } from '@/types';
 import { paymentStore } from '@/utils/paymentStore';
 import { userAuthStore } from '@/utils/userAuthStore';
@@ -14,6 +15,7 @@ interface UserSessionControllerOptions {
 export function useUserSessionController({
   showToast,
 }: UserSessionControllerOptions) {
+  const navigate = useNavigate();
   const [currentUser, setCurrentUser] = useState<UserAccount | null>(() => userAuthStore.getUser());
   const [personalLibrary, setPersonalLibrary] = useState(() =>
     personalLibraryStore.load(userAuthStore.getUser()?.id)
@@ -32,6 +34,12 @@ export function useUserSessionController({
       if (!active) return;
       setCurrentUser(user);
       if (user?.email) void paymentStore.syncPurchasesFromSupabase(user.email);
+      if (user) {
+        const pendingStoryId = userAuthStore.consumeStoryAfterLogin();
+        if (pendingStoryId) {
+          void navigate({ to: '/read/$storyId', params: { storyId: pendingStoryId } });
+        }
+      }
     };
     const subscription = userAuthStore.onAuthStateChange(applyAuthenticatedUser);
     void userAuthStore.initialize().then(applyAuthenticatedUser).catch((error) => {
@@ -43,14 +51,16 @@ export function useUserSessionController({
       active = false;
       subscription.unsubscribe();
     };
-  }, []);
+  }, [navigate]);
 
   const requestLogin = useCallback((story?: Story) => {
+    userAuthStore.rememberStoryAfterLogin(story?.id);
     if (story) setPendingStory(story);
     else setShowLoginModal(true);
   }, []);
 
   const closeLogin = useCallback(() => {
+    userAuthStore.rememberStoryAfterLogin();
     setShowLoginModal(false);
     setPendingStory(null);
   }, []);

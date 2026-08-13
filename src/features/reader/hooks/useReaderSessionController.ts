@@ -50,7 +50,7 @@ export function useReaderSessionController({
   });
 
   const openStory = useCallback((story: Story, targetPage?: number) => {
-    if (!userAuthStore.canReadStoryOnline(story.id)) {
+    if (!userAuthStore.canReadStoryOnline(story.accessStatus)) {
       requestLogin(story);
       return;
     }

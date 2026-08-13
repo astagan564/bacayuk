@@ -13,23 +13,27 @@ export const ParentLoginModal: React.FC<ParentLoginModalProps> = ({
   onClose,
   attemptedStoryTitle,
 }) => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submittingProvider, setSubmittingProvider] = useState<'google' | 'facebook' | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  const handleGoogleSignIn = async () => {
-    setIsSubmitting(true);
+  const handleSignIn = async (provider: 'google' | 'facebook') => {
+    setSubmittingProvider(provider);
     setErrorMsg(null);
     try {
-      await userAuthStore.signInWithGoogle();
+      if (provider === 'google') await userAuthStore.signInWithGoogle();
+      else await userAuthStore.signInWithFacebook();
     } catch (error) {
-      setErrorMsg(error instanceof Error ? error.message : 'Google Sign-In gagal dimulai.');
-      setIsSubmitting(false);
+      const providerName = provider === 'google' ? 'Google' : 'Facebook';
+      setErrorMsg(error instanceof Error ? error.message : `${providerName} Sign-In gagal dimulai.`);
+      setSubmittingProvider(null);
     }
   };
 
+  const isSubmitting = submittingProvider !== null;
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[var(--color-overlay)] backdrop-blur-sm animate-fade-in">
-      <div className="app-modal w-full max-w-lg rounded-[1.35rem] p-6 sm:p-8 relative overflow-hidden flex flex-col gap-6">
+      <div className="app-modal max-h-[calc(100dvh-2rem)] w-full max-w-lg overflow-y-auto rounded-[1.35rem] p-6 sm:p-8 relative flex flex-col gap-6">
         <div className="flex items-start justify-between pb-3 border-b border-default">
           <div className="flex items-center gap-3">
             <div className="p-3 rounded-2xl bg-brand-green text-white font-black shadow-md shrink-0">
@@ -38,9 +42,9 @@ export const ParentLoginModal: React.FC<ParentLoginModalProps> = ({
             <div>
               <div className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-wider text-secondary">
                 <Gift className="w-3.5 h-3.5 text-brand-green" />
-                <span>Akses internal pembaca</span>
+                <span>Akses pembaca</span>
               </div>
-              <h2 className="text-xl sm:text-2xl font-black tracking-tight">Masuk dengan Google</h2>
+              <h2 className="text-xl sm:text-2xl font-black tracking-tight">Masuk akun orang tua</h2>
             </div>
           </div>
 
@@ -57,15 +61,15 @@ export const ParentLoginModal: React.FC<ParentLoginModalProps> = ({
         <div className="reader-soft-panel p-4 rounded-2xl flex flex-col gap-1.5 text-xs">
           <div className="flex items-center gap-2 text-primary font-black text-sm">
             <Sparkles className="w-4 h-4 text-brand-gold" />
-            <span>Akun Google internal BacaYuk</span>
+            <span>Pilih cara masuk</span>
           </div>
           <p className="text-secondary font-medium leading-relaxed">
             {attemptedStoryTitle ? (
               <>
-                Masuk dengan akun Google yang telah diizinkan untuk membuka cerita <strong>“{attemptedStoryTitle}”</strong> dan koleksi internal lainnya.
+                Masuk dengan Google atau Facebook untuk membuka cerita <strong>“{attemptedStoryTitle}”</strong> dan koleksi lainnya.
               </>
             ) : (
-              'Gunakan salah satu akun Google internal yang telah diizinkan pada konfigurasi OAuth BacaYuk.'
+              'Gunakan akun Google atau Facebook untuk melanjutkan ke koleksi BacaYuk.'
             )}
           </p>
         </div>
@@ -77,7 +81,7 @@ export const ParentLoginModal: React.FC<ParentLoginModalProps> = ({
           </div>
           <div className="flex items-center gap-1.5">
             <CheckCircle2 className="w-4 h-4 text-success shrink-0" />
-            <span>Google OAuth terverifikasi</span>
+            <span>OAuth aman</span>
           </div>
         </div>
 
@@ -89,11 +93,11 @@ export const ParentLoginModal: React.FC<ParentLoginModalProps> = ({
 
         <button
           type="button"
-          onClick={handleGoogleSignIn}
+          onClick={() => void handleSignIn('google')}
           disabled={isSubmitting}
           className="reader-field w-full py-3.5 px-5 rounded-2xl hover:border-brand-blue font-black text-xs shadow-sm transition-transform hover:scale-[1.02] flex items-center justify-center gap-2.5 disabled:opacity-50"
         >
-          {isSubmitting ? (
+          {submittingProvider === 'google' ? (
             <>
               <div className="w-4 h-4 border-2 border-brand-gold border-t-transparent rounded-full animate-spin" />
               <span>Menghubungkan akun Google...</span>
@@ -111,9 +115,30 @@ export const ParentLoginModal: React.FC<ParentLoginModalProps> = ({
           )}
         </button>
 
+        <button
+          type="button"
+          onClick={() => void handleSignIn('facebook')}
+          disabled={isSubmitting}
+          className="w-full rounded-2xl bg-[#1877F2] px-5 py-3.5 text-xs font-black text-white shadow-sm transition-transform hover:scale-[1.02] hover:bg-[#166FE5] disabled:opacity-50 flex items-center justify-center gap-2.5"
+        >
+          {submittingProvider === 'facebook' ? (
+            <>
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+              <span>Menghubungkan akun Facebook...</span>
+            </>
+          ) : (
+            <>
+              <svg className="h-5 w-5" viewBox="0 0 24 24" aria-hidden="true">
+                <path fill="currentColor" d="M13.5 22v-9h3l.45-3.5H13.5V7.26c0-1.01.28-1.7 1.74-1.7H17.1V2.43c-.32-.04-1.43-.13-2.72-.13-2.69 0-4.53 1.64-4.53 4.66V9.5H6.8V13h3.05v9h3.65Z" />
+              </svg>
+              <span>Lanjutkan dengan Facebook</span>
+            </>
+          )}
+        </button>
+
         <div className="reader-soft-panel p-3 rounded-xl text-[11px] text-secondary flex items-center gap-2">
           <ShieldCheck className="w-4 h-4 text-brand-green shrink-0" />
-          <span>Login diverifikasi melalui Google OAuth dan Supabase Auth.</span>
+          <span>Login diverifikasi melalui penyedia OAuth dan Supabase Auth.</span>
         </div>
       </div>
     </div>

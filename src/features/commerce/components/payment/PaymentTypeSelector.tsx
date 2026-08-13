@@ -43,7 +43,7 @@ export function PaymentTypeSelector({ controller }: PaymentTypeSelectorProps) {
         <Sparkles className="mb-3 w-5 h-5 text-brand-blue" />
         <p className="text-sm font-extrabold">Langganan keluarga</p>
         <p className="mt-1 text-xs leading-5 text-secondary">
-          Unduh semua buku dan buat 10 cerita AI per bulan.
+          Unduh semua buku. Fitur membuat cerita AI segera hadir.
         </p>
         <p className="mt-3 text-lg font-extrabold tabular-nums">
           Rp {controller.vipPrice.toLocaleString('id-ID')}

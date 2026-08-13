@@ -204,6 +204,7 @@ export const normalizeStoryForSave = (story: Story): Story => {
     moralMessage: story.moralMessage.trim(),
     coverImage: story.coverImage.trim(),
     status: story.status || 'draft',
+    accessStatus: story.accessStatus === 'free_guest' ? 'free_guest' : 'free_member',
     pages,
     glossary: (story.glossary || []).filter(
       (item) =>

@@ -3,7 +3,7 @@ export interface UserAccount {
   name: string;
   email: string;
   phone?: string;
-  loginMethod: 'google' | 'whatsapp' | 'email';
+  loginMethod: 'google' | 'facebook' | 'whatsapp' | 'email';
   createdAt: string;
   vipExpiresAt?: string; // ISO string
   aiStoriesUsed?: number;
@@ -13,12 +13,13 @@ import type { User } from '@supabase/supabase-js';
 import { supabase } from './supabaseClient';
 
 const FREE_READ_HISTORY_KEY = 'buku_cerita_free_read_history_v1';
+const PENDING_LOGIN_STORY_KEY = 'bacayuk_pending_login_story_v1';
 let authenticatedUser: UserAccount | null = null;
 
 function accountFromAuthUser(user: User): UserAccount {
   const provider = user.app_metadata?.provider;
-  const loginMethod: UserAccount['loginMethod'] = provider === 'google'
-    ? 'google'
+  const loginMethod: UserAccount['loginMethod'] = provider === 'google' || provider === 'facebook'
+    ? provider
     : user.phone
       ? 'whatsapp'
       : 'email';
@@ -67,6 +68,25 @@ export const userAuthStore = {
       options: { redirectTo: window.location.origin },
     });
     if (error) throw error;
+  },
+
+  async signInWithFacebook(): Promise<void> {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'facebook',
+      options: { redirectTo: window.location.origin },
+    });
+    if (error) throw error;
+  },
+
+  rememberStoryAfterLogin(storyId?: string): void {
+    if (storyId) sessionStorage.setItem(PENDING_LOGIN_STORY_KEY, storyId);
+    else sessionStorage.removeItem(PENDING_LOGIN_STORY_KEY);
+  },
+
+  consumeStoryAfterLogin(): string | null {
+    const storyId = sessionStorage.getItem(PENDING_LOGIN_STORY_KEY);
+    sessionStorage.removeItem(PENDING_LOGIN_STORY_KEY);
+    return storyId;
   },
 
   async logout(): Promise<void> {
@@ -143,23 +163,17 @@ export const userAuthStore = {
   /**
    * Returns true if user can read the story online.
    * Logic:
-   * 1. If logged in -> Always allowed (unlimited online reading)
-   * 2. If guest:
-   *    - If readHistory is empty -> Allowed (this will be their 1 free story)
-   *    - If readHistory contains this storyId -> Allowed (they can re-read their 1 free story)
-   *    - If readHistory already has 1 or more OTHER stories -> LOCKED (requires login)
+   * 1. Logged-in users may read every published story online.
+   * 2. Guests may only read the story selected by Admin as "free_guest".
+   * 3. Download purchase/VIP access is enforced by the commerce flow.
    */
-  canReadStoryOnline(storyId: string, accessStatus?: 'free_guest' | 'free_member' | 'paid'): boolean {
-    if (accessStatus === 'free_guest') return true;
-
+  canReadStoryOnline(accessStatus?: 'free_guest' | 'free_member' | 'paid'): boolean {
     const user = this.getUser();
-    if (user) return true; // Logged in members get unlimited online access for free/member books
+    if (user) return true;
 
-    const history = this.getReadHistory();
-    if (history.length === 0) return true; // First book is free
-    if (history.includes(storyId)) return true; // Same free book re-read allowed
-
-    return false; // Tried to access a 2nd story without login
+    // Admin selects the guest book by assigning accessStatus "free_guest".
+    // Download access is handled separately by the purchase/VIP flow.
+    return accessStatus === 'free_guest';
   },
 
   getFreeStoryId(): string | null {

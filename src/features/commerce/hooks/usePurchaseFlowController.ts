@@ -53,7 +53,7 @@ export function usePurchaseFlowController({
   const handlePaymentSuccess = useCallback((receipt: PurchaseReceipt) => {
     if (state.kind === 'vip_payment') {
       setState({ kind: 'idle' });
-      showToast('🎉 Pembayaran VIP Berhasil! Fitur AI telah terbuka.');
+      showToast('🎉 Pembayaran VIP berhasil! Unduh semua buku kini terbuka.');
       onVipActivated();
       return;
     }

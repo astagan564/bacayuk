@@ -148,9 +148,17 @@ export function useStoryEditorController({
     }
 
     const normalizedStory = normalizeStoryForSave(editingStory);
-    const updatedStories = isNewStory
+    let updatedStories = isNewStory
       ? [normalizedStory, ...stories]
       : stories.map((story) => story.id === normalizedStory.id ? normalizedStory : story);
+    if (normalizedStory.accessStatus === 'free_guest') {
+      updatedStories = updatedStories.map((story) => story.id === normalizedStory.id
+        ? story
+        : story.accessStatus === 'free_guest'
+          ? { ...story, accessStatus: 'free_member' }
+          : story
+      );
+    }
     const successMessage = isNewStory
       ? `Buku "${normalizedStory.title}" ditambahkan.`
       : `Perubahan "${normalizedStory.title}" disimpan.`;

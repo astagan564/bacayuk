@@ -44,8 +44,8 @@ export function StoriesTab({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {stories.map((story, index) => {
-          const accessStatus = story.accessStatus || (index === 0 ? 'free_guest' : 'free_member');
+        {stories.map((story) => {
+          const accessStatus = story.accessStatus === 'free_guest' ? 'free_guest' : 'free_member';
           const downloadEnabled = story.downloadEnabled !== false;
           const price = story.ebookPrice || defaultEbookPrice;
 
@@ -57,7 +57,6 @@ export function StoriesTab({
                   <div className="flex flex-wrap items-center gap-1.5 mb-1">
                     {accessStatus === 'free_guest' && <span className="px-2 py-0.5 rounded-md bg-brand-green/15 text-brand-green text-[10px] font-bold border border-brand-green/30">Gratis tanpa login</span>}
                     {accessStatus === 'free_member' && <span className="px-2 py-0.5 rounded-md bg-warning/20 text-warning dark:text-warning text-[10px] font-bold border border-[var(--warm-gold)]/35">Gratis setelah login</span>}
-                    {accessStatus === 'paid' && <span className="px-2 py-0.5 rounded-md bg-brand-blue/15 text-brand-blue dark:text-brand-blue text-[10px] font-bold border border-brand-blue/30">Berbayar</span>}
                     <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold border ${story.status === 'draft' ? 'bg-surface text-secondary border-default' : 'bg-brand-green/15 text-brand-green border-brand-green/30 dark:text-brand-green'}`}>
                       {story.status === 'draft' ? 'Draft' : 'Published'}
                     </span>

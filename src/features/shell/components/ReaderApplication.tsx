@@ -2,7 +2,6 @@ import { useCallback } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import type { Story } from '@/types';
-import { userAuthStore } from '@/utils/userAuthStore';
 import { adminStore } from '@/utils/adminStore';
 import { useUserSessionController } from '@/features/account';
 import { usePurchaseFlowController } from '@/features/commerce';
@@ -46,27 +45,13 @@ export function ReaderApplication({
   });
   const readerOverlays = useReaderOverlayController();
   const purchaseFlow = usePurchaseFlowController({
-    onVipActivated: readerOverlays.openStoryMaker,
+    onVipActivated: () => showToast('VIP aktif. Unduh semua buku kini terbuka; fitur AI segera hadir.'),
     showToast,
   });
 
   const openStoryMaker = useCallback((): void => {
-    const user = userAuthStore.getUser();
-    if (!user) {
-      showToast('🔒 Silakan Masuk (Login) Akun Orang Tua terlebih dahulu untuk menggunakan fitur AI.');
-      userSession.requestLogin();
-      return;
-    }
-    if (!userAuthStore.isVip()) {
-      purchaseFlow.offerVip();
-      return;
-    }
-    if ((user.aiStoriesUsed || 0) >= 10) {
-      showToast('Kuota buat cerita bulan ini sudah habis.');
-      return;
-    }
-    readerOverlays.openStoryMaker();
-  }, [purchaseFlow.offerVip, readerOverlays.openStoryMaker, showToast, userSession.requestLogin]);
+    showToast('✨ Fitur membuat buku dengan AI segera hadir untuk anggota VIP.');
+  }, [showToast]);
 
   const openAdmin = useCallback(() => void navigate({ to: '/admin' }), [navigate]);
   const openSettings = useCallback(() => void navigate({ to: '/settings' }), [navigate]);
