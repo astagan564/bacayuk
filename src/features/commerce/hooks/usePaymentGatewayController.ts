@@ -25,7 +25,6 @@ export function usePaymentGatewayController({
     story,
     purchaseType: checkout.purchaseType,
     appliedCouponCode: checkout.appliedCouponCode,
-    downloadLinkExpireHours: adminSettings.downloadLinkExpireHours,
     validateCustomer: checkout.validateCustomer,
     onPaymentSuccess,
   });

@@ -37,24 +37,24 @@ export function PaymentCheckoutPanel({ controller }: PaymentCheckoutPanelProps) 
 
       <div className="grid gap-3 sm:grid-cols-2">
         <label className="grid gap-1.5 text-xs font-bold text-secondary">
-          Nama pembeli
+          Nama akun pembeli
           <input
             type="text"
             value={controller.customerName}
             disabled={controller.isProcessing}
-            onChange={(event) => controller.setCustomerName(event.target.value)}
+            readOnly
             placeholder="Budi Santoso"
             autoComplete="name"
             className="rounded-xl px-3 py-2.5 text-sm font-semibold reader-field disabled:opacity-60"
           />
         </label>
         <label className="grid gap-1.5 text-xs font-bold text-secondary">
-          Email bukti pembayaran
+          Email akun pembeli
           <input
             type="email"
             value={controller.customerEmail}
             disabled={controller.isProcessing}
-            onChange={(event) => controller.setCustomerEmail(event.target.value)}
+            readOnly
             placeholder="orangtua@email.com"
             autoComplete="email"
             className="rounded-xl px-3 py-2.5 text-sm font-semibold reader-field disabled:opacity-60"

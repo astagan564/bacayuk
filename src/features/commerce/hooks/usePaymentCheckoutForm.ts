@@ -3,6 +3,7 @@ import type { Story } from '@/types';
 import { adminStore } from '@/utils/adminStore';
 import { VIP_MONTHLY_PRICE } from '@/features/commerce/constants/payment';
 import type { PurchaseType } from '@/features/commerce/types/paymentGateway';
+import { userAuthStore } from '@/utils/userAuthStore';
 
 interface PaymentCheckoutFormOptions {
   story?: Story;
@@ -21,8 +22,9 @@ export function usePaymentCheckoutForm({
   basePrice,
 }: PaymentCheckoutFormOptions) {
   const [purchaseType, setPurchaseType] = useState<PurchaseType>(isVipOnly ? 'vip' : 'book');
-  const [customerName, setCustomerName] = useState('');
-  const [customerEmail, setCustomerEmail] = useState('');
+  const account = userAuthStore.getUser();
+  const [customerName, setCustomerName] = useState(account?.name || '');
+  const [customerEmail, setCustomerEmail] = useState(account?.email || '');
   const [couponInput, setCouponInput] = useState('');
   const [appliedDiscount, setAppliedDiscount] = useState(0);
   const [appliedCouponCode, setAppliedCouponCode] = useState<string | null>(null);
@@ -53,6 +55,7 @@ export function usePaymentCheckoutForm({
   }, [couponInput, priceBeforeDiscount]);
 
   const validateCustomer = useCallback((): ValidatedPaymentCustomer | string => {
+    if (!userAuthStore.getUser()) return 'Silakan login terlebih dahulu untuk melakukan pembayaran.';
     const name = customerName.trim();
     const email = customerEmail.trim().toLowerCase();
     if (!name || !email) return 'Isi nama dan email pembeli terlebih dahulu.';

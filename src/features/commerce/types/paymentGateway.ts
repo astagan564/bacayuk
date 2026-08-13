@@ -26,8 +26,8 @@ export interface CreateTransactionRequest {
   purchaseType: PurchaseType;
   storyId?: string;
   storyTitle?: string;
-  customerName: string;
-  customerEmail: string;
+  customerName?: string;
+  customerEmail?: string;
   couponCode: string | null;
 }
 
@@ -44,6 +44,7 @@ export interface CreateTransactionResponse {
 
 export interface VerifyTransactionResponse {
   isPaid: boolean;
+  entitlement?: PurchaseReceipt | null;
   error?: string;
 }
 

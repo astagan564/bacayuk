@@ -11,6 +11,7 @@ export interface UserAccount {
 
 import type { User } from '@supabase/supabase-js';
 import { supabase } from './supabaseClient';
+import { paymentStore } from './paymentStore';
 
 const FREE_READ_HISTORY_KEY = 'buku_cerita_free_read_history_v1';
 const PENDING_LOGIN_STORY_KEY = 'bacayuk_pending_login_story_v1';
@@ -39,7 +40,7 @@ function accountFromAuthUser(user: User): UserAccount {
     phone: user.phone || undefined,
     loginMethod,
     createdAt: user.created_at,
-    vipExpiresAt: typeof user.app_metadata?.vip_expires_at === 'string' ? user.app_metadata.vip_expires_at : undefined,
+    vipExpiresAt: undefined,
     aiStoriesUsed: typeof user.app_metadata?.ai_stories_used === 'number' ? user.app_metadata.ai_stories_used : undefined,
   };
 }
@@ -52,12 +53,14 @@ export const userAuthStore = {
   async initialize(): Promise<UserAccount | null> {
     const { data, error } = await supabase.auth.getUser();
     authenticatedUser = error || !data.user ? null : accountFromAuthUser(data.user);
+    if (authenticatedUser) await this.refreshEntitlements();
     return authenticatedUser;
   },
 
   onAuthStateChange(callback: (user: UserAccount | null) => void) {
     return supabase.auth.onAuthStateChange((_event, session) => {
       authenticatedUser = session?.user ? accountFromAuthUser(session.user) : null;
+      if (!authenticatedUser) paymentStore.clearVerifiedPurchases();
       callback(authenticatedUser);
     }).data.subscription;
   },
@@ -93,6 +96,7 @@ export const userAuthStore = {
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
     authenticatedUser = null;
+    paymentStore.clearVerifiedPurchases();
   },
 
   isVip(): boolean {
@@ -101,17 +105,15 @@ export const userAuthStore = {
     return new Date(user.vipExpiresAt) > new Date();
   },
 
-  async activateVip(): Promise<void> {
-    const user = this.getUser();
-    if (!user) return;
-    
-    const expires = new Date();
-    expires.setMonth(expires.getMonth() + 1); // 1 month subscription
-    
-    user.vipExpiresAt = expires.toISOString();
-    user.aiStoriesUsed = 0; // reset quota on payment
-    
-    authenticatedUser = user;
+  async refreshEntitlements(): Promise<UserAccount | null> {
+    if (!authenticatedUser) return null;
+    const { vipExpiresAt } = await paymentStore.syncPurchasesFromServer();
+    authenticatedUser = {
+      ...authenticatedUser,
+      vipExpiresAt: vipExpiresAt || undefined,
+      aiStoriesUsed: vipExpiresAt ? 0 : authenticatedUser.aiStoriesUsed,
+    };
+    return authenticatedUser;
   },
 
   async recordAiStoryUsed(): Promise<void> {

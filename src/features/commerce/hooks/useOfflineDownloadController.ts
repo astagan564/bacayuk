@@ -3,11 +3,9 @@ import type { Story } from '@/types';
 import { paymentStore } from '@/utils/paymentStore';
 import type { PurchaseReceipt } from '@/utils/paymentStore';
 import { userAuthStore } from '@/utils/userAuthStore';
+import { consumeDownload } from '@/features/commerce/api/entitlementApi';
 import { generateStoryEPUB } from '@/features/commerce/download/epubGenerator';
-import {
-  createDownloadFilename,
-  saveBlobToDevice,
-} from '@/features/commerce/download/fileSave';
+import { createDownloadFilename, saveBlobToDevice } from '@/features/commerce/download/fileSave';
 import { generateStoryPDF } from '@/features/commerce/download/pdfGenerator';
 import type { OfflineDownloadFormat } from '@/features/commerce/types/offlineDownload';
 
@@ -17,7 +15,6 @@ const NOTICE_DURATION_MS = 3500;
 function getVipReceipt(story: Story): PurchaseReceipt | null {
   const user = userAuthStore.getUser();
   if (!userAuthStore.isVip() || !user) return null;
-
   return {
     storyId: story.id,
     storyTitle: story.title,
@@ -28,6 +25,7 @@ function getVipReceipt(story: Story): PurchaseReceipt | null {
     amount: 0,
     purchasedAt: user.createdAt,
     downloadCount: 0,
+    downloadLimit: null,
     tokenExpiresAt: user.vipExpiresAt || new Date().toISOString(),
   };
 }
@@ -70,30 +68,40 @@ export function useOfflineDownloadController(story: Story) {
   const downloadLimitReached = Boolean(
     purchase
       && purchase.paymentMethod !== 'vip'
-      && purchase.downloadCount >= DOWNLOAD_LIMIT,
+      && purchase.downloadCount >= (purchase.downloadLimit || DOWNLOAD_LIMIT),
   );
 
   const renewToken = useCallback(async (): Promise<void> => {
-    const updatedPurchase = await paymentStore.renewToken(story.id);
-    if (!isMountedRef.current) return;
-    setPurchase(updatedPurchase);
-    showNotice('✅ Masa berlaku link unduhan diperbarui untuk 24 jam ke depan!');
+    try {
+      const updatedPurchase = await paymentStore.renewToken(story.id);
+      if (!isMountedRef.current) return;
+      setPurchase(updatedPurchase);
+      showNotice('Masa berlaku link unduhan diperbarui untuk 24 jam ke depan.');
+    } catch (error) {
+      if (!isMountedRef.current) return;
+      showNotice(error instanceof Error ? error.message : 'Hak unduhan tidak dapat diperbarui.');
+    }
   }, [showNotice, story.id]);
 
   const download = useCallback(async (format: OfflineDownloadFormat): Promise<void> => {
     if (!purchase || generationFormatRef.current) return;
-    if (purchase.paymentMethod !== 'vip' && purchase.downloadCount >= DOWNLOAD_LIMIT) {
-      showNotice('❌ Batas 3 kali unduh sudah tercapai. Perbarui masa berlaku link untuk mengunduh lagi.');
+    if (purchase.paymentMethod !== 'vip'
+      && purchase.downloadCount >= (purchase.downloadLimit || DOWNLOAD_LIMIT)) {
+      showNotice('Batas unduh sudah tercapai. Perbarui token setelah masa berlakunya selesai.');
       return;
     }
 
     generationFormatRef.current = format;
     setActiveFormat(format);
     try {
+      const authorizedReceipt = await consumeDownload(story.id);
+      const currentReceipt = authorizedReceipt.paymentMethod === 'vip'
+        ? { ...authorizedReceipt, storyId: story.id, storyTitle: story.title }
+        : authorizedReceipt;
       const customer = {
-        name: purchase.customerName,
-        email: purchase.customerEmail,
-        transactionId: purchase.transactionId,
+        name: currentReceipt.customerName,
+        email: currentReceipt.customerEmail,
+        transactionId: currentReceipt.transactionId,
       };
       const blob = format === 'pdf'
         ? await generateStoryPDF(story, customer)
@@ -103,30 +111,21 @@ export function useOfflineDownloadController(story: Story) {
         : createDownloadFilename(story.title, 'Tablet.epub');
       saveBlobToDevice(blob, filename);
 
-      const newCount = purchase.paymentMethod === 'vip'
-        ? purchase.downloadCount + 1
-        : paymentStore.incrementDownloadCount(story.id);
+      if (currentReceipt.paymentMethod !== 'vip') paymentStore.updateVerifiedPurchase(currentReceipt);
       if (!isMountedRef.current) return;
-      setPurchase((currentPurchase) => (
-        currentPurchase ? { ...currentPurchase, downloadCount: newCount } : null
-      ));
+      setPurchase(currentReceipt);
       showNotice(format === 'pdf'
-        ? '🎉 File PDF Siap Cetak berhasil diunduh dengan stempel Watermark!'
-        : '🎉 File EPUB E-Book berhasil diunduh!');
+        ? 'File PDF siap cetak berhasil diunduh dengan watermark.'
+        : 'File EPUB berhasil diunduh.');
     } catch (error) {
       console.error(`${format.toUpperCase()} generation error:`, error);
       if (!isMountedRef.current) return;
-      showNotice(format === 'pdf'
-        ? '❌ Gagal memproses file PDF. Mohon coba lagi.'
-        : '❌ Gagal memproses file EPUB. Mohon coba lagi.');
+      showNotice(error instanceof Error ? error.message : 'File gagal diproses. Mohon coba lagi.');
     } finally {
       generationFormatRef.current = null;
       if (isMountedRef.current) setActiveFormat(null);
     }
   }, [purchase, showNotice, story]);
-
-  const downloadPdf = useCallback(() => download('pdf'), [download]);
-  const downloadEpub = useCallback(() => download('epub'), [download]);
 
   return {
     purchase,
@@ -135,8 +134,8 @@ export function useOfflineDownloadController(story: Story) {
     expired,
     downloadLimitReached,
     renewToken,
-    downloadPdf,
-    downloadEpub,
+    downloadPdf: useCallback(() => download('pdf'), [download]),
+    downloadEpub: useCallback(() => download('epub'), [download]),
   };
 }
 

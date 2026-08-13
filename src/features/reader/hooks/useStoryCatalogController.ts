@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
 import type { Story } from '@/types';
-import { adminStore } from '@/utils/adminStore';
+import { useGlobalAdminSettings } from '@/features/admin/hooks/useGlobalAdminSettings';
 import { paymentStore } from '@/utils/paymentStore';
 import { userAuthStore } from '@/utils/userAuthStore';
 import {
@@ -73,7 +73,7 @@ export function useStoryCatalogController({
     [readingTimes],
   );
 
-  const adminSettings = adminStore.getSettings();
+  const adminSettings = useGlobalAdminSettings();
   const isVipUser = userAuthStore.isVip();
   const selectCategory = useCallback((category: string) => setSelectedCategory(category), []);
   const selectLibraryView = useCallback((view: StoryLibraryView) => setLibraryView(view), []);

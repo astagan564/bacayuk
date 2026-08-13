@@ -1,25 +1,37 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import { adminStore } from '@/utils/adminStore';
 import type { AdminSettings } from '@/utils/adminStore';
 
 interface AdminSettingsControllerOptions {
+  adminPin: string;
   onTransactionsRefresh: () => void;
   showToast: (message: string) => void;
 }
 
 export function useAdminSettingsController({
+  adminPin,
   onTransactionsRefresh,
   showToast,
 }: AdminSettingsControllerOptions) {
   const [settings, setSettings] = useState<AdminSettings>(() => adminStore.getSettings());
   const [cronStatus, setCronStatus] = useState<string | null>(null);
 
-  const handleSaveSettings = useCallback((event: FormEvent) => {
+  useEffect(() => {
+    void adminStore.loadSettings().then(setSettings).catch((error) => {
+      showToast(error instanceof Error ? error.message : 'Pengaturan global gagal dimuat.');
+    });
+  }, [showToast]);
+
+  const handleSaveSettings = useCallback(async (event: FormEvent) => {
     event.preventDefault();
-    void adminStore.saveSettings(settings);
-    showToast('Pengaturan berhasil disimpan.');
-  }, [settings, showToast]);
+    try {
+      setSettings(await adminStore.saveSettings(settings, adminPin));
+      showToast('Pengaturan berhasil disimpan ke database.');
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Pengaturan gagal disimpan.');
+    }
+  }, [adminPin, settings, showToast]);
 
   const handleRunCleanup = useCallback(() => {
     const result = adminStore.runCronJobCleanup();

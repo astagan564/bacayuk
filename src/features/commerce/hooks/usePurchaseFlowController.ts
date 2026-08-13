@@ -26,19 +26,33 @@ export function usePurchaseFlowController({
 
   const closeFlow = useCallback(() => setState({ kind: 'idle' }), []);
   const offerVip = useCallback(() => setState({ kind: 'vip_offer' }), []);
-  const startVipSubscription = useCallback(() => setState({ kind: 'vip_gate' }), []);
+  const startVipSubscription = useCallback(() => {
+    if (!userAuthStore.getUser()) {
+      showToast('Silakan login terlebih dahulu untuk berlangganan VIP.');
+      return;
+    }
+    setState({ kind: 'vip_gate' });
+  }, [showToast]);
 
   const requestOfflineDownload = useCallback((story: Story) => {
+    if (!userAuthStore.getUser()) {
+      showToast('Silakan login terlebih dahulu untuk membeli atau mengunduh buku.');
+      return;
+    }
     const hasAccess = userAuthStore.isVip() || paymentStore.isStoryPurchased(story.id);
     setState(hasAccess ? { kind: 'download', story } : { kind: 'book_payment', story });
-  }, []);
+  }, [showToast]);
 
   const requestBookPurchase = useCallback((story: Story) => {
+    if (!userAuthStore.getUser()) {
+      showToast('Silakan login terlebih dahulu untuk membeli atau mengunduh buku.');
+      return;
+    }
     setState(userAuthStore.isVip()
       ? { kind: 'download', story }
       : { kind: 'book_gate', story }
     );
-  }, []);
+  }, [showToast]);
 
   const approveParentalGate = useCallback(() => {
     setState((currentState) => {

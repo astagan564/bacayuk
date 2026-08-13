@@ -11,7 +11,6 @@ interface MidtransPaymentControllerOptions {
   story?: Story;
   purchaseType: PurchaseType;
   appliedCouponCode: string | null;
-  downloadLinkExpireHours: number;
   validateCustomer: () => ValidatedPaymentCustomer | string;
   onPaymentSuccess: (receipt: PurchaseReceipt) => void;
 }
@@ -26,7 +25,6 @@ export function useMidtransPaymentController({
   story,
   purchaseType,
   appliedCouponCode,
-  downloadLinkExpireHours,
   validateCustomer,
   onPaymentSuccess,
 }: MidtransPaymentControllerOptions) {
@@ -98,12 +96,8 @@ export function useMidtransPaymentController({
             const receipt = await completeVerifiedPayment({
               transaction,
               result,
-              customerName: customer.name,
-              customerEmail: customer.email,
               story,
               purchaseType,
-              appliedCouponCode,
-              downloadLinkExpireHours,
               signal: activeSession.abortController.signal,
             });
             if (!isActiveSession(session.id)) return;
@@ -143,7 +137,6 @@ export function useMidtransPaymentController({
     }
   }, [
     appliedCouponCode,
-    downloadLinkExpireHours,
     finishSession,
     isActiveSession,
     purchaseType,

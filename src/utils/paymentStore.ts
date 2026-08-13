@@ -1,3 +1,5 @@
+import { fetchEntitlements, renewDownload } from '@/features/commerce/api/entitlementApi';
+
 export interface PurchaseReceipt {
   storyId: string;
   storyTitle: string;
@@ -5,118 +7,68 @@ export interface PurchaseReceipt {
   customerEmail: string;
   transactionId: string;
   paymentMethod: 'qris' | 'gopay' | 'ovo' | 'va_bca' | 'va_mandiri' | 'midtrans' | 'vip' | string;
-  amount: number; // in IDR, e.g. 15000
-  purchasedAt: string; // ISO date
-  downloadCount: number; // starts at 0, max 3
-  tokenExpiresAt: string; // ISO date (24h after purchase or creation)
+  amount: number;
+  purchasedAt: string;
+  downloadCount: number;
+  downloadLimit?: number | null;
+  tokenExpiresAt: string;
 }
 
-import { supabase } from './supabaseClient';
+const STORAGE_KEY = 'buku_cerita_purchases_v2_cache';
+let verifiedPurchases: Record<string, PurchaseReceipt> = {};
 
-const STORAGE_KEY = 'buku_cerita_purchases_v1';
+function persistDisplayCache(): void {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(verifiedPurchases));
+  } catch {
+    // The cache is optional; server entitlements remain authoritative.
+  }
+}
 
 export const paymentStore = {
   getPurchases(): Record<string, PurchaseReceipt> {
-    try {
-      const data = localStorage.getItem(STORAGE_KEY);
-      return data ? JSON.parse(data) : {};
-    } catch {
-      return {};
-    }
+    return verifiedPurchases;
   },
 
   isStoryPurchased(storyId: string): boolean {
-    const purchases = this.getPurchases();
-    return !!purchases[storyId];
+    return Boolean(verifiedPurchases[storyId]);
   },
 
   getStoryPurchase(storyId: string): PurchaseReceipt | null {
-    const purchases = this.getPurchases();
-    return purchases[storyId] || null;
+    return verifiedPurchases[storyId] || null;
   },
 
-  async savePurchase(receipt: PurchaseReceipt): Promise<void> {
-    const purchases = this.getPurchases();
-    purchases[receipt.storyId] = receipt;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(purchases));
-    
+  saveVerifiedPurchase(receipt: PurchaseReceipt): void {
+    if (receipt.storyId === 'vip_sub') return;
+    verifiedPurchases = { ...verifiedPurchases, [receipt.storyId]: receipt };
+    persistDisplayCache();
+  },
+
+  clearVerifiedPurchases(): void {
+    verifiedPurchases = {};
     try {
-      await supabase.from('purchase_receipts').upsert({
-        id: receipt.transactionId, // fallback ID
-        story_id: receipt.storyId,
-        story_title: receipt.storyTitle,
-        customer_name: receipt.customerName,
-        customer_email: receipt.customerEmail,
-        transaction_id: receipt.transactionId,
-        payment_method: receipt.paymentMethod,
-        amount: receipt.amount,
-        purchased_at: receipt.purchasedAt,
-        download_count: receipt.downloadCount || 0,
-        token_expires_at: receipt.tokenExpiresAt
-      });
-    } catch (e) {
-      console.error('Failed to sync purchase to Supabase', e);
+      localStorage.removeItem(STORAGE_KEY);
+    } catch {
+      // Ignore unavailable storage.
     }
   },
 
-  incrementDownloadCount(storyId: string): number {
-    const purchases = this.getPurchases();
-    const item = purchases[storyId];
-    if (item) {
-      item.downloadCount = (item.downloadCount || 0) + 1;
-      this.savePurchase(item);
-      return item.downloadCount;
-    }
-    return 1;
+  async syncPurchasesFromServer(): Promise<{ vipExpiresAt: string | null }> {
+    const data = await fetchEntitlements();
+    verifiedPurchases = Object.fromEntries(
+      data.purchases.map((receipt) => [receipt.storyId, receipt]),
+    );
+    persistDisplayCache();
+    return { vipExpiresAt: data.vipExpiresAt };
   },
 
-  async renewToken(storyId: string): Promise<PurchaseReceipt | null> {
-    const purchases = this.getPurchases();
-    const item = purchases[storyId];
-    if (item) {
-      const expires = new Date();
-      expires.setHours(expires.getHours() + 24);
-      item.tokenExpiresAt = expires.toISOString();
-      item.downloadCount = 0;
-      await this.savePurchase(item);
-      return item;
-    }
-    return null;
+  updateVerifiedPurchase(receipt: PurchaseReceipt): void {
+    this.saveVerifiedPurchase(receipt);
   },
-  
-  async syncPurchasesFromSupabase(email: string): Promise<void> {
-    try {
-      const { data, error } = await supabase
-        .from('purchase_receipts')
-        .select('*')
-        .eq('customer_email', email);
-        
-      if (!error && data) {
-        const purchases = this.getPurchases();
-        let changed = false;
-        for (const row of data) {
-          if (!purchases[row.story_id] || new Date(row.purchased_at) > new Date(purchases[row.story_id].purchasedAt)) {
-            purchases[row.story_id] = {
-              storyId: row.story_id,
-              storyTitle: row.story_title,
-              customerName: row.customer_name,
-              customerEmail: row.customer_email,
-              transactionId: row.transaction_id,
-              paymentMethod: row.payment_method,
-              amount: row.amount,
-              purchasedAt: row.purchased_at,
-              downloadCount: row.download_count,
-              tokenExpiresAt: row.token_expires_at
-            };
-            changed = true;
-          }
-        }
-        if (changed) {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(purchases));
-        }
-      }
-    } catch (e) {
-      console.error('Failed to sync purchases from Supabase', e);
-    }
-  }
+
+  async renewToken(storyId: string): Promise<PurchaseReceipt> {
+    const receipt = await renewDownload(storyId);
+    this.saveVerifiedPurchase(receipt);
+    return receipt;
+  },
 };

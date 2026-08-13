@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import type { Story } from '@/types';
-import { adminStore } from '@/utils/adminStore';
+import { useGlobalAdminSettings } from '@/features/admin/hooks/useGlobalAdminSettings';
 import { useUserSessionController } from '@/features/account';
 import { usePurchaseFlowController } from '@/features/commerce';
 import {
@@ -31,6 +31,7 @@ export function ReaderApplication({
 }: ReaderApplicationProps) {
   const navigate = useNavigate();
   const changelog = useChangelogController();
+  const globalSettings = useGlobalAdminSettings();
   const userSession = useUserSessionController({ showToast });
   const readerSession = useReaderSessionController({
     stories,
@@ -121,7 +122,7 @@ export function ReaderApplication({
         changelog={changelog}
         stories={stories}
         isNight={readerSettings.isNight}
-        restMinutes={adminStore.getSettings().eyeRestIntervalMinutes || 20}
+        restMinutes={globalSettings.eyeRestIntervalMinutes || 20}
         loginStoryTarget={userSession.pendingStory}
         showLoginModal={userSession.showLoginModal}
         onCloseLogin={userSession.closeLogin}

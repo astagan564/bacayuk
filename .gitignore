@@ -16,4 +16,5 @@ server.js.map
 skills-lock.json
 
 .vercel
+supabase/.temp/
 .env*

@@ -30,7 +30,11 @@ export function DownloadLicensePanel({
           <div>Pembeli: <strong>{purchase.customerName}</strong></div>
           <div>ID Order: <strong>#{purchase.transactionId}</strong></div>
           <div>
-            Sisa Unduhan: <strong>{Math.max(0, 3 - purchase.downloadCount)} / 3 kali</strong>
+            Sisa Unduhan: <strong>
+              {purchase.paymentMethod === 'vip'
+                ? 'Tanpa batas'
+                : `${Math.max(0, (purchase.downloadLimit || 3) - purchase.downloadCount)} / ${purchase.downloadLimit || 3} kali`}
+            </strong>
           </div>
           <div>Watermark: <strong className="text-success">Aktif Pada File</strong></div>
         </div>

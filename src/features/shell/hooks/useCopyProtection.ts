@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { adminStore } from '@/utils/adminStore';
+import { useGlobalAdminSettings } from '@/features/admin/hooks/useGlobalAdminSettings';
 
 function isProtectedShortcut(event: KeyboardEvent): boolean {
   const key = event.key.toLowerCase();
@@ -9,8 +9,9 @@ function isProtectedShortcut(event: KeyboardEvent): boolean {
 }
 
 export function useCopyProtection(showToast: (message: string) => void): void {
+  const settings = useGlobalAdminSettings();
   useEffect(() => {
-    if (!adminStore.getSettings().enableCopyProtection) return;
+    if (!settings.enableCopyProtection) return;
 
     const handleContextMenu = (event: MouseEvent): void => {
       event.preventDefault();
@@ -28,5 +29,5 @@ export function useCopyProtection(showToast: (message: string) => void): void {
       window.removeEventListener('contextmenu', handleContextMenu);
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [showToast]);
+  }, [settings.enableCopyProtection, showToast]);
 }

@@ -6,18 +6,33 @@ import type {
   UserReadingActivity,
 } from '@/features/admin/types/adminStore';
 
-export async function persistAdminSettings(settings: AdminSettings): Promise<void> {
-  await supabase.from('admin_settings').upsert({
-    id: 1,
-    eye_rest_interval_minutes: settings.eyeRestIntervalMinutes,
-    download_link_expire_hours: settings.downloadLinkExpireHours,
-    default_ebook_price: settings.defaultEbookPrice,
-    enable_global_watermark: settings.enableGlobalWatermark,
-    allow_guest_free_book_count: settings.allowGuestFreeBookCount,
-    enable_copy_protection: settings.enableCopyProtection,
-    promo_banner_text: settings.promoBannerText,
-    promo_banner_active: settings.promoBannerActive,
-  });
+interface SettingsResponse {
+  settings?: AdminSettings;
+  error?: string;
+}
+
+async function parseSettingsResponse(response: Response): Promise<AdminSettings> {
+  const data = await response.json() as SettingsResponse;
+  if (!response.ok || !data.settings) throw new Error(data.error || 'Pengaturan tidak dapat diproses.');
+  return data.settings;
+}
+
+export async function fetchAdminSettings(): Promise<AdminSettings> {
+  return parseSettingsResponse(await fetch('/api/settings'));
+}
+
+export async function persistAdminSettings(
+  settings: AdminSettings,
+  adminPin: string,
+): Promise<AdminSettings> {
+  return parseSettingsResponse(await fetch('/api/admin/settings', {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-admin-pin': adminPin,
+    },
+    body: JSON.stringify({ settings }),
+  }));
 }
 
 export async function persistCoupons(coupons: DiscountCoupon[]): Promise<void> {

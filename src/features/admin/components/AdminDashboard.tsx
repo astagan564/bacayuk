@@ -88,6 +88,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     handleSaveSettings,
     handleRunCleanup,
   } = useAdminSettingsController({
+    adminPin: adminPin || '',
     onTransactionsRefresh: refreshTransactions,
     showToast,
   });

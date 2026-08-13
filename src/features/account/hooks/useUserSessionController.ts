@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import type { Story } from '@/types';
-import { paymentStore } from '@/utils/paymentStore';
 import { userAuthStore } from '@/utils/userAuthStore';
 import type { UserAccount } from '@/utils/userAuthStore';
 import {
@@ -33,7 +32,6 @@ export function useUserSessionController({
     const applyAuthenticatedUser = (user: UserAccount | null) => {
       if (!active) return;
       setCurrentUser(user);
-      if (user?.email) void paymentStore.syncPurchasesFromSupabase(user.email);
       if (user) {
         const pendingStoryId = userAuthStore.consumeStoryAfterLogin();
         if (pendingStoryId) {
@@ -66,8 +64,8 @@ export function useUserSessionController({
   }, []);
 
   const handleLoginSuccess = useCallback(async (user: UserAccount) => {
-    await paymentStore.syncPurchasesFromSupabase(user.email);
-    setCurrentUser(user);
+    const refreshedUser = await userAuthStore.refreshEntitlements();
+    setCurrentUser(refreshedUser || user);
     setShowLoginModal(false);
     showToast(`Selamat datang, ${user.name}! Seluruh koleksi cerita kini terbuka.`);
 

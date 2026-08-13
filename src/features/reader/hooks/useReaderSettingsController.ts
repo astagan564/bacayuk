@@ -15,13 +15,33 @@ const DEFAULT_READING_SETTINGS: ReadingSettings = {
   languageMode: 'id',
 };
 
+const READER_SETTINGS_KEY = 'bacayuk_reader_settings_v1';
+
+function loadReadingSettings(): ReadingSettings {
+  try {
+    const saved = JSON.parse(localStorage.getItem(READER_SETTINGS_KEY) || '{}') as Partial<ReadingSettings>;
+    return {
+      ...DEFAULT_READING_SETTINGS,
+      ...saved,
+      themeMode: saved.themeMode === 'night' ? 'night' : 'day',
+    };
+  } catch {
+    return DEFAULT_READING_SETTINGS;
+  }
+}
+
 export function useReaderSettingsController() {
-  const [settings, setSettings] = useState<ReadingSettings>(DEFAULT_READING_SETTINGS);
+  const [settings, setSettings] = useState<ReadingSettings>(loadReadingSettings);
   const isNight = settings.themeMode === 'night';
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', isNight);
-  }, [isNight]);
+    try {
+      localStorage.setItem(READER_SETTINGS_KEY, JSON.stringify(settings));
+    } catch {
+      // Keep the active React state when browser storage is unavailable.
+    }
+  }, [isNight, settings]);
 
   const updateSettings = useCallback((updates: Partial<ReadingSettings>) => {
     setSettings((currentSettings) => ({ ...currentSettings, ...updates }));

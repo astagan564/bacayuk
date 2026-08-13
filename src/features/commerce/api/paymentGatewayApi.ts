@@ -3,6 +3,7 @@ import type {
   CreateTransactionResponse,
   VerifyTransactionResponse,
 } from '@/features/commerce/types/paymentGateway';
+import { getAuthenticatedHeaders } from '@/utils/authenticatedFetch';
 
 interface ApiErrorResponse {
   error?: string;
@@ -14,7 +15,10 @@ export async function createPaymentTransaction(
 ): Promise<CreateTransactionResponse> {
   const response = await fetch('/api/create-transaction', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      ...await getAuthenticatedHeaders(),
+    },
     body: JSON.stringify(request),
     signal,
   });
@@ -29,7 +33,10 @@ export async function verifyPaymentTransaction(
 ): Promise<VerifyTransactionResponse> {
   const response = await fetch('/api/verify-transaction', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      ...await getAuthenticatedHeaders(),
+    },
     body: JSON.stringify({ orderId }),
     signal,
   });
