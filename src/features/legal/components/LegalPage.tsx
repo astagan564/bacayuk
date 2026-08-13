@@ -1,6 +1,5 @@
 import {
   ArrowLeft,
-  BookOpen,
   CheckCircle2,
   Clock3,
   Database,
@@ -11,6 +10,7 @@ import {
   UserRoundCheck,
 } from 'lucide-react';
 import { Link } from '@tanstack/react-router';
+import bacayukLogo from '@/assets/bacayuk-logo.svg';
 
 const LAST_UPDATED = '13 Agustus 2026';
 const CONTACT_EMAIL = import.meta.env.VITE_LEGAL_CONTACT_EMAIL || 'privacy@bacayuk.web.id';
@@ -43,11 +43,8 @@ export function LegalPage() {
     <div className="min-h-screen bg-background text-primary">
       <header className="sticky top-0 z-40 border-b border-default bg-surface/95 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
-          <Link to="/" className="flex items-center gap-2.5 font-extrabold text-primary transition-colors hover:text-brand-green">
-            <span className="grid h-9 w-9 place-items-center rounded-xl bg-brand-green text-white shadow-sm">
-              <BookOpen className="h-5 w-5" />
-            </span>
-            <span>BacaYuk</span>
+          <Link to="/" aria-label="BacaYuk — kembali ke beranda" className="shrink-0 transition-opacity hover:opacity-85">
+            <img src={bacayukLogo} alt="BacaYuk" className="h-9 w-auto sm:h-10" />
           </Link>
           <Link to="/" className="inline-flex items-center gap-2 rounded-xl border border-default bg-card px-3 py-2 text-xs font-bold text-secondary transition-colors hover:text-primary">
             <ArrowLeft className="h-4 w-4" />
