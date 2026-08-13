@@ -23,7 +23,7 @@ export function createStoryVocabularyMatcher(glossary: GlossaryItem[]): StoryVoc
   const glossaryByWord = new Map(
     glossary
       .filter((item) => item.wordEn.trim())
-      .map((item) => [item.wordEn.toLowerCase(), item]),
+      .map((item) => [item.wordEn.trim().toLowerCase(), item]),
   );
   const keys = Array.from(new Set([
     ...glossaryByWord.keys(),
@@ -33,7 +33,10 @@ export function createStoryVocabularyMatcher(glossary: GlossaryItem[]): StoryVoc
   return {
     glossaryByWord,
     regex: keys.length
-      ? new RegExp(`(${keys.map(escapeRegularExpression).join('|')})`, 'gi')
+      ? new RegExp(
+          `(?<![\\p{L}\\p{N}])(${keys.map(escapeRegularExpression).join('|')})(?![\\p{L}\\p{N}])`,
+          'giu',
+        )
       : null,
   };
 }

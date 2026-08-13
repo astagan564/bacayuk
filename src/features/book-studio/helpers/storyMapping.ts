@@ -11,6 +11,8 @@ import {
   targetAgeLabel,
 } from '@/features/book-studio/helpers/storyDraft';
 
+const DRAFT_COVER_PLACEHOLDER = '/story-cover-placeholder.svg';
+
 export const cloneStoryForEditing = (story: Story): Story => ({
   ...story,
   pages: story.pages.map((page) => ({
@@ -29,7 +31,7 @@ export const buildManualStoryDraft = (defaultEbookPrice: number): Story => ({
   title: 'Buku Cerita Baru',
   author: 'Penulis Cilik',
   category: 'Petualangan',
-  coverImage: 'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=600',
+  coverImage: DRAFT_COVER_PLACEHOLDER,
   coverBg: 'from-warning to-warning',
   themeColor: 'amber',
   accentColor: 'orange',
@@ -88,8 +90,8 @@ export const buildDraftStoryFromQuickCreate = (form: QuickCreateForm, defaultEbo
       quizQuestion: index === pageDrafts.length - 1
         ? {
             question: 'Apa pesan baik dari cerita ini?',
-            options: ['Berani mencoba', 'Menyerah', 'Tidak peduli', 'Marah-marah'],
-            answerIndex: 0,
+            options: ['Meminta orang lain mengerjakannya', 'Berani mencoba dengan cara yang baik', 'Berhenti saat belum berhasil', 'Mengabaikan pelajaran dari perjalanan'],
+            answerIndex: 1,
             explanation: 'Cerita ini mengajak anak mencoba hal baik dengan berani dan lembut.',
           }
         : undefined,
@@ -101,7 +103,7 @@ export const buildDraftStoryFromQuickCreate = (form: QuickCreateForm, defaultEbo
     title: fallbackTitle,
     author: 'BacaYuk Studio',
     category: 'Petualangan',
-    coverImage: 'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=600',
+    coverImage: DRAFT_COVER_PLACEHOLDER,
     coverBg: 'from-warning to-warning',
     themeColor: 'amber',
     accentColor: 'orange',
@@ -149,7 +151,7 @@ export const buildDraftStoryFromAiDraft = (form: QuickCreateForm, draft: AiBookD
     title: draft.title?.trim() || form.title.trim() || 'Buku Cerita Baru',
     author: 'BacaYuk Studio',
     category: draft.category?.trim() || 'Petualangan',
-    coverImage: 'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=600',
+    coverImage: DRAFT_COVER_PLACEHOLDER,
     coverBg: 'from-warning to-warning',
     themeColor: 'amber',
     accentColor: 'orange',

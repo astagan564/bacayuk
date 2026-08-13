@@ -206,7 +206,9 @@ export const inferPipelineStatus = (story: Story): NonNullable<Story['pipelineSt
 };
 
 export const isPlaceholderCover = (coverImage: string): boolean =>
-  !coverImage.trim() || coverImage.includes('images.unsplash.com/photo-1512820790803-83ca734da794');
+  !coverImage.trim()
+  || coverImage.includes('images.unsplash.com/photo-1512820790803-83ca734da794')
+  || coverImage.endsWith('/story-cover-placeholder.svg');
 
 export const hasCompleteStoryImages = (story: Story): boolean =>
   !isPlaceholderCover(story.coverImage)

@@ -89,6 +89,10 @@ Rules:
 - Do not invent a fake English translation.
 - Create glossary candidates only from useful words that appear in the story.
 - Create quiz/interactions as suggestions only. Keep them simple and child-friendly.
+- Put every named character who appears on two or more pages in characterBible, including supporting characters.
+- Quiz distractors must be plausible in the context of this specific story and similar in length to the correct answer.
+- Do not reuse generic distractors such as giving up, accusing without evidence, or ignoring help across unrelated stories.
+- Vary page-quiz answer positions; do not consistently use answerIndex 0.
 - Vary the correct vocabulary answer position across questions; never place every correct answer first.
 - Visual prompts must describe subject + action + setting + mood + important object + child-safe illustration style.
 - Illustration and cover prompts are visual descriptions only. Never quote or repeat the book title, page title, narration, dialogue, captions, signs, letters, or numbers.
@@ -149,8 +153,8 @@ JSON shape:
       ],
       "quizQuestion": {
         "question": "Question about this page",
-        "options": ["Correct", "Wrong", "Wrong", "Wrong"],
-        "answerIndex": 0,
+        "options": ["Plausible answer", "Correct answer", "Plausible answer", "Plausible answer"],
+        "answerIndex": 1,
         "explanation": "Why the answer is correct"
       }
     }
@@ -205,7 +209,7 @@ JSON shape:
               `A clear ${illustrationType} story scene with one focal action, expressive characters, and a child-safe colorful illustration style.`
             ),
             interactiveElements: normalizeInteractiveElements(page.interactiveElements, index + 1),
-            quizQuestion: normalizeQuizQuestion(page.quizQuestion),
+            quizQuestion: normalizeQuizQuestion(page.quizQuestion, (index + 1) % 4),
           };
         })
         .filter((page): page is GeneratedStoryPage => Boolean(page))

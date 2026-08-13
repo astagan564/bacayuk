@@ -93,7 +93,7 @@ export function normalizeIllustrationType(value: unknown, text = ''): StoryPage[
   return 'forest';
 }
 
-export function normalizeQuizQuestion(value: unknown): QuizQuestion | undefined {
+export function normalizeQuizQuestion(value: unknown, desiredAnswerIndex?: number): QuizQuestion | undefined {
   const raw = asRecord(value);
   const question = cleanOneLine(raw.question, 180);
   const options = Array.isArray(raw.options)
@@ -102,7 +102,13 @@ export function normalizeQuizQuestion(value: unknown): QuizQuestion | undefined 
 
   if (!question || options.length < 2) return undefined;
 
-  const answerIndex = Math.min(options.length - 1, Math.max(0, Number(raw.answerIndex) || 0));
+  let answerIndex = Math.min(options.length - 1, Math.max(0, Number(raw.answerIndex) || 0));
+  if (desiredAnswerIndex !== undefined && options.length > 1) {
+    const targetIndex = Math.min(options.length - 1, Math.max(0, desiredAnswerIndex));
+    const [correctAnswer] = options.splice(answerIndex, 1);
+    options.splice(targetIndex, 0, correctAnswer);
+    answerIndex = targetIndex;
+  }
 
   return {
     question,
