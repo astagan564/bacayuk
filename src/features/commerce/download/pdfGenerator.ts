@@ -2,289 +2,277 @@ import jsPDF from 'jspdf';
 import type { Story } from '@/types';
 import type { CustomerInfo } from '@/features/commerce/download/types';
 
-/**
- * Generates a high-quality printable PDF with cover, page illustrations/text, 
- * page numbers, and Social Watermark (Digital Stamping) at the bottom corner of every page.
- */
-export async function generateStoryPDF(story: Story, customer: CustomerInfo): Promise<Blob> {
-  // A4 dimensions in mm: 210 x 297
-  const doc = new jsPDF({
-    orientation: 'portrait',
-    unit: 'mm',
-    format: 'a4',
-  });
+interface PrintableImage {
+  dataUrl: string;
+  width: number;
+  height: number;
+}
 
-  const pageWidth = doc.internal.pageSize.getWidth(); // 210
-  const pageHeight = doc.internal.pageSize.getHeight(); // 297
-  const margin = 20;
-  const contentWidth = pageWidth - margin * 2;
+const PAGE_WIDTH = 210;
+const PAGE_HEIGHT = 297;
+const SAFE_MARGIN = 14;
 
-  const watermarkText = `🔒 LISENSI DIGITAL RESMI: ${customer.name} (${customer.email}) | ID Pesanan #${customer.transactionId} | Dilarang memperbanyak/menyebarkan tanpa izin.`;
+function cleanPdfText(value: string | undefined): string {
+  return String(value || '')
+    .replace(/\*\*(.*?)\*\*/g, '$1')
+    .replace(/__(.*?)__/g, '$1')
+    .replace(/[*_`#]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
 
-  // Helper to add footer watermark to page
-  const addWatermark = (pageNum: number, totalPagesNum: number) => {
-    doc.setFontSize(8);
-    doc.setTextColor(120, 120, 120);
-    
-    // Top header line
-    doc.setDrawColor(220, 220, 220);
-    doc.line(margin, 15, pageWidth - margin, 15);
-    doc.text(`Buku Cerita Anak Interaktif: ${story.title}`, margin, 11);
-    doc.text(`Halaman ${pageNum} dari ${totalPagesNum}`, pageWidth - margin, 11, { align: 'right' });
+async function loadPrintableImage(url: string | undefined): Promise<PrintableImage | null> {
+  if (!url?.trim()) return null;
 
-    // Bottom Footer Watermark line
-    const footerY = pageHeight - 12;
-    doc.setDrawColor(235, 150, 150);
-    doc.setLineWidth(0.3);
-    doc.line(margin, footerY - 4, pageWidth - margin, footerY - 4);
+  try {
+    const response = await fetch(url, { mode: 'cors' });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const bitmap = await createImageBitmap(await response.blob());
+    const longestSide = Math.max(bitmap.width, bitmap.height);
+    const scale = Math.min(1, 2200 / longestSide);
+    const width = Math.max(1, Math.round(bitmap.width * scale));
+    const height = Math.max(1, Math.round(bitmap.height * scale));
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const context = canvas.getContext('2d');
+    if (!context) throw new Error('Canvas tidak tersedia.');
+    context.fillStyle = '#ffffff';
+    context.fillRect(0, 0, width, height);
+    context.drawImage(bitmap, 0, 0, width, height);
+    bitmap.close();
+    return {
+      dataUrl: canvas.toDataURL('image/jpeg', 0.9),
+      width,
+      height,
+    };
+  } catch (error) {
+    console.warn('Gambar PDF tidak dapat dimuat:', url, error);
+    return null;
+  }
+}
 
-    doc.setFont('helvetica', 'italic');
-    doc.setFontSize(7.5);
-    doc.setTextColor(180, 50, 50); // Reddish watermark tint to discourage unauthorized sharing
-    doc.text(watermarkText, pageWidth / 2, footerY, { align: 'center' });
-  };
+function drawImageCover(
+  doc: jsPDF,
+  image: PrintableImage,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+) {
+  const sourceRatio = image.width / image.height;
+  const targetRatio = width / height;
+  let renderWidth = width;
+  let renderHeight = height;
+  let renderX = x;
+  let renderY = y;
 
-  // --- 1. COVER PAGE ---
-  // Background cover accent box
-  doc.setFillColor(252, 248, 238); // Soft warm amber
-  doc.rect(0, 0, pageWidth, pageHeight, 'F');
+  if (sourceRatio > targetRatio) {
+    renderWidth = height * sourceRatio;
+    renderX = x - (renderWidth - width) / 2;
+  } else {
+    renderHeight = width / sourceRatio;
+    renderY = y - (renderHeight - height) / 2;
+  }
 
-  // Decorative border
-  doc.setDrawColor(217, 119, 6); // Amber border
-  doc.setLineWidth(2);
-  doc.rect(10, 10, pageWidth - 20, pageHeight - 20, 'S');
+  doc.saveGraphicsState();
+  doc.rect(x, y, width, height);
+  doc.clip();
+  doc.addImage(image.dataUrl, 'JPEG', renderX, renderY, renderWidth, renderHeight, undefined, 'FAST');
+  doc.restoreGraphicsState();
+}
 
-  doc.setDrawColor(245, 158, 11);
-  doc.setLineWidth(0.8);
-  doc.rect(13, 13, pageWidth - 26, pageHeight - 26, 'S');
-
-  // Cover Category Badge
-  doc.setFillColor(217, 119, 6);
-  doc.rect(pageWidth / 2 - 40, 35, 80, 10, 'F');
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(10);
-  doc.setTextColor(255, 255, 255);
-  doc.text(story.category.toUpperCase(), pageWidth / 2, 41.5, { align: 'center' });
-
-  // Book Title
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(26);
-  doc.setTextColor(120, 53, 15); // Dark amber
-  const splitTitle = doc.splitTextToSize(story.title, contentWidth);
-  doc.text(splitTitle, pageWidth / 2, 65, { align: 'center' });
-
-  // Story Description Box
-  const descY = 65 + splitTitle.length * 10 + 10;
+function addLicenseFooter(doc: jsPDF, story: Story, customer: CustomerInfo, pageNumber: number) {
+  doc.setDrawColor(218, 213, 202);
+  doc.setLineWidth(0.25);
+  doc.line(SAFE_MARGIN, 285, PAGE_WIDTH - SAFE_MARGIN, 285);
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(11);
-  doc.setTextColor(75, 85, 99);
-  const splitDesc = doc.splitTextToSize(story.description, contentWidth - 10);
-  doc.text(splitDesc, pageWidth / 2, descY, { align: 'center' });
+  doc.setFontSize(6.8);
+  doc.setTextColor(112, 105, 94);
+  doc.text(
+    `Lisensi pribadi: ${cleanPdfText(customer.name)} (${cleanPdfText(customer.email)}) | #${cleanPdfText(customer.transactionId)}`,
+    SAFE_MARGIN,
+    290,
+  );
+  doc.text(`${cleanPdfText(story.title)}  -  ${pageNumber}`, PAGE_WIDTH - SAFE_MARGIN, 290, { align: 'right' });
+}
 
-  // Target Age & Moral Value Box
-  const moralY = descY + splitDesc.length * 6 + 15;
-  doc.setFillColor(254, 243, 199);
-  doc.roundedRect(margin, moralY, contentWidth, 28, 4, 4, 'F');
-  doc.setDrawColor(252, 211, 77);
-  doc.roundedRect(margin, moralY, contentWidth, 28, 4, 4, 'S');
-
+function drawMissingIllustration(doc: jsPDF, title: string) {
+  doc.setFillColor(231, 242, 234);
+  doc.rect(0, 0, PAGE_WIDTH, 195, 'F');
+  doc.setFillColor(205, 229, 213);
+  doc.circle(35, 48, 22, 'F');
+  doc.setFillColor(245, 218, 145);
+  doc.circle(170, 38, 15, 'F');
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(10);
-  doc.setTextColor(146, 64, 14);
-  doc.text(`Usia Sasaran: ${story.targetAge}`, margin + 6, moralY + 9);
-  doc.text(`Pesan Moral Utama:`, margin + 6, moralY + 17);
-  doc.setFont('helvetica', 'italic');
-  doc.setFontSize(10);
-  doc.setTextColor(120, 53, 15);
-  const moralText = `"${story.moralMessage}"`;
-  const splitMoral = doc.splitTextToSize(moralText, contentWidth - 12);
-  doc.text(splitMoral, margin + 6, moralY + 23);
+  doc.setFontSize(18);
+  doc.setTextColor(43, 83, 59);
+  doc.text(cleanPdfText(title), PAGE_WIDTH / 2, 104, { align: 'center', maxWidth: 160 });
+}
 
-  // Bottom Stamp Box on Cover
-  doc.setFillColor(239, 68, 68);
-  doc.rect(margin, pageHeight - 35, contentWidth, 18, 'F');
+function addCover(doc: jsPDF, story: Story, customer: CustomerInfo, cover: PrintableImage | null) {
+  doc.setFillColor(250, 247, 239);
+  doc.rect(0, 0, PAGE_WIDTH, PAGE_HEIGHT, 'F');
+
+  if (cover) {
+    drawImageCover(doc, cover, 0, 0, PAGE_WIDTH, 225);
+  } else {
+    drawMissingIllustration(doc, story.title);
+  }
+
+  doc.setFillColor(20, 34, 29);
+  doc.setGState(doc.GState({ opacity: 0.78 }));
+  doc.roundedRect(12, 157, PAGE_WIDTH - 24, 58, 5, 5, 'F');
+  doc.setGState(doc.GState({ opacity: 1 }));
+
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(9);
+  doc.setTextColor(244, 196, 83);
+  doc.text(cleanPdfText(story.category).toUpperCase(), PAGE_WIDTH / 2, 169, { align: 'center' });
+
+  const title = doc.splitTextToSize(cleanPdfText(story.title), 160);
+  doc.setFontSize(title.length > 2 ? 22 : 27);
   doc.setTextColor(255, 255, 255);
-  doc.text(`HAK CIPTA TERLINDUNGI & DIGITAL WATERMARK`, pageWidth / 2, pageHeight - 27, { align: 'center' });
+  doc.text(title, PAGE_WIDTH / 2, 183, { align: 'center', lineHeightFactor: 1.05 });
+
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(8);
-  doc.text(`Dilisensikan Khusus Kepada: ${customer.name} (${customer.email})`, pageWidth / 2, pageHeight - 21, { align: 'center' });
+  doc.setFontSize(10);
+  doc.setTextColor(239, 235, 225);
+  doc.text(`Cerita oleh ${cleanPdfText(story.author)}`, PAGE_WIDTH / 2, 207, { align: 'center' });
 
-  // --- 2. STORY PAGES ---
-  const totalPagesNum = story.pages.length + 1;
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(10);
+  doc.setTextColor(41, 78, 57);
+  doc.text('BacaYuk  |  Buku Cerita Anak', SAFE_MARGIN, 239);
 
-  for (let i = 0; i < story.pages.length; i++) {
-    const pageObj = story.pages[i];
-    doc.addPage();
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9.5);
+  doc.setTextColor(72, 67, 58);
+  const description = doc.splitTextToSize(cleanPdfText(story.description), PAGE_WIDTH - SAFE_MARGIN * 2);
+  doc.text(description, SAFE_MARGIN, 248, { lineHeightFactor: 1.35 });
 
-    // Soft background tint for inner reading pages
-    doc.setFillColor(255, 253, 248);
-    doc.rect(0, 0, pageWidth, pageHeight, 'F');
+  doc.setFont('helvetica', 'italic');
+  doc.setFontSize(8.5);
+  doc.setTextColor(95, 89, 78);
+  doc.text(`Untuk usia ${cleanPdfText(story.targetAge)}  |  ${cleanPdfText(story.moralMessage)}`, SAFE_MARGIN, 274, {
+    maxWidth: PAGE_WIDTH - SAFE_MARGIN * 2,
+  });
+  addLicenseFooter(doc, story, customer, 1);
+}
 
-    // Page Number Badge
-    doc.setFillColor(245, 158, 11);
-    doc.circle(pageWidth - 25, 30, 8, 'F');
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(10);
-    doc.setTextColor(255, 255, 255);
-    doc.text(`${pageObj.pageNumber}`, pageWidth - 25, 33.5, { align: 'center' });
+function addStoryPage(
+  doc: jsPDF,
+  story: Story,
+  customer: CustomerInfo,
+  pageIndex: number,
+  image: PrintableImage | null,
+) {
+  const page = story.pages[pageIndex];
+  doc.addPage();
+  doc.setFillColor(250, 247, 239);
+  doc.rect(0, 0, PAGE_WIDTH, PAGE_HEIGHT, 'F');
 
-    // Page Illustration Banner Box
-    doc.setFillColor(254, 243, 199);
-    doc.roundedRect(margin, 25, contentWidth - 15, 65, 6, 6, 'F');
-    doc.setDrawColor(251, 191, 36);
-    doc.setLineWidth(0.8);
-    doc.roundedRect(margin, 25, contentWidth - 15, 65, 6, 6, 'S');
+  if (image) drawImageCover(doc, image, 0, 0, PAGE_WIDTH, 195);
+  else drawMissingIllustration(doc, page.title || `Halaman ${page.pageNumber}`);
 
-    // Illustration Title / Scene Label
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(14);
-    doc.setTextColor(180, 83, 9);
-    doc.text(`Ilustrasi Adegan Halaman ${pageObj.pageNumber}`, pageWidth / 2 - 8, 42, { align: 'center' });
+  doc.setFillColor(21, 77, 55);
+  doc.circle(190, 17, 8, 'F');
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(10);
+  doc.setTextColor(255, 255, 255);
+  doc.text(String(page.pageNumber), 190, 20.5, { align: 'center' });
 
-    // Interactive elements preview or text summary inside illustration frame
+  doc.setFillColor(255, 253, 248);
+  doc.setDrawColor(224, 217, 203);
+  doc.setLineWidth(0.4);
+  doc.roundedRect(10, 178, PAGE_WIDTH - 20, 104, 7, 7, 'FD');
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(17);
+  doc.setTextColor(31, 58, 45);
+  doc.text(cleanPdfText(page.title || `Halaman ${page.pageNumber}`), 18, 194, { maxWidth: 174 });
+
+  const storyText = doc.splitTextToSize(cleanPdfText(page.text), 174);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(12.5);
+  doc.setTextColor(47, 45, 40);
+  doc.text(storyText, 18, 207, { lineHeightFactor: 1.42 });
+
+  if (page.textEn) {
+    const englishY = Math.min(254, 210 + storyText.length * 6.3);
+    doc.setDrawColor(226, 218, 200);
+    doc.line(18, englishY - 5, PAGE_WIDTH - 18, englishY - 5);
     doc.setFont('helvetica', 'italic');
-    doc.setFontSize(10);
-    doc.setTextColor(120, 53, 15);
-    const subText = pageObj.quizQuestion ? `Kuis Interaktif: "${pageObj.quizQuestion.question}"` : `Cerita Bergambar Seri ${story.category}`;
-    doc.text(subText, pageWidth / 2 - 8, 52, { align: 'center' });
-
-    // Key interactive element labels inside frame
-    if (pageObj.interactiveElements && pageObj.interactiveElements.length > 0) {
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(9);
-      doc.setTextColor(100, 116, 139);
-      const elemsList = pageObj.interactiveElements.map(e => `• ${e.label} (${e.soundType})`).join('   ');
-      doc.text(`Elemen Suara Interaktif: ${elemsList}`, pageWidth / 2 - 8, 65, { align: 'center' });
-    }
-
-    // Story Text Content Section (Indonesian)
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(12);
-    doc.setTextColor(30, 41, 59); // Slate-800 for high legibility
-    
-    const splitStoryText = doc.splitTextToSize(pageObj.text, contentWidth);
-    doc.text(splitStoryText, margin, 105, {
-      align: 'left',
-      lineHeightFactor: 1.5,
-    });
-
-    // Bilingual English Text Section if available
-    if (pageObj.textEn) {
-      const enY = 105 + splitStoryText.length * 6 + 6;
-      doc.setFillColor(238, 242, 255); // Indigo light
-      doc.roundedRect(margin, enY, contentWidth, 24, 3, 3, 'F');
-      doc.setDrawColor(199, 210, 254);
-      doc.roundedRect(margin, enY, contentWidth, 24, 3, 3, 'S');
-
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(8.5);
-      doc.setTextColor(67, 56, 202);
-      doc.text(`🇬🇧 ENGLISH VERSION (EDISI BELAJAR BILINGUAL):`, margin + 4, enY + 6);
-
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(10);
-      doc.setTextColor(30, 27, 75);
-      const splitEnText = doc.splitTextToSize(pageObj.textEn, contentWidth - 8);
-      doc.text(splitEnText, margin + 4, enY + 13);
-    }
-
-    // Quiz Question Box at the bottom of page if present
-    if (pageObj.quizQuestion) {
-      const quizY = 195;
-      doc.setFillColor(238, 242, 255); // Indigo light
-      doc.roundedRect(margin, quizY, contentWidth, 42, 4, 4, 'F');
-      doc.setDrawColor(199, 210, 254);
-      doc.roundedRect(margin, quizY, contentWidth, 42, 4, 4, 'S');
-
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(10);
-      doc.setTextColor(67, 56, 202);
-      doc.text(`🧩 Kuis Pemahaman Halaman ${pageObj.pageNumber}:`, margin + 6, quizY + 8);
-
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(10.5);
-      doc.setTextColor(30, 27, 75);
-      doc.text(pageObj.quizQuestion.question, margin + 6, quizY + 16);
-
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(9.5);
-      doc.setTextColor(51, 65, 85);
-      pageObj.quizQuestion.options.forEach((opt, idx) => {
-        const optionLabel = `${String.fromCharCode(65 + idx)}. ${opt}`;
-        const isCorrect = idx === pageObj.quizQuestion?.answerIndex;
-        if (isCorrect) {
-          doc.setFont('helvetica', 'bold');
-          doc.setTextColor(22, 101, 52); // Green correct answer text
-        } else {
-          doc.setFont('helvetica', 'normal');
-          doc.setTextColor(51, 65, 85);
-        }
-        doc.text(optionLabel, margin + (idx % 2 === 0 ? 6 : contentWidth / 2 + 2), quizY + 26 + Math.floor(idx / 2) * 7);
-      });
-    }
-
-    // Add Security Watermark Footer
-    addWatermark(i + 2, totalPagesNum);
+    doc.setFontSize(8.2);
+    doc.setTextColor(105, 99, 88);
+    const englishText = doc.splitTextToSize(cleanPdfText(page.textEn), 174);
+    doc.text(englishText, 18, englishY, { lineHeightFactor: 1.3 });
   }
 
-  // --- 3. PICTURE DICTIONARY SUPPLEMENT PAGE (Glosarium Kamus Bergambar) ---
-  if (story.glossary && story.glossary.length > 0) {
+  addLicenseFooter(doc, story, customer, pageIndex + 2);
+}
+
+function addGlossaryPages(doc: jsPDF, story: Story, customer: CustomerInfo, firstPageNumber: number) {
+  if (!story.glossary?.length) return;
+
+  let pageNumber = firstPageNumber;
+  let y = 52;
+  const startPage = () => {
     doc.addPage();
-    doc.setFillColor(245, 243, 255); // Soft purple
-    doc.rect(0, 0, pageWidth, pageHeight, 'F');
-
+    doc.setFillColor(246, 242, 233);
+    doc.rect(0, 0, PAGE_WIDTH, PAGE_HEIGHT, 'F');
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(18);
-    doc.setTextColor(76, 29, 149);
-    doc.text(`📚 PICTURE DICTIONARY (KAMUS BERGAMBAR BILINGUAL)`, pageWidth / 2, 25, { align: 'center' });
-
+    doc.setFontSize(22);
+    doc.setTextColor(37, 78, 57);
+    doc.text('Kamus Kecil Cerita', SAFE_MARGIN, 27);
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(9.5);
-    doc.setTextColor(109, 40, 217);
-    doc.text(`Kosakata Bahasa Inggris Pilihan Dari Cerita Ini Untuk Belajar Anak`, pageWidth / 2, 32, { align: 'center' });
+    doc.setTextColor(103, 95, 81);
+    doc.text('Kosakata pilihan untuk dibaca dan dipelajari bersama.', SAFE_MARGIN, 36);
+    y = 52;
+  };
 
-    let itemY = 42;
-    story.glossary.forEach((item, idx) => {
-      if (itemY + 22 > pageHeight - 25) {
-        doc.addPage();
-        itemY = 25;
-      }
+  startPage();
+  story.glossary.forEach((item) => {
+    if (y > 258) {
+      addLicenseFooter(doc, story, customer, pageNumber);
+      pageNumber += 1;
+      startPage();
+    }
+    doc.setFillColor(255, 253, 248);
+    doc.setDrawColor(224, 217, 203);
+    doc.roundedRect(SAFE_MARGIN, y, PAGE_WIDTH - SAFE_MARGIN * 2, 26, 4, 4, 'FD');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(12);
+    doc.setTextColor(43, 83, 59);
+    doc.text(cleanPdfText(item.wordEn), SAFE_MARGIN + 7, y + 10);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9.5);
+    doc.setTextColor(66, 61, 53);
+    const phonetic = item.phonetic ? ` [${cleanPdfText(item.phonetic)}]` : '';
+    doc.text(`${cleanPdfText(item.translationId)}${phonetic}`, SAFE_MARGIN + 7, y + 19);
+    y += 31;
+  });
+  addLicenseFooter(doc, story, customer, pageNumber);
+}
 
-      doc.setFillColor(255, 255, 255);
-      doc.roundedRect(margin, itemY, contentWidth, 20, 3, 3, 'F');
-      doc.setDrawColor(221, 214, 254);
-      doc.roundedRect(margin, itemY, contentWidth, 20, 3, 3, 'S');
+/** Generates a print-ready illustrated storybook PDF with a personal license stamp. */
+export async function generateStoryPDF(story: Story, customer: CustomerInfo): Promise<Blob> {
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4', compress: true });
+  doc.setProperties({
+    title: cleanPdfText(story.title),
+    author: cleanPdfText(story.author),
+    subject: 'Buku cerita anak BacaYuk',
+    creator: 'BacaYuk',
+  });
 
-      // Emoji / Icon box
-      doc.setFontSize(14);
-      doc.text(item.emoji || '📖', margin + 6, itemY + 13);
+  const [cover, ...pageImages] = await Promise.all([
+    loadPrintableImage(story.coverImage),
+    ...story.pages.map((page) => loadPrintableImage(page.imageUrl)),
+  ]);
 
-      // Word EN
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(11);
-      doc.setTextColor(91, 33, 182);
-      doc.text(`${item.wordEn}`, margin + 18, itemY + 10);
-
-      if (item.phonetic) {
-        doc.setFont('helvetica', 'italic');
-        doc.setFontSize(8.5);
-        doc.setTextColor(124, 58, 237);
-        doc.text(`[${item.phonetic}]`, margin + 18 + doc.getTextWidth(item.wordEn) * 2.8 + 2, itemY + 10);
-      }
-
-      // Indonesian translation
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(10);
-      doc.setTextColor(15, 23, 42);
-      doc.text(`= ${item.translationId}`, margin + 18, itemY + 16);
-
-      itemY += 24;
-    });
-
-    addWatermark(story.pages.length + 2, totalPagesNum + 1);
-  }
-
+  addCover(doc, story, customer, cover);
+  story.pages.forEach((_, index) => addStoryPage(doc, story, customer, index, pageImages[index]));
+  addGlossaryPages(doc, story, customer, story.pages.length + 2);
   return doc.output('blob');
 }
