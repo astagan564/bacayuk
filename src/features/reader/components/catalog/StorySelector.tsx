@@ -30,6 +30,7 @@ export function StorySelector(props: StorySelectorProps) {
       />
       <PersonalLibraryTabs controller={controller} />
       <StoryCategoryFilter
+        categories={controller.categories}
         selectedCategory={controller.selectedCategory}
         onSelectCategory={controller.selectCategory}
       />

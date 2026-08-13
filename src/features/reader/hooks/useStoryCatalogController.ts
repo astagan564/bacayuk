@@ -1,10 +1,12 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { Story } from '@/types';
 import { useGlobalAdminSettings } from '@/features/admin/hooks/useGlobalAdminSettings';
 import { paymentStore } from '@/utils/paymentStore';
 import { userAuthStore } from '@/utils/userAuthStore';
 import {
   getStoryProgress,
+  getStoryCategories,
+  ALL_STORIES_CATEGORY,
   storyMatchesCategory,
 } from '@/features/reader/helpers/storyCatalog';
 import type {
@@ -25,7 +27,7 @@ export function useStoryCatalogController({
   favoriteStoryIds = [],
   recentStoryIds = [],
 }: StoryCatalogControllerOptions) {
-  const [selectedCategory, setSelectedCategory] = useState<string>('Semua');
+  const [selectedCategory, setSelectedCategory] = useState<string>(ALL_STORIES_CATEGORY);
   const [libraryView, setLibraryView] = useState<StoryLibraryView>('all');
 
   const publicStories = useMemo(
@@ -36,6 +38,11 @@ export function useStoryCatalogController({
     () => new Map(publicStories.map((story) => [story.id, story])),
     [publicStories],
   );
+  const categories = useMemo(() => getStoryCategories(publicStories), [publicStories]);
+
+  useEffect(() => {
+    if (!categories.includes(selectedCategory)) setSelectedCategory(ALL_STORIES_CATEGORY);
+  }, [categories, selectedCategory]);
   const favoriteStoryIdSet = useMemo(() => new Set(favoriteStoryIds), [favoriteStoryIds]);
   const favoriteStories = useMemo(
     () => publicStories.filter((story) => favoriteStoryIdSet.has(story.id)),
@@ -93,6 +100,7 @@ export function useStoryCatalogController({
 
   return {
     selectedCategory,
+    categories,
     libraryView,
     publicStories,
     favoriteStories,

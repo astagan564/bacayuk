@@ -1,17 +1,17 @@
-import { STORY_CATEGORIES } from '@/features/reader/helpers/storyCatalog';
-
 interface StoryCategoryFilterProps {
+  categories: string[];
   selectedCategory: string;
   onSelectCategory: (category: string) => void;
 }
 
 export function StoryCategoryFilter({
+  categories,
   selectedCategory,
   onSelectCategory,
 }: StoryCategoryFilterProps) {
   return (
     <nav className="flex items-center gap-2 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-none" aria-label="Filter kategori cerita">
-      {STORY_CATEGORIES.map((category) => {
+      {categories.map((category) => {
         const isActive = selectedCategory === category;
         return (
           <button

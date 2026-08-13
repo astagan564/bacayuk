@@ -1,13 +1,7 @@
 import type { Story } from '@/types';
 import type { StoryProgress } from '@/features/reader/types/storyCatalog';
 
-export const STORY_CATEGORIES = [
-  'Semua',
-  'Emosi & Keberanian',
-  'Kebaikan & Petualangan',
-  'Hewan & Petualangan',
-  'Fabel Pertumbuhan',
-] as const;
+export const ALL_STORIES_CATEGORY = 'Semua';
 
 export const STORY_SPINE_PALETTE = ['#2f8f6b', '#4a6fa5', '#e7a93b', '#d95d6a'] as const;
 
@@ -29,7 +23,17 @@ export function getStoryProgress(
 }
 
 export function storyMatchesCategory(story: Story, selectedCategory: string): boolean {
-  return selectedCategory === 'Semua'
-    || story.category.includes(selectedCategory)
-    || selectedCategory.includes(story.category);
+  return selectedCategory === ALL_STORIES_CATEGORY
+    || story.category.trim().localeCompare(selectedCategory.trim(), 'id', { sensitivity: 'base' }) === 0;
+}
+
+export function getStoryCategories(stories: Story[]): string[] {
+  const categories = new Map<string, string>();
+  for (const story of stories) {
+    const category = story.category.trim();
+    if (!category) continue;
+    const normalizedCategory = category.toLocaleLowerCase('id');
+    if (!categories.has(normalizedCategory)) categories.set(normalizedCategory, category);
+  }
+  return [ALL_STORIES_CATEGORY, ...categories.values()];
 }
