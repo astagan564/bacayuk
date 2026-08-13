@@ -100,4 +100,38 @@ export const voiceRecordingsStore = {
       localStorage.removeItem(`buku_cerita_vrec_${key}`);
     }
   },
+
+  async countRecordings(): Promise<number> {
+    let fallbackCount = 0;
+    for (let index = 0; index < localStorage.length; index += 1) {
+      if (localStorage.key(index)?.startsWith('buku_cerita_vrec_')) fallbackCount += 1;
+    }
+    try {
+      const db = await openDB();
+      return await new Promise((resolve) => {
+        const request = db.transaction(STORE_NAME, 'readonly').objectStore(STORE_NAME).count();
+        request.onsuccess = () => resolve(request.result + fallbackCount);
+        request.onerror = () => resolve(fallbackCount);
+      });
+    } catch {
+      return fallbackCount;
+    }
+  },
+
+  async clearAll(): Promise<void> {
+    const fallbackKeys: string[] = [];
+    for (let index = 0; index < localStorage.length; index += 1) {
+      const key = localStorage.key(index);
+      if (key?.startsWith('buku_cerita_vrec_')) fallbackKeys.push(key);
+    }
+    fallbackKeys.forEach((key) => localStorage.removeItem(key));
+
+    await new Promise<void>((resolve) => {
+      if (!window.indexedDB) return resolve();
+      const request = indexedDB.deleteDatabase(DB_NAME);
+      request.onsuccess = () => resolve();
+      request.onerror = () => resolve();
+      request.onblocked = () => resolve();
+    });
+  },
 };

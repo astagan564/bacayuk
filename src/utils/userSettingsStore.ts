@@ -28,7 +28,9 @@ export const userSettingsStore = {
 
   saveSettings(settings: UserSettings): void {
     localStorage.setItem(USER_SETTINGS_KEY, JSON.stringify(settings));
-    // Usually we would also sync this to Supabase, but since user auth is simple for now, 
-    // local storage is fine.
-  }
+  },
+
+  clearSettings(): void {
+    localStorage.removeItem(USER_SETTINGS_KEY);
+  },
 };

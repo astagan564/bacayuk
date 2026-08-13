@@ -39,6 +39,14 @@ export const personalLibraryStore = {
     }
   },
 
+  clear(userId?: string): void {
+    try {
+      localStorage.removeItem(getStorageKey(userId));
+    } catch {
+      // Storage cleanup is best-effort on restricted browsers.
+    }
+  },
+
   toggleFavorite(library: PersonalLibrary, storyId: string): PersonalLibrary {
     const favoriteStoryIds = library.favoriteStoryIds.includes(storyId)
       ? library.favoriteStoryIds.filter((id) => id !== storyId)

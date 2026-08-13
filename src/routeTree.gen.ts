@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
+import { Route as LegalRouteImport } from './routes/legal'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
 import { Route as AdminCostsRouteImport } from './routes/admin.costs'
@@ -31,6 +32,11 @@ const IndexRoute = IndexRouteImport.update({
 const AdminRoute = AdminRouteImport.update({
   id: '/admin',
   path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LegalRoute = LegalRouteImport.update({
+  id: '/legal',
+  path: '/legal',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SettingsRoute = SettingsRouteImport.update({
@@ -93,6 +99,7 @@ const AdminStoriesStoryIdEditRoute = AdminStoriesStoryIdEditRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
+  '/legal': typeof LegalRoute
   '/settings': typeof SettingsRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/costs': typeof AdminCostsRoute
@@ -108,6 +115,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
+  '/legal': typeof LegalRoute
   '/settings': typeof SettingsRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/costs': typeof AdminCostsRoute
@@ -124,6 +132,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
+  '/legal': typeof LegalRoute
   '/settings': typeof SettingsRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/costs': typeof AdminCostsRoute
@@ -141,6 +150,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/admin'
+    | '/legal'
     | '/settings'
     | '/admin/analytics'
     | '/admin/costs'
@@ -156,6 +166,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/admin'
+    | '/legal'
     | '/settings'
     | '/admin/analytics'
     | '/admin/costs'
@@ -171,6 +182,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/admin'
+    | '/legal'
     | '/settings'
     | '/admin/analytics'
     | '/admin/costs'
@@ -187,6 +199,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRouteWithChildren
+  LegalRoute: typeof LegalRoute
   SettingsRoute: typeof SettingsRoute
   ReadStoryIdRoute: typeof ReadStoryIdRoute
 }
@@ -205,6 +218,13 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/admin'
       preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/legal': {
+      id: '/legal'
+      path: '/legal'
+      fullPath: '/legal'
+      preLoaderRoute: typeof LegalRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/settings': {
@@ -326,6 +346,7 @@ const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
+  LegalRoute: LegalRoute,
   SettingsRoute: SettingsRoute,
   ReadStoryIdRoute: ReadStoryIdRoute,
 }

@@ -1,4 +1,5 @@
 import packageJson from '../../../../package.json';
+import { Link } from '@tanstack/react-router';
 
 interface ApplicationFooterProps {
   onOpenChangelog: () => void;
@@ -18,6 +19,10 @@ export function ApplicationFooter({ onOpenChangelog }: ApplicationFooterProps) {
         >
           Changelog
         </button>
+        <span>â€¢</span>
+        <Link to="/legal" className="underline hover:text-action-secondary transition-colors">
+          Privasi & Ketentuan
+        </Link>
       </div>
     </footer>
   );

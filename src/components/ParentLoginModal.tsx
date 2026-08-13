@@ -140,6 +140,12 @@ export const ParentLoginModal: React.FC<ParentLoginModalProps> = ({
           <ShieldCheck className="w-4 h-4 text-brand-green shrink-0" />
           <span>Login diverifikasi melalui penyedia OAuth dan Supabase Auth.</span>
         </div>
+        <p className="text-center text-[10px] leading-5 text-muted">
+          Dengan melanjutkan, Anda menyetujui{' '}
+          <a href="/legal#terms" className="font-bold text-brand-green underline">Ketentuan Layanan</a>
+          {' '}dan telah membaca{' '}
+          <a href="/legal#privacy" className="font-bold text-brand-green underline">Kebijakan Privasi</a>.
+        </p>
       </div>
     </div>
   );

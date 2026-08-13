@@ -68,4 +68,14 @@ export const readingProgressStore = {
   saveCompletedStories(completedStories: CompletedStories): void {
     saveRecord(COMPLETED_STORIES_KEY, completedStories);
   },
+
+  clearAll(): void {
+    try {
+      localStorage.removeItem(BOOKMARKS_KEY);
+      localStorage.removeItem(READING_TIMES_KEY);
+      localStorage.removeItem(COMPLETED_STORIES_KEY);
+    } catch (error) {
+      console.warn('Failed to clear local reading progress:', error);
+    }
+  },
 };

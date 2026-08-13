@@ -93,8 +93,21 @@ export const userAuthStore = {
   },
 
   async logout(): Promise<void> {
-    const { error } = await supabase.auth.signOut();
+    const { error } = await supabase.auth.signOut({ scope: 'local' });
     if (error) throw error;
+    authenticatedUser = null;
+    paymentStore.clearVerifiedPurchases();
+  },
+
+  async logoutAllDevices(): Promise<void> {
+    const { error } = await supabase.auth.signOut({ scope: 'global' });
+    if (error) throw error;
+    authenticatedUser = null;
+    paymentStore.clearVerifiedPurchases();
+  },
+
+  async finishAccountDeletion(): Promise<void> {
+    await supabase.auth.signOut({ scope: 'local' }).catch(() => undefined);
     authenticatedUser = null;
     paymentStore.clearVerifiedPurchases();
   },

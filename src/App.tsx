@@ -1,5 +1,6 @@
 import { useRouterState } from '@tanstack/react-router';
 import { AdminApplicationRoute } from '@/features/admin/components/AdminApplicationRoute';
+import { LegalPage } from '@/features/legal/components/LegalPage';
 import { useReaderSettingsController } from '@/features/reader';
 import {
   ApplicationToast,
@@ -19,10 +20,13 @@ export default function App() {
 
   const isAdminRoute = pathname === '/admin' || pathname.startsWith('/admin/');
   const isSettingsRoute = pathname === '/settings';
+  const isLegalRoute = pathname === '/legal';
 
   return (
     <>
-      {isAdminRoute ? (
+      {isLegalRoute ? (
+        <LegalPage />
+      ) : isAdminRoute ? (
         <AdminApplicationRoute
           stories={storyCollection.stories}
           onStoriesChange={storyCollection.setStories}
