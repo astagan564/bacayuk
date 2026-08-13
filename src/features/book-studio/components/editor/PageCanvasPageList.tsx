@@ -41,7 +41,7 @@ export function PageCanvasPageList({
             }`}
           >
             <span className="block text-[10px] font-black opacity-75">
-              {pageIndex === 0 ? 'Cover' : `Halaman ${pageIndex + 1}`}
+              Halaman {page.pageNumber || pageIndex + 1}
             </span>
             <span className="mt-1 block line-clamp-2 text-[11px] font-black">
               {page.title || sentenceCaseTitle(page.text, `Halaman ${pageIndex + 1}`)}

@@ -5,7 +5,7 @@
     "title": "Lila Berani Bercerita",
     "author": "BacaYuk Studio",
     "category": "Keberanian",
-    "coverImage": "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=600",
+    "coverImage": "https://sibwrdbmoasrpcpjgrst.supabase.co/storage/v1/object/public/story-images/lila-berani-bercerita-demo/cover.webp",
     "coverBg": "from-amber-300 to-rose-400",
     "themeColor": "amber",
     "accentColor": "rose",
@@ -26,6 +26,7 @@
         "textEn": "",
         "illustrationType": "forest",
         "illustrationPrompt": "Lila, a small cream-colored rabbit wearing yellow overalls and a teal scarf, sits in a warm woodland classroom while her owl teacher announces story day, Lila's ears lowered with gentle nervousness, colorful books and leaf-shaped windows, soft colorful children's storybook illustration.",
+        "imageUrl": "https://bacayuk-beta.vercel.app/books/lila-berani-bercerita-demo/page-01.webp",
         "colors": {
           "bgGradFrom": "from-amber-100",
           "bgGradTo": "to-rose-100",
@@ -41,6 +42,7 @@
         "textEn": "",
         "illustrationType": "garden",
         "illustrationPrompt": "Lila, the same cream-colored rabbit in yellow overalls and teal scarf, prepares a drawing of a tiny seed growing into a flower at her bedroom desk, placing it into her small red satchel, warm evening mood, soft colorful children's storybook illustration.",
+        "imageUrl": "https://bacayuk-beta.vercel.app/books/lila-berani-bercerita-demo/page-02.webp",
         "colors": {
           "bgGradFrom": "from-emerald-100",
           "bgGradTo": "to-amber-100",
@@ -56,6 +58,7 @@
         "textEn": "",
         "illustrationType": "custom",
         "illustrationPrompt": "Lila, the same cream-colored rabbit with round brown eyes, yellow overalls, and teal scarf, practices speaking in front of a round bedroom mirror, holding her seed drawing with both paws, shy but determined expression, gentle morning light, soft colorful children's storybook illustration.",
+        "imageUrl": "https://bacayuk-beta.vercel.app/books/lila-berani-bercerita-demo/page-03.webp",
         "colors": {
           "bgGradFrom": "from-sky-100",
           "bgGradTo": "to-amber-100",
@@ -71,6 +74,7 @@
         "textEn": "",
         "illustrationType": "forest",
         "illustrationPrompt": "Lila, unchanged in yellow overalls and teal scarf, tells her seed story to Momo, a small reddish-brown squirrel wearing a blue vest, inside Lila's cozy room, Momo smiles and listens attentively, encouraging mood, soft colorful children's storybook illustration.",
+        "imageUrl": "https://bacayuk-beta.vercel.app/books/lila-berani-bercerita-demo/page-04.webp",
         "colors": {
           "bgGradFrom": "from-orange-100",
           "bgGradTo": "to-sky-100",
@@ -99,6 +103,7 @@
         "textEn": "",
         "illustrationType": "forest",
         "illustrationPrompt": "Lila, the same cream-colored rabbit wearing yellow overalls and teal scarf and carrying a red satchel, walks along a sunny woodland path toward school, one paw touching her scarf, nervous but hopeful mood, soft colorful children's storybook illustration.",
+        "imageUrl": "https://bacayuk-beta.vercel.app/books/lila-berani-bercerita-demo/page-05.webp",
         "colors": {
           "bgGradFrom": "from-lime-100",
           "bgGradTo": "to-sky-100",
@@ -114,6 +119,7 @@
         "textEn": "",
         "illustrationType": "forest",
         "illustrationPrompt": "Lila, unchanged with cream fur, round brown eyes, yellow overalls, and teal scarf, stands at the front of the woodland classroom holding her seed drawing, taking a calm breath as Momo smiles from his seat, supportive classmates, warm reassuring mood, soft colorful children's storybook illustration.",
+        "imageUrl": "https://bacayuk-beta.vercel.app/books/lila-berani-bercerita-demo/page-06.webp",
         "colors": {
           "bgGradFrom": "from-amber-100",
           "bgGradTo": "to-emerald-100",
@@ -129,6 +135,7 @@
         "textEn": "",
         "illustrationType": "garden",
         "illustrationPrompt": "Lila, identical cream-colored rabbit in yellow overalls and teal scarf, speaks confidently beside her seed-to-flower drawing in the woodland classroom, classmates watching with delighted faces, an imaginative glowing flower motif behind her, joyful mood, soft colorful children's storybook illustration.",
+        "imageUrl": "https://bacayuk-beta.vercel.app/books/lila-berani-bercerita-demo/page-07.webp",
         "colors": {
           "bgGradFrom": "from-rose-100",
           "bgGradTo": "to-amber-100",
@@ -144,6 +151,7 @@
         "textEn": "",
         "illustrationType": "forest",
         "illustrationPrompt": "Lila, unchanged in her yellow overalls and teal scarf, smiles with relief at the front of the woodland classroom while Momo, the reddish-brown squirrel in a blue vest, and other classmates clap, seed drawing visible, warm celebratory mood, soft colorful children's storybook illustration.",
+         "imageUrl": "https://bacayuk-beta.vercel.app/books/lila-berani-bercerita-demo/page-08.webp",
         "colors": {
           "bgGradFrom": "from-yellow-100",
           "bgGradTo": "to-rose-100",
