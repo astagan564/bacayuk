@@ -1,12 +1,31 @@
 import type {
   CreateTransactionRequest,
   CreateTransactionResponse,
+  PaymentQuoteResponse,
   VerifyTransactionResponse,
 } from '@/features/commerce/types/paymentGateway';
 import { getAuthenticatedHeaders } from '@/utils/authenticatedFetch';
 
 interface ApiErrorResponse {
   error?: string;
+}
+
+export async function quotePaymentTransaction(
+  request: CreateTransactionRequest,
+  signal?: AbortSignal,
+): Promise<PaymentQuoteResponse> {
+  const response = await fetch('/api/payment-quote', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...await getAuthenticatedHeaders(),
+    },
+    body: JSON.stringify(request),
+    signal,
+  });
+  const data = await response.json() as PaymentQuoteResponse & ApiErrorResponse;
+  if (!response.ok) throw new Error(data.error || 'Kupon belum dapat diperiksa.');
+  return data;
 }
 
 export async function createPaymentTransaction(

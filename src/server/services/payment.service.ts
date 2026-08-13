@@ -6,12 +6,6 @@ import { getSupabaseAdminClient } from '../clients/supabaseAdminClient';
 import { DEFAULT_EBOOK_PRICE, VIP_SUBSCRIPTION_PRICE } from '../config/storybookConfig';
 import { normalizeStory } from '../utils/storybookNormalization';
 
-const SERVER_COUPONS = [
-  { code: 'BUKUANAK20', type: 'percent', value: 20, maxUsage: 100 },
-  { code: 'MERDEKA5K', type: 'fixed', value: 5000, maxUsage: 50 },
-  { code: 'PARENTSPROMO', type: 'percent', value: 30, maxUsage: 200 },
-] as const;
-
 export function getSnapClient() {
   const serverKey = process.env.MIDTRANS_SERVER_KEY;
   const clientKey = process.env.VITE_MIDTRANS_CLIENT_KEY;
@@ -42,19 +36,34 @@ export function getCoreClient() {
   });
 }
 
-function calculateDiscount(couponCode: unknown, originalAmount: number) {
+async function calculateDiscount(couponCode: unknown, originalAmount: number) {
   if (typeof couponCode !== 'string' || !couponCode.trim()) {
     return { discountAmount: 0, couponCode: null as string | null };
   }
 
   const cleanCode = couponCode.trim().toUpperCase();
-  const coupon = SERVER_COUPONS.find((item) => item.code === cleanCode);
-  if (!coupon) {
+  const { data: coupon, error } = await getSupabaseAdminClient()
+    .from('discount_coupons')
+    .select('code, type, value, min_purchase, usage_count, max_usage, expires_at, is_active')
+    .eq('code', cleanCode)
+    .maybeSingle();
+  if (error) throw new Error(`Kupon belum dapat diverifikasi: ${error.message}`);
+
+  const isExpired = coupon?.expires_at
+    ? new Date(coupon.expires_at).getTime() <= Date.now()
+    : false;
+  const usageLimitReached = coupon?.max_usage != null
+    && Number(coupon.usage_count) >= Number(coupon.max_usage);
+  const minimumNotMet = coupon?.min_purchase != null
+    && originalAmount < Number(coupon.min_purchase);
+  if (!coupon?.is_active || isExpired || usageLimitReached || minimumNotMet) {
     return { discountAmount: 0, couponCode: null as string | null };
   }
 
   const rawDiscount =
-    coupon.type === 'percent' ? Math.round((originalAmount * coupon.value) / 100) : coupon.value;
+    coupon.type === 'percent'
+      ? Math.round((originalAmount * Number(coupon.value)) / 100)
+      : Number(coupon.value);
 
   return {
     discountAmount: Math.min(originalAmount, Math.max(0, rawDiscount)),
@@ -149,14 +158,15 @@ export async function resolveTransactionRequest(
   const { customerName, customerEmail } = getVerifiedCustomer(user);
 
   if (purchaseType === 'vip') {
-    const { discountAmount, couponCode } = calculateDiscount(body.couponCode, VIP_SUBSCRIPTION_PRICE);
+    const discount = await calculateDiscount(body.couponCode, VIP_SUBSCRIPTION_PRICE);
+    const amount = Math.max(1000, VIP_SUBSCRIPTION_PRICE - discount.discountAmount);
     return {
       purchaseType,
       storyId: 'vip_sub',
       storyTitle: 'Langganan VIP 1 Bulan',
-      amount: Math.max(1000, VIP_SUBSCRIPTION_PRICE - discountAmount),
-      discountAmount,
-      couponCode,
+      amount,
+      discountAmount: VIP_SUBSCRIPTION_PRICE - amount,
+      couponCode: discount.couponCode,
       customerName,
       customerEmail,
     };
@@ -172,7 +182,8 @@ export async function resolveTransactionRequest(
   }
 
   const originalAmount = story?.ebookPrice || DEFAULT_EBOOK_PRICE;
-  const { discountAmount, couponCode } = calculateDiscount(body.couponCode, originalAmount);
+  const discount = await calculateDiscount(body.couponCode, originalAmount);
+  const amount = Math.max(1000, originalAmount - discount.discountAmount);
   const fallbackTitle = typeof body.storyTitle === 'string' && body.storyTitle.trim()
     ? body.storyTitle.trim().slice(0, 80)
     : 'Buku Cerita BacaYuk';
@@ -181,9 +192,9 @@ export async function resolveTransactionRequest(
     purchaseType,
     storyId: body.storyId,
     storyTitle: story?.title || fallbackTitle,
-    amount: Math.max(1000, originalAmount - discountAmount),
-    discountAmount,
-    couponCode,
+    amount,
+    discountAmount: originalAmount - amount,
+    couponCode: discount.couponCode,
     customerName,
     customerEmail,
   };

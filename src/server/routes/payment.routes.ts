@@ -78,6 +78,24 @@ export function registerPaymentRoutes(app: Express) {
     res.json({ ok: submittedPin === configuredPin });
   });
 
+  app.post('/api/payment-quote', async (req, res) => {
+    try {
+      const user = await requireAuthenticatedUser(req);
+      const order = await resolveTransactionRequest(req.body, user);
+      res.json({
+        amount: order.amount,
+        discountAmount: order.discountAmount,
+        couponCode: order.couponCode,
+        storyId: order.storyId,
+        storyTitle: order.storyTitle,
+        purchaseType: order.purchaseType,
+      });
+    } catch (error) {
+      if (!(error instanceof AuthenticationError)) console.error('Error generating payment quote:', error);
+      sendRouteError(res, error);
+    }
+  });
+
   // Midtrans Snap Token endpoint
   app.post('/api/create-transaction', async (req, res) => {
     try {

@@ -51,6 +51,8 @@ export interface VerifyTransactionResponse {
   error?: string;
 }
 
+export type PaymentQuoteResponse = Omit<CreateTransactionResponse, 'token' | 'orderId'>;
+
 declare global {
   interface Window {
     snap?: {

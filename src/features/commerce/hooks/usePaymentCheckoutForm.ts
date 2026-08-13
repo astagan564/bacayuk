@@ -1,9 +1,9 @@
 import { useCallback, useState } from 'react';
 import type { Story } from '@/types';
-import { adminStore } from '@/utils/adminStore';
 import { VIP_MONTHLY_PRICE } from '@/features/commerce/constants/payment';
 import type { PurchaseType } from '@/features/commerce/types/paymentGateway';
 import { userAuthStore } from '@/utils/userAuthStore';
+import { quotePaymentTransaction } from '@/features/commerce/api/paymentGatewayApi';
 
 interface PaymentCheckoutFormOptions {
   story?: Story;
@@ -28,31 +28,59 @@ export function usePaymentCheckoutForm({
   const [couponInput, setCouponInput] = useState('');
   const [appliedDiscount, setAppliedDiscount] = useState(0);
   const [appliedCouponCode, setAppliedCouponCode] = useState<string | null>(null);
+  const [quotedAmount, setQuotedAmount] = useState<number | null>(null);
   const [couponMessage, setCouponMessage] = useState<string | null>(null);
+  const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
 
   const priceBeforeDiscount = purchaseType === 'book' ? basePrice : VIP_MONTHLY_PRICE;
-  const finalPrice = Math.max(0, priceBeforeDiscount - appliedDiscount);
+  const finalPrice = quotedAmount ?? Math.max(0, priceBeforeDiscount - appliedDiscount);
 
   const selectPurchaseType = useCallback((nextPurchaseType: PurchaseType) => {
     setPurchaseType(nextPurchaseType);
     setAppliedDiscount(0);
     setAppliedCouponCode(null);
+    setQuotedAmount(null);
     setCouponMessage(null);
   }, []);
 
-  const applyCoupon = useCallback(() => {
-    if (!couponInput.trim()) return;
-    const result = adminStore.validateCoupon(couponInput, priceBeforeDiscount);
-    if (result.valid) {
-      setAppliedDiscount(result.discountAmount);
-      setAppliedCouponCode(result.coupon?.code || couponInput.toUpperCase());
-      setCouponMessage(`Kupon terpasang. Hemat Rp ${result.discountAmount.toLocaleString('id-ID')}.`);
-      return;
-    }
-    setCouponMessage(result.message || 'Kupon tidak dapat digunakan.');
+  const updateCouponInput = useCallback((value: string) => {
+    setCouponInput(value);
     setAppliedDiscount(0);
     setAppliedCouponCode(null);
-  }, [couponInput, priceBeforeDiscount]);
+    setQuotedAmount(null);
+    setCouponMessage(null);
+  }, []);
+
+  const applyCoupon = useCallback(async () => {
+    if (!couponInput.trim()) return;
+    setIsApplyingCoupon(true);
+    try {
+      const quote = await quotePaymentTransaction({
+        purchaseType,
+        storyId: story?.id,
+        storyTitle: story?.title,
+        couponCode: couponInput.trim().toUpperCase(),
+      });
+      if (!quote.couponCode || quote.discountAmount <= 0) {
+        setCouponMessage('Kode kupon tidak ditemukan, tidak aktif, kedaluwarsa, atau syaratnya belum terpenuhi.');
+        setAppliedDiscount(0);
+        setAppliedCouponCode(null);
+        setQuotedAmount(null);
+        return;
+      }
+      setAppliedDiscount(quote.discountAmount);
+      setAppliedCouponCode(quote.couponCode);
+      setQuotedAmount(quote.amount);
+      setCouponMessage(`Kupon terpasang. Hemat Rp ${quote.discountAmount.toLocaleString('id-ID')}.`);
+    } catch (error) {
+      setCouponMessage(error instanceof Error ? error.message : 'Kupon belum dapat diperiksa.');
+      setAppliedDiscount(0);
+      setAppliedCouponCode(null);
+      setQuotedAmount(null);
+    } finally {
+      setIsApplyingCoupon(false);
+    }
+  }, [couponInput, purchaseType, story]);
 
   const validateCustomer = useCallback((): ValidatedPaymentCustomer | string => {
     if (!userAuthStore.getUser()) return 'Silakan login terlebih dahulu untuk melakukan pembayaran.';
@@ -72,11 +100,12 @@ export function usePaymentCheckoutForm({
     appliedDiscount,
     appliedCouponCode,
     couponMessage,
+    isApplyingCoupon,
     priceBeforeDiscount,
     finalPrice,
     setCustomerName,
     setCustomerEmail,
-    setCouponInput,
+    setCouponInput: updateCouponInput,
     selectPurchaseType,
     applyCoupon,
     validateCustomer,

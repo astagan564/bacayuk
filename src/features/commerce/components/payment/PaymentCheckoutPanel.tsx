@@ -42,7 +42,7 @@ export function PaymentCheckoutPanel({ controller }: PaymentCheckoutPanelProps) 
           <input
             type="text"
             value={controller.customerName}
-            disabled={controller.isProcessing}
+            disabled={controller.isProcessing || controller.isApplyingCoupon}
             readOnly
             placeholder="Budi Santoso"
             autoComplete="name"
@@ -54,7 +54,7 @@ export function PaymentCheckoutPanel({ controller }: PaymentCheckoutPanelProps) 
           <input
             type="email"
             value={controller.customerEmail}
-            disabled={controller.isProcessing}
+            disabled={controller.isProcessing || controller.isApplyingCoupon}
             readOnly
             placeholder="orangtua@email.com"
             autoComplete="email"
@@ -69,7 +69,7 @@ export function PaymentCheckoutPanel({ controller }: PaymentCheckoutPanelProps) 
           <input
             type="text"
             value={controller.couponInput}
-            disabled={controller.isProcessing}
+            disabled={controller.isProcessing || controller.isApplyingCoupon}
             onChange={(event) => controller.setCouponInput(event.target.value)}
             placeholder="Kode kupon"
             aria-label="Kode kupon"
@@ -78,10 +78,10 @@ export function PaymentCheckoutPanel({ controller }: PaymentCheckoutPanelProps) 
           <button
             type="button"
             onClick={controller.applyCoupon}
-            disabled={controller.isProcessing}
+            disabled={controller.isProcessing || controller.isApplyingCoupon}
             className="btn-secondary px-3 py-2.5 text-xs disabled:opacity-60"
           >
-            Pasang
+            {controller.isApplyingCoupon ? 'Memeriksa…' : 'Pasang'}
           </button>
         </div>
         {controller.couponMessage && (
@@ -109,7 +109,7 @@ export function PaymentCheckoutPanel({ controller }: PaymentCheckoutPanelProps) 
       <button
         type="button"
         onClick={controller.startPayment}
-        disabled={controller.isProcessing}
+        disabled={controller.isProcessing || controller.isApplyingCoupon}
         className="btn-primary flex w-full items-center justify-center gap-2 px-5 py-3.5 text-sm disabled:opacity-60 disabled:hover:translate-y-0"
       >
         {controller.isProcessing ? (

@@ -25,6 +25,7 @@ export function usePaymentGatewayController({
     story,
     purchaseType: checkout.purchaseType,
     appliedCouponCode: checkout.appliedCouponCode,
+    expectedAmount: checkout.finalPrice,
     validateCustomer: checkout.validateCustomer,
     onPaymentSuccess,
   });
@@ -46,6 +47,7 @@ export function usePaymentGatewayController({
     couponInput: checkout.couponInput,
     appliedDiscount: checkout.appliedDiscount,
     couponMessage: checkout.couponMessage,
+    isApplyingCoupon: checkout.isApplyingCoupon,
     isProcessing: payment.isProcessing,
     isSuccess: payment.isSuccess,
     currentReceipt: payment.currentReceipt,

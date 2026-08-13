@@ -11,6 +11,7 @@ interface MidtransPaymentControllerOptions {
   story?: Story;
   purchaseType: PurchaseType;
   appliedCouponCode: string | null;
+  expectedAmount: number;
   validateCustomer: () => ValidatedPaymentCustomer | string;
   onPaymentSuccess: (receipt: PurchaseReceipt) => void;
 }
@@ -25,6 +26,7 @@ export function useMidtransPaymentController({
   story,
   purchaseType,
   appliedCouponCode,
+  expectedAmount,
   validateCustomer,
   onPaymentSuccess,
 }: MidtransPaymentControllerOptions) {
@@ -86,6 +88,9 @@ export function useMidtransPaymentController({
         couponCode: appliedCouponCode,
       }, session.abortController.signal);
       if (!isActiveSession(session.id)) return;
+      if (transaction.amount !== expectedAmount) {
+        throw new Error('Harga atau kupon berubah. Periksa kembali ringkasan sebelum membayar.');
+      }
 
       openMidtransPayment(transaction.token, {
         onSuccess: async (result) => {
@@ -137,6 +142,7 @@ export function useMidtransPaymentController({
     }
   }, [
     appliedCouponCode,
+    expectedAmount,
     finishSession,
     isActiveSession,
     purchaseType,
