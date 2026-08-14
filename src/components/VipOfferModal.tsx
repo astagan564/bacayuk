@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sparkles, X, Lock, BookOpen, Wand2, ShieldCheck } from 'lucide-react';
+import { Sparkles, X, Lock, BookOpen, Clock3, ShieldCheck } from 'lucide-react';
 
 interface VipOfferModalProps {
   onClose: () => void;
@@ -29,17 +29,17 @@ export const VipOfferModal: React.FC<VipOfferModalProps> = ({ onClose, onSubscri
             Fitur Eksklusif <span className="text-brand-gold">VIP</span>
           </h2>
           <p className="text-secondary text-sm mb-6 leading-relaxed">
-            Wah! Fitur <strong>Buat Buku Cerita AI</strong> ini sangat ajaib, namun saat ini hanya terbuka untuk Pelanggan VIP.
+            Satu langganan keluarga untuk mengunduh seluruh koleksi BacaYuk selama 1 bulan. Fitur AI masih segera hadir dan belum termasuk layanan aktif.
           </p>
 
           <div className="w-full reader-soft-panel rounded-2xl p-4 border border-default mb-6 flex flex-col gap-3">
             <div className="flex items-start gap-3 text-left">
               <div className="mt-0.5 shrink-0 bg-brand-gold/20 p-1.5 rounded-lg text-brand-gold">
-                <Wand2 className="w-4 h-4" />
+                <Clock3 className="w-4 h-4" />
               </div>
               <div>
-                <h4 className="text-sm font-bold text-primary">Buat 10 Cerita AI / Bulan</h4>
-                <p className="text-[10px] text-secondary">Rancang karakter & tema sendiri sebebasnya.</p>
+                <h4 className="text-sm font-bold text-primary">Aktif selama 1 bulan</h4>
+                <p className="text-[10px] text-secondary">Masa aktif dihitung setelah pembayaran diverifikasi admin.</p>
               </div>
             </div>
             
@@ -69,7 +69,7 @@ export const VipOfferModal: React.FC<VipOfferModalProps> = ({ onClose, onSubscri
             className="w-full py-3.5 rounded-2xl bg-brand-gold hover:opacity-90 text-white font-black text-sm uppercase tracking-wide shadow-xl flex items-center justify-center gap-2 transform transition-transform hover:scale-[1.02] active:scale-95"
           >
             <Sparkles className="w-5 h-5" />
-            <span>Aktifkan VIP Sekarang</span>
+            <span>Gabung VIP • Rp100.000</span>
           </button>
 
           <button

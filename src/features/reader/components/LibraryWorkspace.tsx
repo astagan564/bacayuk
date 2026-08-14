@@ -25,6 +25,7 @@ interface LibraryWorkspaceProps {
   onOpenQuiz: (story: Story, pageIndex: number) => void;
   onOpenStats: () => void;
   onOpenStoryMaker: () => void;
+  onOpenVip: () => void;
   onOpenVoiceRecorder: (story: Story, pageIndex: number) => void;
   onPageChange: (pageIndex: number) => void;
   onSelectStory: (story: Story, pageIndex?: number) => void;
@@ -54,6 +55,7 @@ export function LibraryWorkspace({
   onOpenQuiz,
   onOpenStats,
   onOpenStoryMaker,
+  onOpenVip,
   onOpenVoiceRecorder,
   onPageChange,
   onSelectStory,
@@ -76,6 +78,7 @@ export function LibraryWorkspace({
           onSelectStory={onSelectStory}
           onToggleFavorite={onToggleFavorite}
           onOpenStoryMaker={onOpenStoryMaker}
+          onOpenVip={onOpenVip}
           onOpenStatsModal={onOpenStats}
           onOpenPaymentModal={onOpenPayment}
           onOpenOfflineDownloadModal={onOpenOfflineDownload}

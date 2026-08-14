@@ -1,37 +1,56 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
 import { adminStore } from '@/utils/adminStore';
-import type { DiscountCoupon, TransactionRecord } from '@/utils/adminStore';
+import type { DiscountCoupon } from '@/utils/adminStore';
+import {
+  approveManualPaymentOrder,
+  fetchManualPaymentOrders,
+  rejectManualPaymentOrder,
+} from '@/features/admin/api/manualPaymentAdminApi';
+import type { AdminManualPaymentOrder } from '@/features/admin/types/manualPayment';
 
 interface AdminFinanceControllerOptions {
+  adminPin: string;
   showToast: (message: string) => void;
 }
-
-export function useAdminFinanceController({ showToast }: AdminFinanceControllerOptions) {
+export function useAdminFinanceController({ adminPin, showToast }: AdminFinanceControllerOptions) {
   const [coupons, setCoupons] = useState<DiscountCoupon[]>(() => adminStore.getCoupons());
-  const [transactions, setTransactions] = useState<TransactionRecord[]>(() => adminStore.getTransactions());
+  const [transactions, setTransactions] = useState<AdminManualPaymentOrder[]>([]);
+  const [transactionsError, setTransactionsError] = useState<string | null>(null);
+  const [isLoadingTransactions, setIsLoadingTransactions] = useState(false);
   const [newCouponCode, setNewCouponCode] = useState('');
   const [newCouponType, setNewCouponType] = useState<'percent' | 'fixed'>('percent');
   const [newCouponValue, setNewCouponValue] = useState(20);
   const [showCouponForm, setShowCouponForm] = useState(false);
 
-  const refreshTransactions = useCallback(() => {
-    setTransactions(adminStore.getTransactions());
-  }, []);
+  const refreshTransactions = useCallback(async () => {
+    if (!adminPin) return;
+    setIsLoadingTransactions(true);
+    setTransactionsError(null);
+    try {
+      setTransactions(await fetchManualPaymentOrders(adminPin));
+    } catch (error) {
+      setTransactionsError(error instanceof Error ? error.message : 'Pesanan manual belum dapat dimuat.');
+    } finally {
+      setIsLoadingTransactions(false);
+    }
+  }, [adminPin]);
+
+  useEffect(() => {
+    void refreshTransactions();
+  }, [refreshTransactions]);
 
   const handleCreateCoupon = useCallback((event: FormEvent) => {
     event.preventDefault();
     if (!newCouponCode.trim()) return;
-
     const code = newCouponCode.trim().toUpperCase();
-    const newCoupon: DiscountCoupon = {
+    const updated = [{
       code,
       type: newCouponType,
       value: Number(newCouponValue),
       usageCount: 0,
       isActive: true,
-    };
-    const updated = [newCoupon, ...coupons];
+    } satisfies DiscountCoupon, ...coupons];
     setCoupons(updated);
     void adminStore.saveCoupons(updated);
     setNewCouponCode('');
@@ -43,8 +62,7 @@ export function useAdminFinanceController({ showToast }: AdminFinanceControllerO
     setCoupons((currentCoupons) => {
       const updated = currentCoupons.map((coupon) => coupon.code === code
         ? { ...coupon, isActive: !coupon.isActive }
-        : coupon
-      );
+        : coupon);
       void adminStore.saveCoupons(updated);
       return updated;
     });
@@ -59,21 +77,24 @@ export function useAdminFinanceController({ showToast }: AdminFinanceControllerO
     showToast(`Kupon ${code} dihapus.`);
   }, [showToast]);
 
-  const handleUpdateTransactionStatus = useCallback(async (
-    id: string,
-    status: TransactionRecord['status'],
-  ) => {
-    await adminStore.updateTransactionStatus(id, status);
-    refreshTransactions();
-    showToast(`Status transaksi #${id} menjadi ${status}.`);
-  }, [refreshTransactions, showToast]);
+  const handleApproveTransaction = useCallback(async (id: string) => {
+    await approveManualPaymentOrder(adminPin, id);
+    await refreshTransactions();
+    showToast(`Pesanan #${id} disetujui dan akses pembeli sudah aktif.`);
+  }, [adminPin, refreshTransactions, showToast]);
+
+  const handleRejectTransaction = useCallback(async (id: string, note: string) => {
+    await rejectManualPaymentOrder(adminPin, id, note);
+    await refreshTransactions();
+    showToast(`Pesanan #${id} ditolak.`);
+  }, [adminPin, refreshTransactions, showToast]);
 
   const successfulTransactions = useMemo(
-    () => transactions.filter((transaction) => transaction.status === 'success'),
+    () => transactions.filter((transaction) => transaction.status === 'paid'),
     [transactions],
   );
   const pendingTransactions = useMemo(
-    () => transactions.filter((transaction) => transaction.status === 'pending'),
+    () => transactions.filter((transaction) => ['pending_payment', 'pending_review'].includes(transaction.status)),
     [transactions],
   );
   const totalRevenue = useMemo(
@@ -84,6 +105,8 @@ export function useAdminFinanceController({ showToast }: AdminFinanceControllerO
   return {
     coupons,
     transactions,
+    transactionsError,
+    isLoadingTransactions,
     newCouponCode,
     newCouponType,
     newCouponValue,
@@ -99,6 +122,7 @@ export function useAdminFinanceController({ showToast }: AdminFinanceControllerO
     handleCreateCoupon,
     handleToggleCoupon,
     handleDeleteCoupon,
-    handleUpdateTransactionStatus,
+    handleApproveTransaction,
+    handleRejectTransaction,
   };
 }

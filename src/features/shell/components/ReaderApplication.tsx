@@ -46,7 +46,7 @@ export function ReaderApplication({
   });
   const readerOverlays = useReaderOverlayController();
   const purchaseFlow = usePurchaseFlowController({
-    onVipActivated: () => showToast('VIP aktif. Unduh semua buku kini terbuka; fitur AI segera hadir.'),
+    requestLogin: () => userSession.requestLogin(),
     showToast,
   });
 
@@ -104,6 +104,7 @@ export function ReaderApplication({
         onOpenQuiz={readerOverlays.openQuiz}
         onOpenStats={readerOverlays.openStats}
         onOpenStoryMaker={openStoryMaker}
+        onOpenVip={purchaseFlow.offerVip}
         onOpenVoiceRecorder={readerOverlays.openVoiceRecorder}
         onPageChange={readerSession.changePage}
         onSelectStory={readerSession.openStory}

@@ -8,6 +8,8 @@ export function FinanceTab({
   successfulTransactions,
   pendingTransactions,
   transactions,
+  transactionsError,
+  isLoadingTransactions,
   coupons,
   showCouponForm,
   newCouponCode,
@@ -20,7 +22,9 @@ export function FinanceTab({
   onCreateCoupon,
   onToggleCoupon,
   onDeleteCoupon,
-  onUpdateTransactionStatus,
+  onApproveTransaction,
+  onRejectTransaction,
+  onRefreshTransactions,
 }: FinanceTabProps) {
   return (
     <div className="flex flex-col gap-6">
@@ -46,7 +50,11 @@ export function FinanceTab({
       />
       <TransactionHistoryTable
         transactions={transactions}
-        onUpdateStatus={onUpdateTransactionStatus}
+        error={transactionsError}
+        isLoading={isLoadingTransactions}
+        onApprove={onApproveTransaction}
+        onReject={onRejectTransaction}
+        onRefresh={onRefreshTransactions}
       />
     </div>
   );

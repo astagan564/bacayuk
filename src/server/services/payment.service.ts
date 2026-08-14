@@ -7,6 +7,9 @@ import { DEFAULT_EBOOK_PRICE, VIP_SUBSCRIPTION_PRICE } from '../config/storybook
 import { normalizeStory } from '../utils/storybookNormalization';
 
 export function getSnapClient() {
+  if (!isMidtransEnabled()) {
+    throw new Error('Midtrans dinonaktifkan. Gunakan pembayaran manual.');
+  }
   const serverKey = process.env.MIDTRANS_SERVER_KEY;
   const clientKey = process.env.VITE_MIDTRANS_CLIENT_KEY;
 
@@ -22,6 +25,9 @@ export function getSnapClient() {
 }
 
 export function getCoreClient() {
+  if (!isMidtransEnabled()) {
+    throw new Error('Midtrans dinonaktifkan. Gunakan pembayaran manual.');
+  }
   const serverKey = process.env.MIDTRANS_SERVER_KEY;
   const clientKey = process.env.VITE_MIDTRANS_CLIENT_KEY;
 
@@ -102,10 +108,24 @@ export interface ResolvedTransactionOrder {
   customerEmail: string;
 }
 
+export function isMidtransEnabled() {
+  return process.env.PAYMENT_PROVIDER === 'midtrans'
+    && process.env.ENABLE_MIDTRANS === 'true';
+}
+
 export interface PaymentOrderRow extends ResolvedTransactionOrder {
   orderId: string;
-  userId: string;
-  status: 'pending' | 'paid' | 'failed' | 'expired' | 'refunded';
+  userId: string | null;
+  status:
+    | 'pending'
+    | 'pending_payment'
+    | 'pending_review'
+    | 'paid'
+    | 'rejected'
+    | 'cancelled'
+    | 'failed'
+    | 'expired'
+    | 'refunded';
 }
 
 export function getMidtransAmountBreakdown(orderAmount: number, grossAmount: number) {
@@ -217,6 +237,7 @@ export async function savePendingPaymentOrder(
     customer_name: order.customerName,
     customer_email: order.customerEmail,
     status: 'pending',
+    provider: 'midtrans',
   });
   if (error) throw new Error(`Failed to save payment order: ${error.message}`);
 }

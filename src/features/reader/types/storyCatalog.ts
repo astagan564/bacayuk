@@ -18,6 +18,7 @@ export interface StorySelectorProps {
   onSelectStory: (story: Story, pageIndex?: number) => void;
   onToggleFavorite: (storyId: string) => void;
   onOpenStoryMaker: () => void;
+  onOpenVip: () => void;
   onOpenStatsModal?: () => void;
   onOpenPaymentModal: (story: Story) => void;
   onOpenOfflineDownloadModal: (story: Story) => void;

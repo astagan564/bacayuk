@@ -25,6 +25,7 @@ export function StorySelector(props: StorySelectorProps) {
         controller={controller}
         onSelectStory={props.onSelectStory}
         onOpenStoryMaker={props.onOpenStoryMaker}
+        onOpenVip={props.onOpenVip}
         onOpenStatsModal={props.onOpenStatsModal}
         onTestRestReminder={props.onTestRestReminder}
       />

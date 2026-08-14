@@ -15,6 +15,7 @@ interface StoryCatalogHeroProps {
   controller: StoryCatalogController;
   onSelectStory: (story: Story, pageIndex?: number) => void;
   onOpenStoryMaker: () => void;
+  onOpenVip: () => void;
   onOpenStatsModal?: () => void;
   onTestRestReminder?: () => void;
 }
@@ -23,6 +24,7 @@ export function StoryCatalogHero({
   controller,
   onSelectStory,
   onOpenStoryMaker,
+  onOpenVip,
   onOpenStatsModal,
   onTestRestReminder,
 }: StoryCatalogHeroProps) {
@@ -45,10 +47,14 @@ export function StoryCatalogHero({
           </div>
 
           <div className="flex flex-wrap items-center gap-2.5 pt-1">
+            <button type="button" onClick={onOpenVip} className="btn-primary inline-flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm">
+              <Lock className="w-4 h-4" />
+              <span>Gabung VIP</span>
+            </button>
+
             <button type="button" onClick={onOpenStoryMaker} className="btn-primary inline-flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm">
               <Wand2 className="w-4 h-4" />
-              <span>Buat cerita</span>
-              {!controller.isVipUser && <Lock className="w-3.5 h-3.5 opacity-70" />}
+              <span>AI segera hadir</span>
             </button>
 
             {onOpenStatsModal && (

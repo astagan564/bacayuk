@@ -133,7 +133,7 @@ export function LegalPage() {
                 </div>
                 <div>
                   <h3 className="text-base font-extrabold text-primary">3. Pembayaran dan lisensi unduhan</h3>
-                  <p>Kami menyimpan ID order, buku atau paket yang dibeli, nominal, status, metode pembayaran, waktu transaksi, identitas pembeli, status VIP, dan jumlah unduhan. Informasi instrumen pembayaran diproses oleh Midtrans; BacaYuk tidak menyimpan nomor kartu atau PIN pembayaran.</p>
+                  <p>Kami menyimpan ID order, buku atau paket yang dibeli, nominal, status, metode pembayaran, waktu transaksi, identitas pembeli, bukti pembayaran yang dikirim, status VIP, dan jumlah unduhan. Bukti pembayaran disimpan privat dan hanya digunakan admin untuk mencocokkan dana masuk.</p>
                 </div>
                 <div>
                   <h3 className="text-base font-extrabold text-primary">4. Data teknis dan konten</h3>
@@ -171,7 +171,7 @@ export function LegalPage() {
                 {[
                   ['Supabase', 'Autentikasi, database, dan penyimpanan aplikasi.'],
                   ['Google dan Meta', 'Penyedia login OAuth; masing-masing memproses data sesuai kebijakannya.'],
-                  ['Midtrans', 'Pemrosesan pembayaran dan konfirmasi status transaksi.'],
+                  ['Bank atau PJP QRIS merchant', 'Menerima pembayaran langsung dan menyediakan catatan transaksi yang diperiksa admin.'],
                   ['Google Gemini', 'Pemrosesan materi Book Studio/AI yang dikirim oleh pengelola saat fitur digunakan.'],
                   ['Vercel', 'Hosting aplikasi, jaringan, dan log operasional.'],
                 ].map(([name, use]) => (
@@ -244,7 +244,7 @@ export function LegalPage() {
               <ul className="space-y-3 text-sm">
                 <li><strong className="text-primary">Pembelian buku:</strong> membuka lisensi unduhan untuk buku yang dipilih sesuai harga yang tampil saat checkout.</li>
                 <li><strong className="text-primary">VIP:</strong> membuka unduhan semua buku selama masa langganan aktif dan dapat mencakup fitur tambahan yang ditandai tersedia.</li>
-                <li><strong className="text-primary">Konfirmasi:</strong> akses diterbitkan setelah pembayaran diverifikasi oleh server dan Midtrans.</li>
+                <li><strong className="text-primary">Konfirmasi:</strong> akses diterbitkan setelah admin mencocokkan bukti dengan dana yang benar-benar masuk ke rekening atau aplikasi merchant.</li>
                 <li><strong className="text-primary">Unduhan:</strong> file bersifat pribadi, dapat diberi watermark identitas pembeli, serta tunduk pada batas waktu/jumlah unduhan yang ditampilkan.</li>
                 <li><strong className="text-primary">Pengembalian dana:</strong> permintaan ditinjau berdasarkan status transaksi, apakah akses/file telah digunakan, gangguan layanan yang terbukti, serta hukum perlindungan konsumen yang berlaku.</li>
                 <li><strong className="text-primary">Harga:</strong> harga dan promosi dapat berubah untuk transaksi berikutnya; jumlah final selalu ditampilkan sebelum pengguna membayar.</li>

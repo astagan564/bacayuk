@@ -8,11 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased] - 2026-08-11
 
 ### Added
+- **Manual payment launch flow**: Added authenticated book/VIP orders, bank-transfer or merchant-QRIS instructions, private proof uploads, pending-review status, and Admin approval/rejection that issues the existing server-side entitlement.
+- **QRIS payment choices**: Added dedicated QRIS assets for Rp15.000 and Rp25.000 book orders plus Rp100.000 VIP orders, a static QRIS fallback where customers enter promo totals manually, and bluBisnis transfer as the second payment choice.
+- **DANA sandbox callback**: Added a public Finish Notify endpoint with SNAP RSA signature verification, exact order/merchant/amount checks, idempotent entitlement issuance, and DANA provider reconciliation fields.
+- **Standalone VIP path**: Added a visible `Gabung VIP` entry point with a one-month offer independent of selecting a book first.
+- **Manual payment operations**: Added a private `payment-proofs` Storage bucket, production order-review indexes and constraints, and a Finance view with expiring proof links and explicit verification actions.
 - **Addressable frontend routes**: Added file-based routing for the catalog, parent settings, story reader, and Admin sections. Pages such as `/settings`, `/read/:storyId`, `/admin/stories`, `/admin/users`, `/admin/finance`, `/admin/costs`, `/admin/analytics`, and `/admin/settings` can now be bookmarked and opened directly.
 - **Addressable Book Studio workflows**: Added dedicated URLs for AI Quick Create, story editing, and story canvas at `/admin/stories/new`, `/admin/stories/:storyId/edit`, and `/admin/stories/:storyId/canvas`.
 - **Frontend route generation**: Added TanStack Router and its Vite plugin so the typed route tree and route-specific production chunks are generated during development and build.
 
 ### Changed
+- **Launch commerce provider**: Made manual payment the default launch path, gated all Midtrans transaction/webhook routes behind explicit production flags, and retained the integration for a later rollout.
+- **Parent login and payment disclosure**: Retained Google and Facebook OAuth while aligning privacy/payment disclosures with manually verified payments.
+- **AI Story Maker launch gate**: Replaced the customer action with `AI segera hadir` and made the generation endpoint fail closed unless the server feature flag is enabled and the caller has an active VIP entitlement.
 - **Feature-based frontend architecture**: Split the frontend into focused Admin, Book Studio, reader, and application-shell modules instead of keeping all behavior and markup in `App.tsx` and `AdminDashboard.tsx`.
 - **Admin maintenance boundaries**: Moved Stories, Users, Payments, Cost & Margin, Settings, and Reading Retention into independent tab components with explicit typed inputs and actions.
 - **Book Studio maintenance boundaries**: Centralized storybook API requests, types, constants, draft helpers, Quick Create, and the story editor under `src/features/book-studio` while retaining the brief-to-draft, enhancement, translation, and illustration workflow.

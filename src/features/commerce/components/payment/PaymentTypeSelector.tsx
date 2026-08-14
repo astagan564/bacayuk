@@ -1,8 +1,17 @@
 import { BookOpen, Sparkles } from 'lucide-react';
-import type { PaymentGatewayController } from '@/features/commerce/hooks/usePaymentGatewayController';
+import type { Story } from '@/types';
+import type { PurchaseType } from '@/features/commerce/types/paymentGateway';
 
 interface PaymentTypeSelectorProps {
-  controller: PaymentGatewayController;
+  controller: {
+    story?: Story;
+    isVipOnly: boolean;
+    isProcessing: boolean;
+    purchaseType: PurchaseType;
+    basePrice: number;
+    vipPrice: number;
+    selectPurchaseType: (purchaseType: PurchaseType) => void;
+  };
 }
 
 export function PaymentTypeSelector({ controller }: PaymentTypeSelectorProps) {

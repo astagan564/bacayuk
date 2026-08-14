@@ -2,6 +2,7 @@ import express from 'express';
 import path from 'path';
 import { registerCatalogRoutes } from './routes/catalog.routes';
 import { registerCoreStoryRoutes } from './routes/coreStory.routes';
+import { registerDanaPaymentRoutes } from './routes/danaPayment.routes';
 import { registerIllustrationRoutes } from './routes/illustration.routes';
 import { registerManuscriptRoutes } from './routes/manuscript.routes';
 import { registerPaymentRoutes } from './routes/payment.routes';
@@ -16,7 +17,8 @@ export async function createApp(options: { serveClient?: boolean } = {}) {
   const serveClient = options.serveClient ?? true;
   const isProductionServer = process.env.NODE_ENV === 'production' || process.argv[1]?.endsWith('server.cjs');
 
-  app.use(express.json({ limit: '1mb' }));
+  // Payment proofs are validated and capped at 1.5 MB after base64 decoding.
+  app.use(express.json({ limit: '3mb' }));
 
   registerCatalogRoutes(app);
   registerQuickStoryRoutes(app);
@@ -25,6 +27,7 @@ export async function createApp(options: { serveClient?: boolean } = {}) {
   registerStoryEnhancementRoutes(app);
   registerIllustrationRoutes(app);
   registerTranslationRoutes(app);
+  registerDanaPaymentRoutes(app);
   registerPaymentRoutes(app);
   registerSettingsRoutes(app);
   registerAccountRoutes(app);

@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import type { Story } from '@/types';
-import type { PurchaseReceipt } from '@/utils/paymentStore';
+import type { ManualPaymentOrder } from '@/features/commerce/types/manualPayment';
 import { paymentStore } from '@/utils/paymentStore';
 import { userAuthStore } from '@/utils/userAuthStore';
 
@@ -14,12 +14,12 @@ export type PurchaseFlowState =
   | { kind: 'download'; story: Story };
 
 interface PurchaseFlowControllerOptions {
-  onVipActivated: () => void;
+  requestLogin?: () => void;
   showToast: (message: string) => void;
 }
 
 export function usePurchaseFlowController({
-  onVipActivated,
+  requestLogin,
   showToast,
 }: PurchaseFlowControllerOptions) {
   const [state, setState] = useState<PurchaseFlowState>({ kind: 'idle' });
@@ -29,30 +29,34 @@ export function usePurchaseFlowController({
   const startVipSubscription = useCallback(() => {
     if (!userAuthStore.getUser()) {
       showToast('Silakan login terlebih dahulu untuk berlangganan VIP.');
+      setState({ kind: 'idle' });
+      requestLogin?.();
       return;
     }
     setState({ kind: 'vip_gate' });
-  }, [showToast]);
+  }, [requestLogin, showToast]);
 
   const requestOfflineDownload = useCallback((story: Story) => {
     if (!userAuthStore.getUser()) {
       showToast('Silakan login terlebih dahulu untuk membeli atau mengunduh buku.');
+      requestLogin?.();
       return;
     }
     const hasAccess = userAuthStore.isVip() || paymentStore.isStoryPurchased(story.id);
     setState(hasAccess ? { kind: 'download', story } : { kind: 'book_payment', story });
-  }, [showToast]);
+  }, [requestLogin, showToast]);
 
   const requestBookPurchase = useCallback((story: Story) => {
     if (!userAuthStore.getUser()) {
       showToast('Silakan login terlebih dahulu untuk membeli atau mengunduh buku.');
+      requestLogin?.();
       return;
     }
     setState(userAuthStore.isVip()
       ? { kind: 'download', story }
       : { kind: 'book_gate', story }
     );
-  }, [showToast]);
+  }, [requestLogin, showToast]);
 
   const approveParentalGate = useCallback(() => {
     setState((currentState) => {
@@ -64,19 +68,16 @@ export function usePurchaseFlowController({
     });
   }, []);
 
-  const handlePaymentSuccess = useCallback((receipt: PurchaseReceipt) => {
+  const handleOrderSubmitted = useCallback((order: ManualPaymentOrder) => {
+    setState({ kind: 'idle' });
     if (state.kind === 'vip_payment') {
-      setState({ kind: 'idle' });
-      showToast('🎉 Pembayaran VIP berhasil! Unduh semua buku kini terbuka.');
-      onVipActivated();
+      showToast(`Bukti pesanan ${order.orderId} dikirim. VIP aktif setelah pembayaran diverifikasi admin.`);
       return;
     }
-
     if (state.kind === 'book_payment') {
-      setState({ kind: 'download', story: state.story });
-      showToast(`🎉 Pembayaran berhasil! Akses unduhan offline untuk ${receipt.storyTitle} telah aktif.`);
+      showToast(`Bukti pesanan ${order.orderId} dikirim. Unduhan aktif setelah pembayaran diverifikasi admin.`);
     }
-  }, [onVipActivated, showToast, state]);
+  }, [showToast, state]);
 
   return {
     state,
@@ -86,7 +87,7 @@ export function usePurchaseFlowController({
     requestOfflineDownload,
     requestBookPurchase,
     approveParentalGate,
-    handlePaymentSuccess,
+    handleOrderSubmitted,
   };
 }
 

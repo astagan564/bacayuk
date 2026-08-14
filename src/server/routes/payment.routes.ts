@@ -1,6 +1,17 @@
 import type { Express, Response } from 'express';
 import { AuthenticationError, requireAuthenticatedUser } from '../middleware/userAuth';
+import { isValidAdminPin } from '../middleware/adminAuth';
 import { estimateMidtransFee, recordCostEvent } from '../services/costTracking.service';
+import {
+  approveManualPaymentOrder,
+  createManualPaymentOrder,
+  getManualPaymentInstructions,
+  getManualPaymentOrderForUser,
+  listManualPaymentOrdersForAdmin,
+  rejectManualPaymentOrder,
+  submitManualPaymentProof,
+  toManualOrderResponse,
+} from '../services/manualPayment.service';
 import {
   consumeDownloadEntitlement,
   finalizePaymentEntitlement,
@@ -9,12 +20,41 @@ import {
   getPaymentOrder,
   getPaymentOrderForUser,
   getSnapClient,
+  isMidtransEnabled,
   listUserEntitlements,
   renewDownloadEntitlement,
   resolveTransactionRequest,
   savePendingPaymentOrder,
   type EntitlementRow,
 } from '../services/payment.service';
+
+function getAdminReviewerName() {
+  return process.env.ADMIN_REVIEWER_NAME?.trim() || 'Admin BacaYuk';
+}
+
+function adminOrderToResponse(order: Awaited<ReturnType<typeof listManualPaymentOrdersForAdmin>>[number]) {
+  return {
+    orderId: order.order_id,
+    purchaseType: order.purchase_type,
+    storyId: order.story_id,
+    storyTitle: order.story_title,
+    amount: order.amount,
+    discountAmount: order.discount_amount,
+    customerName: order.customer_name,
+    customerEmail: order.customer_email,
+    status: order.status,
+    paymentMethod: order.payment_method,
+    expiresAt: order.expires_at,
+    proofSubmittedAt: order.proof_submitted_at,
+    proofUrl: order.proof_signed_url,
+    payerNote: order.payer_note,
+    reviewNote: order.review_note,
+    reviewedAt: order.reviewed_at,
+    reviewedBy: order.reviewed_by,
+    paidAt: order.paid_at,
+    createdAt: order.created_at,
+  };
+}
 
 function entitlementToReceipt(entitlement: EntitlementRow) {
   return {
@@ -96,9 +136,96 @@ export function registerPaymentRoutes(app: Express) {
     }
   });
 
+  app.post('/api/manual-payment-orders', async (req, res) => {
+    try {
+      const user = await requireAuthenticatedUser(req);
+      const { order, instructions } = await createManualPaymentOrder(user, req.body || {});
+      res.status(201).json({ order: toManualOrderResponse(order, instructions) });
+    } catch (error) {
+      if (!(error instanceof AuthenticationError)) console.error('Error creating manual payment order:', error);
+      sendRouteError(res, error);
+    }
+  });
+
+  app.get('/api/manual-payment-orders/:orderId', async (req, res) => {
+    try {
+      const user = await requireAuthenticatedUser(req);
+      const order = await getManualPaymentOrderForUser(req.params.orderId, user.id);
+      if (!order) return res.status(404).json({ error: 'Pesanan tidak ditemukan.' });
+      const instructions = getManualPaymentInstructions(order.purchase_type, order.amount);
+      res.json({ order: toManualOrderResponse(order, instructions) });
+    } catch (error) {
+      sendRouteError(res, error);
+    }
+  });
+
+  app.post('/api/manual-payment-orders/:orderId/proof', async (req, res) => {
+    try {
+      const user = await requireAuthenticatedUser(req);
+      const order = await submitManualPaymentProof({
+        orderId: req.params.orderId,
+        userId: user.id,
+        dataUrl: req.body?.dataUrl,
+        paymentMethod: req.body?.paymentMethod,
+        payerNote: req.body?.payerNote,
+      });
+      res.json({ order: toManualOrderResponse(order) });
+    } catch (error) {
+      if (!(error instanceof AuthenticationError)) console.error('Error submitting payment proof:', error);
+      sendRouteError(res, error);
+    }
+  });
+
+  app.get('/api/admin/manual-payment-orders', async (req, res) => {
+    if (!isValidAdminPin(req.headers['x-admin-pin'])) {
+      return res.status(403).json({ error: 'PIN admin tidak valid.' });
+    }
+    try {
+      const orders = await listManualPaymentOrdersForAdmin();
+      res.json({ orders: orders.map(adminOrderToResponse) });
+    } catch (error) {
+      console.error('Error listing manual payment orders:', error);
+      sendRouteError(res, error);
+    }
+  });
+
+  app.post('/api/admin/manual-payment-orders/:orderId/approve', async (req, res) => {
+    if (!isValidAdminPin(req.headers['x-admin-pin'])) {
+      return res.status(403).json({ error: 'PIN admin tidak valid.' });
+    }
+    try {
+      const entitlement = await approveManualPaymentOrder(
+        req.params.orderId,
+        getAdminReviewerName(),
+        typeof req.body?.note === 'string' ? req.body.note : undefined,
+      );
+      res.json({ receipt: entitlementToReceipt(entitlement) });
+    } catch (error) {
+      console.error('Error approving manual payment:', error);
+      sendRouteError(res, error);
+    }
+  });
+
+  app.post('/api/admin/manual-payment-orders/:orderId/reject', async (req, res) => {
+    if (!isValidAdminPin(req.headers['x-admin-pin'])) {
+      return res.status(403).json({ error: 'PIN admin tidak valid.' });
+    }
+    try {
+      const note = typeof req.body?.note === 'string' ? req.body.note : '';
+      const order = await rejectManualPaymentOrder(req.params.orderId, getAdminReviewerName(), note);
+      res.json({ order: adminOrderToResponse({ ...order, proof_signed_url: null }) });
+    } catch (error) {
+      console.error('Error rejecting manual payment:', error);
+      sendRouteError(res, error);
+    }
+  });
+
   // Midtrans Snap Token endpoint
   app.post('/api/create-transaction', async (req, res) => {
     try {
+      if (!isMidtransEnabled()) {
+        return res.status(404).json({ error: 'Pembayaran Midtrans sedang dinonaktifkan.' });
+      }
       const user = await requireAuthenticatedUser(req);
       const order = await resolveTransactionRequest(req.body, user);
       const snap = getSnapClient();
@@ -148,6 +275,9 @@ export function registerPaymentRoutes(app: Express) {
 
   app.post('/api/verify-transaction', async (req, res) => {
     try {
+      if (!isMidtransEnabled()) {
+        return res.status(404).json({ error: 'Pembayaran Midtrans sedang dinonaktifkan.' });
+      }
       const user = await requireAuthenticatedUser(req);
       const { orderId } = req.body;
       if (typeof orderId !== 'string' || !orderId.trim()) {
@@ -243,6 +373,9 @@ export function registerPaymentRoutes(app: Express) {
 
   app.post('/api/midtrans-notification', async (req, res) => {
     try {
+      if (!isMidtransEnabled()) {
+        return res.status(404).json({ error: 'Midtrans webhook dinonaktifkan.' });
+      }
       const core = getCoreClient();
       const status = await core.transaction.notification(req.body);
       const transactionStatus = status.transaction_status;
