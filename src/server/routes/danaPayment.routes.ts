@@ -4,6 +4,7 @@ import {
   getDanaEnvironment,
   getDanaNotifyPath,
   isDanaCallbackConfigured,
+  isDanaQrisConfigured,
   processDanaFinishNotify,
   type DanaFinishNotifyBody,
 } from '../services/danaQris.service';
@@ -26,6 +27,7 @@ export function registerDanaPaymentRoutes(app: Express) {
       environment: getDanaEnvironment(),
       callbackPath: getDanaNotifyPath(),
       signatureVerificationConfigured: isDanaCallbackConfigured(),
+      qrisGenerationConfigured: isDanaQrisConfigured(),
     });
   });
 
@@ -55,4 +57,3 @@ export function registerDanaPaymentRoutes(app: Express) {
     }
   });
 }
-

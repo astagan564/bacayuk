@@ -1,4 +1,4 @@
-import { CheckCircle2, ShieldCheck, Tag } from 'lucide-react';
+import { Building2, CheckCircle2, QrCode, ShieldCheck, Tag } from 'lucide-react';
 import { PaymentTypeSelector } from '@/features/commerce/components/payment/PaymentTypeSelector';
 import type { ManualPaymentController } from '@/features/commerce/hooks/useManualPaymentController';
 
@@ -46,6 +46,32 @@ export function ManualPaymentCheckoutPanel({ controller }: { controller: ManualP
         </label>
       </div>
 
+      <fieldset className="grid gap-3">
+        <legend className="mb-1 text-xs font-extrabold text-secondary">Pilih metode pembayaran</legend>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <button
+            type="button"
+            onClick={() => controller.setPaymentMethod('dana_qris')}
+            aria-pressed={controller.paymentMethod === 'dana_qris'}
+            className={`rounded-xl border p-4 text-left ${controller.paymentMethod === 'dana_qris' ? 'border-brand-blue bg-brand-blue/10' : 'border-default bg-surface'}`}
+          >
+            <QrCode className="mb-2 h-5 w-5 text-brand-blue" />
+            <p className="text-sm font-extrabold">QRIS otomatis</p>
+            <p className="mt-1 text-[11px] leading-5 text-secondary">Nominal terpasang otomatis dan status dibaca dari DANA.</p>
+          </button>
+          <button
+            type="button"
+            onClick={() => controller.setPaymentMethod('manual_bank_transfer')}
+            aria-pressed={controller.paymentMethod === 'manual_bank_transfer'}
+            className={`rounded-xl border p-4 text-left ${controller.paymentMethod === 'manual_bank_transfer' ? 'border-brand-green bg-brand-green/10' : 'border-default bg-surface'}`}
+          >
+            <Building2 className="mb-2 h-5 w-5 text-brand-green" />
+            <p className="text-sm font-extrabold">Transfer bank</p>
+            <p className="mt-1 text-[11px] leading-5 text-secondary">Kirim bukti lalu pembayaran diperiksa admin.</p>
+          </button>
+        </div>
+      </fieldset>
+
       <div className="grid gap-2">
         <div className="flex items-center gap-2">
           <Tag className="w-4 h-4 text-brand-gold" />
@@ -79,9 +105,9 @@ export function ManualPaymentCheckoutPanel({ controller }: { controller: ManualP
       <div className="rounded-xl border border-brand-green/25 bg-brand-green/10 p-4 text-xs leading-6 text-secondary">
         <div className="mb-1 flex items-center gap-2 font-extrabold text-brand-green">
           <ShieldCheck className="w-4 h-4" />
-          <span>Pembayaran manual, diverifikasi manusia</span>
+          <span>Pembayaran langsung ke BacaYuk</span>
         </div>
-        Setelah membuat pesanan, transfer ke rekening atau QRIS resmi BacaYuk lalu kirim bukti. Akses baru aktif setelah admin mencocokkan dana masuk.
+        QRIS dikonfirmasi otomatis melalui DANA. Transfer bank tetap diverifikasi admin berdasarkan dana yang benar-benar masuk.
       </div>
 
       <button
@@ -93,10 +119,9 @@ export function ManualPaymentCheckoutPanel({ controller }: { controller: ManualP
         {controller.isProcessing ? (
           <><span className="w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" /><span>Membuat pesanan…</span></>
         ) : (
-          <><CheckCircle2 className="w-5 h-5" /><span>Lanjut ke pembayaran manual</span></>
+          <><CheckCircle2 className="w-5 h-5" /><span>Lanjut ke pembayaran</span></>
         )}
       </button>
     </div>
   );
 }
-

@@ -60,8 +60,9 @@ export interface ManualPaymentInstructions {
     accountHolder: string;
   } | null;
   qrisImageUrl: string | null;
-  qrisAmountMode: 'fixed' | 'manual' | null;
-  expiresHours: number;
+  qrisAmountMode: 'dynamic' | 'fixed' | 'manual' | null;
+  qrisAutomaticVerification: boolean;
+  expiresHours: number | null;
 }
 
 function cleanEnv(name: string): string {
@@ -75,11 +76,12 @@ function getExpiryHours(): number {
 export function getManualPaymentInstructions(
   purchaseType: 'book' | 'vip',
   amount: number,
+  selectedMethod?: ManualPaymentMethod | null,
 ): ManualPaymentInstructions {
   const bankName = cleanEnv('MANUAL_PAYMENT_BANK_NAME');
   const accountNumber = cleanEnv('MANUAL_PAYMENT_ACCOUNT_NUMBER');
   const accountHolder = cleanEnv('MANUAL_PAYMENT_ACCOUNT_HOLDER');
-  const bankTransfer = bankName && accountNumber && accountHolder
+  const bankTransfer = selectedMethod !== 'manual_qris' && bankName && accountNumber && accountHolder
     ? { bankName, accountNumber, accountHolder }
     : null;
   const fixedQrisImageUrl = purchaseType === 'vip' && amount === 100_000
@@ -89,9 +91,11 @@ export function getManualPaymentInstructions(
       : purchaseType === 'book' && amount === 25_000
         ? cleanEnv('MANUAL_PAYMENT_QRIS_25000_URL') || QRIS_ASSET_PATHS.book25000
         : '';
-  const qrisImageUrl = fixedQrisImageUrl
-    || cleanEnv('MANUAL_PAYMENT_QRIS_MANUAL_URL')
-    || QRIS_ASSET_PATHS.manual;
+  const qrisImageUrl = selectedMethod === 'manual_bank_transfer'
+    ? ''
+    : fixedQrisImageUrl
+      || cleanEnv('MANUAL_PAYMENT_QRIS_MANUAL_URL')
+      || QRIS_ASSET_PATHS.manual;
 
   if (!bankTransfer && !qrisImageUrl) {
     throw new Error('Pembayaran manual belum dikonfigurasi oleh admin.');
@@ -101,6 +105,7 @@ export function getManualPaymentInstructions(
     bankTransfer,
     qrisImageUrl: qrisImageUrl || null,
     qrisAmountMode: fixedQrisImageUrl ? 'fixed' : 'manual',
+    qrisAutomaticVerification: false,
     expiresHours: getExpiryHours(),
   };
 }
@@ -123,6 +128,9 @@ export async function createManualPaymentOrder(
   body: Record<string, unknown>,
 ): Promise<{ order: ManualPaymentOrderRow; instructions: ManualPaymentInstructions }> {
   const resolved = await resolveTransactionRequest(body, user);
+  const selectedMethod: ManualPaymentMethod = body.paymentMethod === 'manual_qris'
+    ? 'manual_qris'
+    : 'manual_bank_transfer';
   const supabase = getSupabaseAdminClient();
   const { data: existing, error: existingError } = await supabase
     .from('payment_orders')
@@ -131,6 +139,8 @@ export async function createManualPaymentOrder(
     .eq('provider', 'manual')
     .eq('purchase_type', resolved.purchaseType)
     .eq('story_id', resolved.storyId)
+    .eq('amount', resolved.amount)
+    .eq('payment_method', selectedMethod)
     .in('status', [...REUSABLE_MANUAL_STATUSES])
     .order('created_at', { ascending: false })
     .limit(1)
@@ -141,13 +151,19 @@ export async function createManualPaymentOrder(
   if (currentOrder && currentOrder.status !== 'expired') {
     return {
       order: currentOrder,
-      instructions: getManualPaymentInstructions(currentOrder.purchase_type, currentOrder.amount),
+      instructions: getManualPaymentInstructions(
+        currentOrder.purchase_type,
+        currentOrder.amount,
+        currentOrder.payment_method,
+      ),
     };
   }
 
-  const instructions = getManualPaymentInstructions(resolved.purchaseType, resolved.amount);
+  const instructions = getManualPaymentInstructions(resolved.purchaseType, resolved.amount, selectedMethod);
   const orderId = `MAN-${Date.now()}-${randomUUID().slice(0, 8).toUpperCase()}`;
-  const expiresAt = new Date(Date.now() + instructions.expiresHours * 60 * 60 * 1000).toISOString();
+  const expiresAt = new Date(
+    Date.now() + (instructions.expiresHours ?? getExpiryHours()) * 60 * 60 * 1000,
+  ).toISOString();
   const row = {
     order_id: orderId,
     user_id: user.id,
@@ -161,6 +177,7 @@ export async function createManualPaymentOrder(
     customer_email: resolved.customerEmail,
     status: 'pending_payment',
     provider: 'manual',
+    payment_method: selectedMethod,
     expires_at: expiresAt,
   };
   const { data, error } = await supabase.from('payment_orders').insert(row).select('*').single();
@@ -221,7 +238,7 @@ export async function submitManualPaymentProof(options: {
   const method = options.paymentMethod === 'manual_qris'
     ? 'manual_qris'
     : 'manual_bank_transfer';
-  const instructions = getManualPaymentInstructions(order.purchase_type, order.amount);
+  const instructions = getManualPaymentInstructions(order.purchase_type, order.amount, order.payment_method);
   if (method === 'manual_qris' && !instructions.qrisImageUrl) throw new Error('Pembayaran QRIS belum tersedia.');
   if (method === 'manual_bank_transfer' && !instructions.bankTransfer) throw new Error('Transfer bank belum tersedia.');
 
@@ -351,6 +368,7 @@ export function toManualOrderResponse(
     customerName: order.customer_name,
     customerEmail: order.customer_email,
     status: order.status,
+    provider: order.provider,
     paymentMethod: order.payment_method,
     expiresAt: order.expires_at,
     proofSubmittedAt: order.proof_submitted_at,

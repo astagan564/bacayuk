@@ -70,12 +70,18 @@ export function usePurchaseFlowController({
 
   const handleOrderSubmitted = useCallback((order: ManualPaymentOrder) => {
     setState({ kind: 'idle' });
+    if (order.status === 'paid') {
+      showToast(order.purchaseType === 'vip'
+        ? 'Pembayaran berhasil. VIP keluarga sudah aktif.'
+        : 'Pembayaran berhasil. Buku sudah dapat diunduh.');
+      return;
+    }
     if (state.kind === 'vip_payment') {
-      showToast(`Bukti pesanan ${order.orderId} dikirim. VIP aktif setelah pembayaran diverifikasi admin.`);
+      showToast(`Pesanan ${order.orderId} diterima. VIP aktif setelah pembayaran terverifikasi.`);
       return;
     }
     if (state.kind === 'book_payment') {
-      showToast(`Bukti pesanan ${order.orderId} dikirim. Unduhan aktif setelah pembayaran diverifikasi admin.`);
+      showToast(`Pesanan ${order.orderId} diterima. Unduhan aktif setelah pembayaran terverifikasi.`);
     }
   }, [showToast, state]);
 

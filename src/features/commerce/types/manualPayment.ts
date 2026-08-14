@@ -7,9 +7,10 @@ export type ManualPaymentStatus =
   | 'paid'
   | 'rejected'
   | 'cancelled'
+  | 'failed'
   | 'expired';
 
-export type ManualPaymentMethod = 'manual_bank_transfer' | 'manual_qris';
+export type ManualPaymentMethod = 'dana_qris' | 'manual_bank_transfer' | 'manual_qris';
 
 export interface ManualPaymentInstructions {
   bankTransfer: {
@@ -18,8 +19,9 @@ export interface ManualPaymentInstructions {
     accountHolder: string;
   } | null;
   qrisImageUrl: string | null;
-  qrisAmountMode: 'fixed' | 'manual' | null;
-  expiresHours: number;
+  qrisAmountMode: 'dynamic' | 'fixed' | 'manual' | null;
+  qrisAutomaticVerification: boolean;
+  expiresHours: number | null;
 }
 
 export interface ManualPaymentOrder {
@@ -33,6 +35,7 @@ export interface ManualPaymentOrder {
   customerName: string;
   customerEmail: string;
   status: ManualPaymentStatus;
+  provider: 'dana' | 'manual';
   paymentMethod: ManualPaymentMethod | null;
   expiresAt: string | null;
   proofSubmittedAt: string | null;

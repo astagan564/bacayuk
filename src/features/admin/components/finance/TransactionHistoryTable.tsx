@@ -16,6 +16,7 @@ const STATUS_LABELS: Record<AdminManualPaymentOrder['status'], string> = {
   paid: 'Lunas',
   rejected: 'Bukti ditolak',
   cancelled: 'Dibatalkan',
+  failed: 'Gagal',
   expired: 'Kedaluwarsa',
 };
 

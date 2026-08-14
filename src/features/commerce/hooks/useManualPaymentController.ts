@@ -1,7 +1,12 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { adminStore } from '@/utils/adminStore';
+import { userAuthStore } from '@/utils/userAuthStore';
 import { VIP_MONTHLY_PRICE } from '@/features/commerce/constants/payment';
-import { createManualPaymentOrder, submitManualPaymentProof } from '@/features/commerce/api/manualPaymentApi';
+import {
+  createManualPaymentOrder,
+  fetchPaymentOrder,
+  submitManualPaymentProof,
+} from '@/features/commerce/api/manualPaymentApi';
 import { usePaymentCheckoutForm } from '@/features/commerce/hooks/usePaymentCheckoutForm';
 import type {
   ManualPaymentMethod,
@@ -35,7 +40,7 @@ export function useManualPaymentController({
   const basePrice = story?.ebookPrice || adminSettings.defaultEbookPrice;
   const checkout = usePaymentCheckoutForm({ story, isVipOnly, basePrice });
   const [order, setOrder] = useState<ManualPaymentOrder | null>(null);
-  const [paymentMethod, setPaymentMethod] = useState<ManualPaymentMethod>('manual_qris');
+  const [paymentMethod, setPaymentMethod] = useState<ManualPaymentMethod>('dana_qris');
   const [proofFile, setProofFile] = useState<File | null>(null);
   const [payerNote, setPayerNote] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -70,14 +75,15 @@ export function useManualPaymentController({
         storyId: story?.id,
         storyTitle: story?.title,
         couponCode: checkout.appliedCouponCode,
+        paymentMethod,
       }, abortController.signal);
       if (nextOrder.amount !== checkout.finalPrice) {
         throw new Error('Harga atau kupon berubah. Tutup lalu buka kembali pembayaran.');
       }
       setOrder(nextOrder);
-      setPaymentMethod(nextOrder.instructions?.qrisImageUrl
+      setPaymentMethod(nextOrder.paymentMethod || (nextOrder.instructions?.qrisImageUrl
         ? 'manual_qris'
-        : 'manual_bank_transfer');
+        : 'manual_bank_transfer'));
     } catch (error) {
       if (!abortController.signal.aborted) {
         setErrorMessage(error instanceof Error ? error.message : 'Pesanan belum dapat dibuat.');
@@ -86,7 +92,32 @@ export function useManualPaymentController({
       if (abortRef.current === abortController) abortRef.current = null;
       setIsProcessing(false);
     }
-  }, [checkout, story]);
+  }, [checkout, paymentMethod, story]);
+
+  const refreshOrder = useCallback(async (silent = false) => {
+    if (!order) return;
+    if (!silent) {
+      setIsProcessing(true);
+      setErrorMessage(null);
+    }
+    try {
+      const updatedOrder = await fetchPaymentOrder(order.orderId);
+      setOrder(updatedOrder);
+      if (updatedOrder.status === 'paid') await userAuthStore.refreshEntitlements();
+    } catch (error) {
+      if (!silent) {
+        setErrorMessage(error instanceof Error ? error.message : 'Status pembayaran belum dapat diperiksa.');
+      }
+    } finally {
+      if (!silent) setIsProcessing(false);
+    }
+  }, [order]);
+
+  useEffect(() => {
+    if (order?.provider !== 'dana' || order.status !== 'pending_payment') return undefined;
+    const intervalId = window.setInterval(() => void refreshOrder(true), 5_000);
+    return () => window.clearInterval(intervalId);
+  }, [order?.provider, order?.status, refreshOrder]);
 
   const submitProof = useCallback(async () => {
     if (!order) return;
@@ -160,6 +191,7 @@ export function useManualPaymentController({
     setProofFile,
     setPayerNote,
     startOrder,
+    refreshOrder,
     submitProof,
     complete,
   };

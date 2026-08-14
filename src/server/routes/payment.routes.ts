@@ -3,6 +3,12 @@ import { AuthenticationError, requireAuthenticatedUser } from '../middleware/use
 import { isValidAdminPin } from '../middleware/adminAuth';
 import { estimateMidtransFee, recordCostEvent } from '../services/costTracking.service';
 import {
+  createDanaQrisOrder,
+  getDanaQrisOrderForUser,
+  isDanaQrisConfigured,
+  toDanaOrderResponse,
+} from '../services/danaQris.service';
+import {
   approveManualPaymentOrder,
   createManualPaymentOrder,
   getManualPaymentInstructions,
@@ -139,7 +145,14 @@ export function registerPaymentRoutes(app: Express) {
   app.post('/api/manual-payment-orders', async (req, res) => {
     try {
       const user = await requireAuthenticatedUser(req);
-      const { order, instructions } = await createManualPaymentOrder(user, req.body || {});
+      if (req.body?.paymentMethod === 'dana_qris' && isDanaQrisConfigured()) {
+        const order = await createDanaQrisOrder(user, req.body || {});
+        return res.status(201).json({ order: toDanaOrderResponse(order) });
+      }
+      const manualRequest = req.body?.paymentMethod === 'dana_qris'
+        ? { ...(req.body || {}), paymentMethod: 'manual_qris' }
+        : req.body || {};
+      const { order, instructions } = await createManualPaymentOrder(user, manualRequest);
       res.status(201).json({ order: toManualOrderResponse(order, instructions) });
     } catch (error) {
       if (!(error instanceof AuthenticationError)) console.error('Error creating manual payment order:', error);
@@ -150,9 +163,17 @@ export function registerPaymentRoutes(app: Express) {
   app.get('/api/manual-payment-orders/:orderId', async (req, res) => {
     try {
       const user = await requireAuthenticatedUser(req);
+      if (req.params.orderId.startsWith('BY')) {
+        const order = await getDanaQrisOrderForUser(req.params.orderId, user.id);
+        return res.json({ order: toDanaOrderResponse(order) });
+      }
       const order = await getManualPaymentOrderForUser(req.params.orderId, user.id);
       if (!order) return res.status(404).json({ error: 'Pesanan tidak ditemukan.' });
-      const instructions = getManualPaymentInstructions(order.purchase_type, order.amount);
+      const instructions = getManualPaymentInstructions(
+        order.purchase_type,
+        order.amount,
+        order.payment_method,
+      );
       res.json({ order: toManualOrderResponse(order, instructions) });
     } catch (error) {
       sendRouteError(res, error);

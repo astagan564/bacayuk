@@ -19,7 +19,7 @@ async function parseOrderResponse(response: Response): Promise<ManualPaymentOrde
 }
 
 export async function createManualPaymentOrder(
-  request: CreateTransactionRequest,
+  request: CreateTransactionRequest & { paymentMethod: ManualPaymentMethod },
   signal?: AbortSignal,
 ) {
   return parseOrderResponse(await fetch('/api/manual-payment-orders', {
@@ -29,6 +29,13 @@ export async function createManualPaymentOrder(
       ...await getAuthenticatedHeaders(),
     },
     body: JSON.stringify(request),
+    signal,
+  }));
+}
+
+export async function fetchPaymentOrder(orderId: string, signal?: AbortSignal) {
+  return parseOrderResponse(await fetch(`/api/manual-payment-orders/${encodeURIComponent(orderId)}`, {
+    headers: await getAuthenticatedHeaders(),
     signal,
   }));
 }
@@ -54,4 +61,3 @@ export async function submitManualPaymentProof(options: {
     signal: options.signal,
   }));
 }
-
