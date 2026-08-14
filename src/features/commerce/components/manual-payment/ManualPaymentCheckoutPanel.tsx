@@ -51,13 +51,13 @@ export function ManualPaymentCheckoutPanel({ controller }: { controller: ManualP
         <div className="grid gap-3 sm:grid-cols-2">
           <button
             type="button"
-            onClick={() => controller.setPaymentMethod('dana_qris')}
-            aria-pressed={controller.paymentMethod === 'dana_qris'}
-            className={`rounded-xl border p-4 text-left ${controller.paymentMethod === 'dana_qris' ? 'border-brand-blue bg-brand-blue/10' : 'border-default bg-surface'}`}
+            onClick={() => controller.setPaymentMethod('manual_qris')}
+            aria-pressed={controller.paymentMethod === 'manual_qris'}
+            className={`rounded-xl border p-4 text-left ${controller.paymentMethod === 'manual_qris' ? 'border-brand-blue bg-brand-blue/10' : 'border-default bg-surface'}`}
           >
             <QrCode className="mb-2 h-5 w-5 text-brand-blue" />
-            <p className="text-sm font-extrabold">QRIS otomatis</p>
-            <p className="mt-1 text-[11px] leading-5 text-secondary">Nominal terpasang otomatis dan status dibaca dari DANA.</p>
+            <p className="text-sm font-extrabold">QRIS</p>
+            <p className="mt-1 text-[11px] leading-5 text-secondary">Bayar lewat QRIS lalu kirim bukti untuk diperiksa admin.</p>
           </button>
           <button
             type="button"
@@ -107,7 +107,7 @@ export function ManualPaymentCheckoutPanel({ controller }: { controller: ManualP
           <ShieldCheck className="w-4 h-4" />
           <span>Pembayaran langsung ke BacaYuk</span>
         </div>
-        QRIS dikonfirmasi otomatis melalui DANA. Transfer bank tetap diverifikasi admin berdasarkan dana yang benar-benar masuk.
+        QRIS dan transfer bank diverifikasi admin berdasarkan dana yang benar-benar masuk.
       </div>
 
       <button

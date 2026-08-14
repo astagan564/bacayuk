@@ -143,6 +143,11 @@ export function isDanaQrisConfigured() {
   );
 }
 
+export function isDanaQrisEnabled() {
+  return cleanEnv('DANA_QRIS_ENABLED').toLowerCase() === 'true'
+    && isDanaQrisConfigured();
+}
+
 function getDanaQrisExpiryMinutes() {
   const configured = Number(process.env.DANA_QRIS_EXPIRES_MINUTES);
   if (!Number.isFinite(configured)) return DEFAULT_QRIS_EXPIRY_MINUTES;

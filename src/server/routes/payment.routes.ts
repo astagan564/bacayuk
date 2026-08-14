@@ -5,7 +5,7 @@ import { estimateMidtransFee, recordCostEvent } from '../services/costTracking.s
 import {
   createDanaQrisOrder,
   getDanaQrisOrderForUser,
-  isDanaQrisConfigured,
+  isDanaQrisEnabled,
   toDanaOrderResponse,
 } from '../services/danaQris.service';
 import {
@@ -145,7 +145,7 @@ export function registerPaymentRoutes(app: Express) {
   app.post('/api/manual-payment-orders', async (req, res) => {
     try {
       const user = await requireAuthenticatedUser(req);
-      if (req.body?.paymentMethod === 'dana_qris' && isDanaQrisConfigured()) {
+      if (req.body?.paymentMethod === 'dana_qris' && isDanaQrisEnabled()) {
         const order = await createDanaQrisOrder(user, req.body || {});
         return res.status(201).json({ order: toDanaOrderResponse(order) });
       }

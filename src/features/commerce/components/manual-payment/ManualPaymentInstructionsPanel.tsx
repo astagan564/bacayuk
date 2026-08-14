@@ -24,7 +24,7 @@ export function ManualPaymentInstructionsPanel({ controller }: { controller: Man
           <p className="text-xs font-bold text-brand-green">Pembayaran terkonfirmasi</p>
           <h3 className="mb-0 mt-1 text-3xl text-balance">Akses BacaYuk sudah aktif.</h3>
           <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-secondary">
-            DANA telah mengonfirmasi pembayaran pesanan {order.orderId}.
+            Pembayaran pesanan {order.orderId} telah diverifikasi oleh admin BacaYuk.
           </p>
         </div>
         <button type="button" onClick={controller.complete} className="btn-primary w-full px-5 py-3.5 text-sm">
@@ -39,15 +39,15 @@ export function ManualPaymentInstructionsPanel({ controller }: { controller: Man
       <div className="grid gap-5 pt-6 text-center">
         <Clock3 className="mx-auto h-12 w-12 text-error" />
         <div>
-          <h3 className="mb-0 text-2xl">QRIS tidak lagi berlaku.</h3>
-          <p className="mt-2 text-sm text-secondary">Tutup pembayaran lalu buat pesanan baru untuk memperoleh QRIS baru.</p>
+          <h3 className="mb-0 text-2xl">Pesanan tidak lagi berlaku.</h3>
+          <p className="mt-2 text-sm text-secondary">Tutup pembayaran lalu buat pesanan baru untuk melanjutkan.</p>
         </div>
       </div>
     );
   }
 
-  const qrisSelected = controller.paymentMethod === 'dana_qris'
-    || controller.paymentMethod === 'manual_qris';
+  const qrisSelected = controller.paymentMethod === 'manual_qris'
+    || controller.paymentMethod === 'dana_qris';
 
   return (
     <div className="grid gap-5 pt-5">

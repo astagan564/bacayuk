@@ -40,7 +40,7 @@ export function useManualPaymentController({
   const basePrice = story?.ebookPrice || adminSettings.defaultEbookPrice;
   const checkout = usePaymentCheckoutForm({ story, isVipOnly, basePrice });
   const [order, setOrder] = useState<ManualPaymentOrder | null>(null);
-  const [paymentMethod, setPaymentMethod] = useState<ManualPaymentMethod>('dana_qris');
+  const [paymentMethod, setPaymentMethod] = useState<ManualPaymentMethod>('manual_qris');
   const [proofFile, setProofFile] = useState<File | null>(null);
   const [payerNote, setPayerNote] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
