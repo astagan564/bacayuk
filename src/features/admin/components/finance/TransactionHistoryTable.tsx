@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { CheckCircle2, CreditCard, ExternalLink, RefreshCw, XCircle } from 'lucide-react';
+import { CheckCircle2, CreditCard, ExternalLink, MessageCircle, RefreshCw, XCircle } from 'lucide-react';
 import type { AdminManualPaymentOrder } from '@/features/admin/types/manualPayment';
 
 interface Props {
@@ -8,6 +8,7 @@ interface Props {
   isLoading: boolean;
   onApprove: (id: string) => Promise<void>;
   onReject: (id: string, note: string) => Promise<void>;
+  onRetryWhatsApp: (id: string) => Promise<void>;
   onRefresh: () => void;
 }
 const STATUS_LABELS: Record<AdminManualPaymentOrder['status'], string> = {
@@ -42,6 +43,7 @@ export function TransactionHistoryTable({
   isLoading,
   onApprove,
   onReject,
+  onRetryWhatsApp,
   onRefresh,
 }: Props) {
   const [actionOrderId, setActionOrderId] = useState<string | null>(null);
@@ -69,6 +71,18 @@ export function TransactionHistoryTable({
       await onReject(order.orderId, note.trim());
     } catch (nextError) {
       setActionError(nextError instanceof Error ? nextError.message : 'Pesanan belum dapat ditolak.');
+    } finally {
+      setActionOrderId(null);
+    }
+  };
+
+  const retryWhatsApp = async (order: AdminManualPaymentOrder) => {
+    setActionOrderId(order.orderId);
+    setActionError(null);
+    try {
+      await onRetryWhatsApp(order.orderId);
+    } catch (nextError) {
+      setActionError(nextError instanceof Error ? nextError.message : 'Notifikasi WhatsApp belum dapat dikirim.');
     } finally {
       setActionOrderId(null);
     }
@@ -136,6 +150,19 @@ export function TransactionHistoryTable({
                   </td>
                   <td className="p-3">
                     <StatusBadge status={transaction.status} />
+                    {transaction.status === 'pending_review' && (
+                      <p className={`mt-2 max-w-48 text-[10px] font-semibold ${transaction.whatsappNotificationStatus === 'sent' ? 'text-brand-green' : 'text-secondary'}`}>
+                        {transaction.whatsappNotificationStatus === 'sent'
+                          ? 'WhatsApp terkirim'
+                          : transaction.whatsappNotificationStatus === 'sending'
+                            ? 'WhatsApp sedang dikirim'
+                            : transaction.whatsappNotificationStatus === 'failed'
+                              ? 'WhatsApp gagal'
+                              : transaction.whatsappNotificationStatus === 'skipped'
+                                ? 'WhatsApp belum aktif'
+                                : 'WhatsApp menunggu dikirim'}
+                      </p>
+                    )}
                     {transaction.reviewNote && <p className="mt-2 max-w-48 text-[10px] text-error">{transaction.reviewNote}</p>}
                   </td>
                   <td className="p-3">
@@ -157,6 +184,17 @@ export function TransactionHistoryTable({
                         >
                           <XCircle className="h-3.5 w-3.5" /> Tolak
                         </button>
+                        {['failed', 'skipped', 'not_requested'].includes(transaction.whatsappNotificationStatus) && (
+                          <button
+                            type="button"
+                            onClick={() => void retryWhatsApp(transaction)}
+                            disabled={actionOrderId === transaction.orderId}
+                            title={transaction.whatsappNotificationError || 'Kirim ulang notifikasi WhatsApp'}
+                            className="inline-flex items-center gap-1 rounded-lg border border-default bg-surface px-2.5 py-1.5 text-[10px] font-bold text-primary disabled:opacity-60"
+                          >
+                            <MessageCircle className="h-3.5 w-3.5" /> Kirim WA
+                          </button>
+                        )}
                       </div>
                     ) : <span className="text-[10px] text-muted">Tidak ada aksi</span>}
                   </td>

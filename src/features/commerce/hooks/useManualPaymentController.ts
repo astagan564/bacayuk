@@ -114,8 +114,13 @@ export function useManualPaymentController({
   }, [order]);
 
   useEffect(() => {
-    if (order?.provider !== 'dana' || order.status !== 'pending_payment') return undefined;
-    const intervalId = window.setInterval(() => void refreshOrder(true), 5_000);
+    const shouldPollDana = order?.provider === 'dana' && order.status === 'pending_payment';
+    const shouldPollManualReview = order?.provider === 'manual' && order.status === 'pending_review';
+    if (!shouldPollDana && !shouldPollManualReview) return undefined;
+    const intervalId = window.setInterval(
+      () => void refreshOrder(true),
+      shouldPollDana ? 5_000 : 10_000,
+    );
     return () => window.clearInterval(intervalId);
   }, [order?.provider, order?.status, refreshOrder]);
 

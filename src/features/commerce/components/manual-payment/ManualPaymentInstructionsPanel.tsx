@@ -46,6 +46,33 @@ export function ManualPaymentInstructionsPanel({ controller }: { controller: Man
     );
   }
 
+  if (order.status === 'pending_review') {
+    return (
+      <div className="grid gap-5 pt-6 text-center">
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-blue/15 text-brand-blue">
+          <Clock3 className="h-9 w-9" />
+        </div>
+        <div>
+          <p className="text-xs font-bold text-brand-blue">Bukti pembayaran sudah diterima</p>
+          <h3 className="mb-0 mt-1 text-3xl text-balance">Menunggu persetujuan admin.</h3>
+          <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-secondary">
+            Admin BacaYuk telah diberi tahu. Setelah pembayaran disetujui, akses akan aktif otomatis pada halaman ini.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => controller.refreshOrder()}
+          disabled={controller.isProcessing}
+          className="btn-secondary flex w-full items-center justify-center gap-2 px-5 py-3.5 text-sm disabled:opacity-60"
+        >
+          <RefreshCw className={`h-5 w-5 ${controller.isProcessing ? 'animate-spin' : ''}`} />
+          <span>{controller.isProcessing ? 'Memeriksa statusâ€¦' : 'Periksa status sekarang'}</span>
+        </button>
+        <p className="text-[11px] leading-5 text-secondary">Status juga diperbarui otomatis setiap 10 detik.</p>
+      </div>
+    );
+  }
+
   const qrisSelected = controller.paymentMethod === 'manual_qris'
     || controller.paymentMethod === 'dana_qris';
 

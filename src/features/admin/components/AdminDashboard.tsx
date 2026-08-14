@@ -82,6 +82,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     handleDeleteCoupon,
     handleApproveTransaction,
     handleRejectTransaction,
+    handleRetryWhatsAppNotification,
   } = useAdminFinanceController({ adminPin: adminPin || '', showToast });
 
   const {
@@ -150,7 +151,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
         {activeTab === 'users' && <UsersTab users={userList} readingLogs={readingLogs} searchQuery={userSearchQuery} onSearchQueryChange={setUserSearchQuery} onExportCsv={handleExportUsersCSV} />}
 
-        {activeTab === 'finance' && <FinanceTab totalRevenue={totalRevenue} successfulTransactions={successTrxs} pendingTransactions={pendingTrxs} transactions={transactions} transactionsError={transactionsError} isLoadingTransactions={isLoadingTransactions} coupons={coupons} showCouponForm={showCouponForm} newCouponCode={newCouponCode} newCouponType={newCouponType} newCouponValue={newCouponValue} onToggleCouponForm={() => setShowCouponForm(!showCouponForm)} onCouponCodeChange={setNewCouponCode} onCouponTypeChange={setNewCouponType} onCouponValueChange={setNewCouponValue} onCreateCoupon={handleCreateCoupon} onToggleCoupon={handleToggleCoupon} onDeleteCoupon={handleDeleteCoupon} onApproveTransaction={handleApproveTransaction} onRejectTransaction={handleRejectTransaction} onRefreshTransactions={() => void refreshTransactions()} />}
+        {activeTab === 'finance' && <FinanceTab totalRevenue={totalRevenue} successfulTransactions={successTrxs} pendingTransactions={pendingTrxs} transactions={transactions} transactionsError={transactionsError} isLoadingTransactions={isLoadingTransactions} coupons={coupons} showCouponForm={showCouponForm} newCouponCode={newCouponCode} newCouponType={newCouponType} newCouponValue={newCouponValue} onToggleCouponForm={() => setShowCouponForm(!showCouponForm)} onCouponCodeChange={setNewCouponCode} onCouponTypeChange={setNewCouponType} onCouponValueChange={setNewCouponValue} onCreateCoupon={handleCreateCoupon} onToggleCoupon={handleToggleCoupon} onDeleteCoupon={handleDeleteCoupon} onApproveTransaction={handleApproveTransaction} onRejectTransaction={handleRejectTransaction} onRetryWhatsAppNotification={handleRetryWhatsAppNotification} onRefreshTransactions={() => void refreshTransactions()} />}
 
         {activeTab === 'costs' && <CostLedgerTab error={costLedgerError} totalRevenue={totalRevenue} totalAiCost={totalAiCost} totalPaymentFee={totalPaymentFee} netProfit={netProfit} storyRows={storyCostRows} onReload={() => void loadCostEvents()} />}
 

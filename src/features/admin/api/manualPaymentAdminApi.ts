@@ -34,3 +34,11 @@ export async function rejectManualPaymentOrder(adminPin: string, orderId: string
   }));
 }
 
+export async function retryManualPaymentWhatsAppNotification(adminPin: string, orderId: string) {
+  const data = await parseJson<{ order?: AdminManualPaymentOrder; error?: string }>(await fetch(`/api/admin/manual-payment-orders/${encodeURIComponent(orderId)}/notify-whatsapp`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-admin-pin': adminPin },
+  }));
+  if (!data.order) throw new Error('Status notifikasi WhatsApp tidak tersedia.');
+  return data.order;
+}

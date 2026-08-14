@@ -6,6 +6,7 @@ import {
   approveManualPaymentOrder,
   fetchManualPaymentOrders,
   rejectManualPaymentOrder,
+  retryManualPaymentWhatsAppNotification,
 } from '@/features/admin/api/manualPaymentAdminApi';
 import type { AdminManualPaymentOrder } from '@/features/admin/types/manualPayment';
 
@@ -89,6 +90,16 @@ export function useAdminFinanceController({ adminPin, showToast }: AdminFinanceC
     showToast(`Pesanan #${id} ditolak.`);
   }, [adminPin, refreshTransactions, showToast]);
 
+  const handleRetryWhatsAppNotification = useCallback(async (id: string) => {
+    const order = await retryManualPaymentWhatsAppNotification(adminPin, id);
+    await refreshTransactions();
+    if (order.whatsappNotificationStatus === 'sent') {
+      showToast(`Notifikasi WhatsApp pesanan #${id} sudah terkirim.`);
+      return;
+    }
+    throw new Error(order.whatsappNotificationError || 'Notifikasi WhatsApp belum berhasil dikirim.');
+  }, [adminPin, refreshTransactions, showToast]);
+
   const successfulTransactions = useMemo(
     () => transactions.filter((transaction) => transaction.status === 'paid'),
     [transactions],
@@ -124,5 +135,6 @@ export function useAdminFinanceController({ adminPin, showToast }: AdminFinanceC
     handleDeleteCoupon,
     handleApproveTransaction,
     handleRejectTransaction,
+    handleRetryWhatsAppNotification,
   };
 }

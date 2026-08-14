@@ -24,6 +24,7 @@ export function FinanceTab({
   onDeleteCoupon,
   onApproveTransaction,
   onRejectTransaction,
+  onRetryWhatsAppNotification,
   onRefreshTransactions,
 }: FinanceTabProps) {
   return (
@@ -54,6 +55,7 @@ export function FinanceTab({
         isLoading={isLoadingTransactions}
         onApprove={onApproveTransaction}
         onReject={onRejectTransaction}
+        onRetryWhatsApp={onRetryWhatsAppNotification}
         onRefresh={onRefreshTransactions}
       />
     </div>

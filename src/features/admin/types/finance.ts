@@ -23,5 +23,6 @@ export interface FinanceTabProps {
   onDeleteCoupon: (code: string) => void;
   onApproveTransaction: (id: string) => Promise<void>;
   onRejectTransaction: (id: string, note: string) => Promise<void>;
+  onRetryWhatsAppNotification: (id: string) => Promise<void>;
   onRefreshTransactions: () => void;
 }

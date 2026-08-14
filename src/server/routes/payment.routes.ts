@@ -15,6 +15,7 @@ import {
   getManualPaymentOrderForUser,
   listManualPaymentOrdersForAdmin,
   rejectManualPaymentOrder,
+  retryManualPaymentWhatsAppNotification,
   submitManualPaymentProof,
   toManualOrderResponse,
 } from '../services/manualPayment.service';
@@ -58,6 +59,10 @@ function adminOrderToResponse(order: Awaited<ReturnType<typeof listManualPayment
     reviewedAt: order.reviewed_at,
     reviewedBy: order.reviewed_by,
     paidAt: order.paid_at,
+    whatsappNotificationStatus: order.whatsapp_notification_status,
+    whatsappNotificationAttempts: order.whatsapp_notification_attempts,
+    whatsappNotificationSentAt: order.whatsapp_notification_sent_at,
+    whatsappNotificationError: order.whatsapp_notification_error,
     createdAt: order.created_at,
   };
 }
@@ -237,6 +242,19 @@ export function registerPaymentRoutes(app: Express) {
       res.json({ order: adminOrderToResponse({ ...order, proof_signed_url: null }) });
     } catch (error) {
       console.error('Error rejecting manual payment:', error);
+      sendRouteError(res, error);
+    }
+  });
+
+  app.post('/api/admin/manual-payment-orders/:orderId/notify-whatsapp', async (req, res) => {
+    if (!isValidAdminPin(req.headers['x-admin-pin'])) {
+      return res.status(403).json({ error: 'PIN admin tidak valid.' });
+    }
+    try {
+      const order = await retryManualPaymentWhatsAppNotification(req.params.orderId);
+      res.json({ order: adminOrderToResponse({ ...order, proof_signed_url: null }) });
+    } catch (error) {
+      console.error('Error retrying WhatsApp payment notification:', error);
       sendRouteError(res, error);
     }
   });

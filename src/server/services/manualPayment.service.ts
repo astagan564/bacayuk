@@ -6,6 +6,10 @@ import {
   type EntitlementRow,
   type ResolvedTransactionOrder,
 } from './payment.service';
+import {
+  isWhatsAppPaymentNotificationConfigured,
+  sendPaymentReviewWhatsAppTemplate,
+} from './whatsappNotification.service';
 
 const PAYMENT_PROOF_BUCKET = 'payment-proofs';
 const MAX_PROOF_BYTES = 1_572_864;
@@ -25,6 +29,13 @@ export type ManualPaymentStatus =
   | 'rejected'
   | 'cancelled'
   | 'expired';
+export type WhatsAppNotificationStatus =
+  | 'not_requested'
+  | 'pending'
+  | 'sending'
+  | 'sent'
+  | 'failed'
+  | 'skipped';
 
 export interface ManualPaymentOrderRow {
   order_id: string;
@@ -49,6 +60,11 @@ export interface ManualPaymentOrderRow {
   reviewed_at: string | null;
   reviewed_by: string | null;
   paid_at: string | null;
+  whatsapp_notification_status: WhatsAppNotificationStatus;
+  whatsapp_notification_attempts: number;
+  whatsapp_notification_sent_at: string | null;
+  whatsapp_notification_message_id: string | null;
+  whatsapp_notification_error: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -267,6 +283,10 @@ export async function submitManualPaymentProof(options: {
       review_note: null,
       reviewed_at: null,
       reviewed_by: null,
+      whatsapp_notification_status: 'pending',
+      whatsapp_notification_sent_at: null,
+      whatsapp_notification_message_id: null,
+      whatsapp_notification_error: null,
       updated_at: submittedAt,
     })
     .eq('order_id', options.orderId)
@@ -282,7 +302,113 @@ export async function submitManualPaymentProof(options: {
   if (order.proof_object_path && order.proof_object_path !== objectPath) {
     await supabase.storage.from(PAYMENT_PROOF_BUCKET).remove([order.proof_object_path]);
   }
-  return data as ManualPaymentOrderRow;
+  return deliverPaymentReviewWhatsAppNotification(data as ManualPaymentOrderRow);
+}
+
+async function deliverPaymentReviewWhatsAppNotification(order: ManualPaymentOrderRow) {
+  const supabase = getSupabaseAdminClient();
+  if (!isWhatsAppPaymentNotificationConfigured()) {
+    const { data } = await supabase
+      .from('payment_orders')
+      .update({
+        whatsapp_notification_status: 'skipped',
+        whatsapp_notification_error: 'Konfigurasi WhatsApp Cloud API belum lengkap.',
+        updated_at: new Date().toISOString(),
+      })
+      .eq('order_id', order.order_id)
+      .eq('whatsapp_notification_status', 'pending')
+      .select('*')
+      .maybeSingle();
+    return (data || order) as ManualPaymentOrderRow;
+  }
+
+  const attempts = Number(order.whatsapp_notification_attempts) || 0;
+  const { data: claimed, error: claimError } = await supabase
+    .from('payment_orders')
+    .update({
+      whatsapp_notification_status: 'sending',
+      whatsapp_notification_attempts: attempts + 1,
+      whatsapp_notification_error: null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('order_id', order.order_id)
+    .eq('whatsapp_notification_attempts', attempts)
+    .in('whatsapp_notification_status', ['pending', 'failed', 'skipped'])
+    .select('*')
+    .maybeSingle();
+  if (claimError) {
+    console.error('Error claiming WhatsApp payment notification:', claimError.message);
+    return order;
+  }
+  if (!claimed) return order;
+
+  try {
+    const result = await sendPaymentReviewWhatsAppTemplate(claimed as ManualPaymentOrderRow);
+    const sentAt = new Date().toISOString();
+    const { data: sent, error: sentError } = await supabase
+      .from('payment_orders')
+      .update({
+        whatsapp_notification_status: 'sent',
+        whatsapp_notification_sent_at: sentAt,
+        whatsapp_notification_message_id: result.messageId,
+        whatsapp_notification_error: null,
+        updated_at: sentAt,
+      })
+      .eq('order_id', order.order_id)
+      .eq('whatsapp_notification_status', 'sending')
+      .select('*')
+      .maybeSingle();
+    if (sentError) console.error('Error saving WhatsApp notification receipt:', sentError.message);
+    return (sent || claimed) as ManualPaymentOrderRow;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Notifikasi WhatsApp gagal dikirim.';
+    console.error('Error sending WhatsApp payment notification:', message);
+    const { data: failed } = await supabase
+      .from('payment_orders')
+      .update({
+        whatsapp_notification_status: 'failed',
+        whatsapp_notification_error: message.slice(0, 500),
+        updated_at: new Date().toISOString(),
+      })
+      .eq('order_id', order.order_id)
+      .eq('whatsapp_notification_status', 'sending')
+      .select('*')
+      .maybeSingle();
+    return (failed || claimed) as ManualPaymentOrderRow;
+  }
+}
+
+export async function retryManualPaymentWhatsAppNotification(orderId: string) {
+  const supabase = getSupabaseAdminClient();
+  const { data, error } = await supabase
+    .from('payment_orders')
+    .select('*')
+    .eq('order_id', orderId)
+    .eq('provider', 'manual')
+    .maybeSingle();
+  if (error) throw new Error(`Pesanan belum dapat dimuat: ${error.message}`);
+  if (!data) throw new Error('Pesanan pembayaran manual tidak ditemukan.');
+  const order = data as ManualPaymentOrderRow;
+  if (order.status !== 'pending_review' || !order.proof_object_path) {
+    throw new Error('Notifikasi hanya dapat dikirim untuk bukti yang menunggu verifikasi.');
+  }
+  if (order.whatsapp_notification_status === 'sent') return order;
+  if (order.whatsapp_notification_status === 'sending') {
+    throw new Error('Notifikasi WhatsApp sedang dikirim.');
+  }
+
+  const { data: queued, error: queueError } = await supabase
+    .from('payment_orders')
+    .update({
+      whatsapp_notification_status: 'pending',
+      whatsapp_notification_error: null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('order_id', orderId)
+    .select('*')
+    .single();
+  if (queueError) throw new Error(`Notifikasi belum dapat dijadwalkan: ${queueError.message}`);
+  return deliverPaymentReviewWhatsAppNotification(queued as ManualPaymentOrderRow);
 }
 
 export async function listManualPaymentOrdersForAdmin() {
@@ -375,6 +501,10 @@ export function toManualOrderResponse(
     payerNote: order.payer_note,
     reviewNote: order.review_note,
     paidAt: order.paid_at,
+    whatsappNotificationStatus: order.whatsapp_notification_status,
+    whatsappNotificationAttempts: order.whatsapp_notification_attempts,
+    whatsappNotificationSentAt: order.whatsapp_notification_sent_at,
+    whatsappNotificationError: order.whatsapp_notification_error,
     createdAt: order.created_at,
     instructions,
   };

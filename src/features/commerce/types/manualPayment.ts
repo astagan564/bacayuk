@@ -11,6 +11,13 @@ export type ManualPaymentStatus =
   | 'expired';
 
 export type ManualPaymentMethod = 'dana_qris' | 'manual_bank_transfer' | 'manual_qris';
+export type WhatsAppNotificationStatus =
+  | 'not_requested'
+  | 'pending'
+  | 'sending'
+  | 'sent'
+  | 'failed'
+  | 'skipped';
 
 export interface ManualPaymentInstructions {
   bankTransfer: {
@@ -42,6 +49,10 @@ export interface ManualPaymentOrder {
   payerNote: string | null;
   reviewNote: string | null;
   paidAt: string | null;
+  whatsappNotificationStatus: WhatsAppNotificationStatus;
+  whatsappNotificationAttempts: number;
+  whatsappNotificationSentAt: string | null;
+  whatsappNotificationError: string | null;
   createdAt: string;
   instructions?: ManualPaymentInstructions;
 }

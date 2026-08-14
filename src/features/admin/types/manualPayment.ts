@@ -1,4 +1,8 @@
-import type { ManualPaymentMethod, ManualPaymentStatus } from '@/features/commerce/types/manualPayment';
+import type {
+  ManualPaymentMethod,
+  ManualPaymentStatus,
+  WhatsAppNotificationStatus,
+} from '@/features/commerce/types/manualPayment';
 import type { PurchaseType } from '@/features/commerce/types/paymentGateway';
 
 export interface AdminManualPaymentOrder {
@@ -20,6 +24,9 @@ export interface AdminManualPaymentOrder {
   reviewedAt: string | null;
   reviewedBy: string | null;
   paidAt: string | null;
+  whatsappNotificationStatus: WhatsAppNotificationStatus;
+  whatsappNotificationAttempts: number;
+  whatsappNotificationSentAt: string | null;
+  whatsappNotificationError: string | null;
   createdAt: string;
 }
-
