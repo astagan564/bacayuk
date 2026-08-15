@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+
+Disallow: /admin
+Disallow: /admin/
+Disallow: /settings
+Disallow: /api/
+
+Sitemap: https://www.bacayuk.web.id/sitemap.xml
