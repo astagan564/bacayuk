@@ -1,5 +1,6 @@
 import {
   BarChart3,
+  BadgeCheck,
   BookOpen,
   Clock,
   Eye,
@@ -47,10 +48,17 @@ export function StoryCatalogHero({
           </div>
 
           <div className="flex flex-wrap items-center gap-2.5 pt-1">
-            <button type="button" onClick={onOpenVip} className="btn-primary inline-flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm">
-              <Lock className="w-4 h-4" />
-              <span>Gabung VIP</span>
-            </button>
+            {controller.isVipUser ? (
+              <div className="reader-soft-panel inline-flex items-center gap-2 rounded-xl border border-brand-green/30 px-4 py-2.5 text-xs font-black text-brand-green sm:text-sm">
+                <BadgeCheck className="h-4 w-4" />
+                <span>VIP aktif</span>
+              </div>
+            ) : (
+              <button type="button" onClick={onOpenVip} className="btn-primary inline-flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm">
+                <Lock className="w-4 h-4" />
+                <span>Gabung VIP</span>
+              </button>
+            )}
 
             <button type="button" onClick={onOpenStoryMaker} className="btn-primary inline-flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm">
               <Wand2 className="w-4 h-4" />

@@ -68,6 +68,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Desktop reader control boundaries**: Split desktop page navigation, reading preferences, and reader tools into focused components while retaining the shared navigation controller and control contract.
 
 ### Fixed
+- **Active VIP homepage state**: Replaced the `Gabung VIP` purchase action with a non-purchasing `VIP aktif` indicator for active members and prevented the VIP offer flow from reopening through another trigger.
 - **OAuth homepage branding**: Standardized the public app name as `BacaYuk` and added a visible, server-readable homepage purpose statement plus privacy and terms links for Google OAuth brand verification.
 - **Admin registered-user directory**: The Admin Users page now loads registered application accounts and recent reading activity from the protected backend instead of showing only the current browser session and local reading logs.
 - **Focused QRIS preview**: QRIS images in checkout can now be opened in a high-contrast full-screen view with backdrop, close button, outside-click, and Escape-key dismissal for easier scanning.
