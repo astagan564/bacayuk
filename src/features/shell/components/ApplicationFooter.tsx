@@ -19,7 +19,7 @@ export function ApplicationFooter({ onOpenChangelog }: ApplicationFooterProps) {
         >
           Changelog
         </button>
-        <span>â€¢</span>
+        <span>•</span>
         <Link to="/legal" className="underline hover:text-action-secondary transition-colors">
           Privasi & Ketentuan
         </Link>

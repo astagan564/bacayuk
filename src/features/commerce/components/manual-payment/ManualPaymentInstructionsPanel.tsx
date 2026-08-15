@@ -74,7 +74,7 @@ export function ManualPaymentInstructionsPanel({ controller }: { controller: Man
           className="btn-secondary flex w-full items-center justify-center gap-2 px-5 py-3.5 text-sm disabled:opacity-60"
         >
           <RefreshCw className={`h-5 w-5 ${controller.isProcessing ? 'animate-spin' : ''}`} />
-          <span>{controller.isProcessing ? 'Memeriksa statusâ€¦' : 'Periksa status sekarang'}</span>
+          <span>{controller.isProcessing ? 'Memeriksa status…' : 'Periksa status sekarang'}</span>
         </button>
         <p className="text-[11px] leading-5 text-secondary">Status juga diperbarui otomatis setiap 10 detik.</p>
       </div>
