@@ -65,6 +65,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Desktop reader control boundaries**: Split desktop page navigation, reading preferences, and reader tools into focused components while retaining the shared navigation controller and control contract.
 
 ### Fixed
+- **OAuth homepage branding**: Standardized the public app name as `BacaYuk` and added a visible, server-readable homepage purpose statement plus privacy and terms links for Google OAuth brand verification.
 - **Admin registered-user directory**: The Admin Users page now loads registered application accounts and recent reading activity from the protected backend instead of showing only the current browser session and local reading logs.
 - **Focused QRIS preview**: QRIS images in checkout can now be opened in a high-contrast full-screen view with backdrop, close button, outside-click, and Escape-key dismissal for easier scanning.
 - **Resumable user payments**: Added a tenant-scoped payment history in Parent Settings so unpaid, pending-review, and rejected book/VIP orders can be reopened after the checkout modal, page, or login session is closed. Orders with submitted proof no longer expire while awaiting Admin verification.

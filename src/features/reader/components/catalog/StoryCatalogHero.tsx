@@ -39,10 +39,10 @@ export function StoryCatalogHero({
 
           <div>
             <h1 className="max-w-3xl text-4xl sm:text-6xl leading-[0.98] text-balance">
-              Rak cerita yang siap dibaca bersama.
+              BacaYuk, rak cerita yang siap dibaca bersama.
             </h1>
             <p className="mt-4 max-w-2xl text-sm sm:text-base leading-7 font-medium text-secondary text-pretty">
-              Pilih buku, lanjutkan halaman terakhir, rekam suara orang tua, atau simpan versi offline untuk waktu membaca yang lebih tenang.
+              BacaYuk adalah aplikasi buku cerita anak interaktif untuk orang tua dan anak. Pilih buku, lanjutkan halaman terakhir, rekam suara orang tua, atau simpan versi offline untuk waktu membaca yang lebih tenang.
             </p>
           </div>
 

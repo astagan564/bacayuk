@@ -8,7 +8,7 @@ interface ApplicationFooterProps {
 export function ApplicationFooter({ onOpenChangelog }: ApplicationFooterProps) {
   return (
     <footer className="w-full text-xs py-3 px-4 text-center border-t z-30 transition-colors duration-500 flex flex-col items-center gap-1 bg-surface border-default text-secondary">
-      <p>Buku Cerita Anak Interaktif • Dilengkapi Efek Flipbook 3D, Narasi Suara & Mode Siang/Malam</p>
+      <p>BacaYuk • Aplikasi Buku Cerita Anak Interaktif untuk Membaca Bersama Keluarga</p>
       <div className="flex items-center justify-center gap-1.5 opacity-80 hover:opacity-100 transition-opacity text-[10px]">
         <span>v{packageJson.version}</span>
         <span>•</span>
