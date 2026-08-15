@@ -64,6 +64,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Desktop reader control boundaries**: Split desktop page navigation, reading preferences, and reader tools into focused components while retaining the shared navigation controller and control contract.
 
 ### Fixed
+- **Resumable user payments**: Added a tenant-scoped payment history in Parent Settings so unpaid, pending-review, and rejected book/VIP orders can be reopened after the checkout modal, page, or login session is closed. Orders with submitted proof no longer expire while awaiting Admin verification.
 - **Duplicate story maker dialog**: Removed a duplicate `StoryMakerModal` render that could mount the same AI story creation interface twice.
 - **Direct-link navigation**: Replaced transient view-only navigation with URL-backed navigation so browser refresh and direct entry preserve the requested frontend section.
 - **Hidden draft typing errors**: Normalized manuscript and AI page drafts before Story mapping and removed implicit callback types from the Admin data store, allowing the complete project to pass strict TypeScript checks.

@@ -25,9 +25,8 @@ export function ManualPaymentPendingPanel({ controller }: { controller: ManualPa
         </div>
       </div>
       <button type="button" onClick={controller.complete} className="btn-primary w-full px-5 py-3.5 text-sm">
-        Kembali ke perpustakaan
+        Selesai
       </button>
     </div>
   );
 }
-

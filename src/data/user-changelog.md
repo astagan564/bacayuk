@@ -1,3 +1,11 @@
+## Pembayaran dapat dilanjutkan kembali - 2026-08-15
+
+### Pesanan tidak hilang setelah halaman ditutup
+- Pengaturan Orang Tua kini memiliki bagian **Pembayaran Saya** untuk melihat transaksi milik akun yang sedang login.
+- Pembayaran yang belum selesai dapat dibuka kembali tanpa membuat pesanan baru, termasuk setelah modal pembayaran, halaman, atau sesi login sebelumnya ditutup.
+- User dapat melanjutkan pembayaran, memeriksa status verifikasi Admin, atau mengirim ulang bukti yang ditolak.
+- Bukti yang sudah dikirim tidak lagi kedaluwarsa saat masih menunggu keputusan Admin.
+
 ## Halaman kini lebih mudah dibuka kembali - 2026-08-11
 
 ### Setiap area memiliki alamat halaman sendiri

@@ -10,6 +10,11 @@ interface ManualOrderResponse {
   error?: string;
 }
 
+interface ManualOrdersResponse {
+  orders?: ManualPaymentOrder[];
+  error?: string;
+}
+
 async function parseOrderResponse(response: Response): Promise<ManualPaymentOrder> {
   const data = await response.json() as ManualOrderResponse;
   if (!response.ok || !data.order) {
@@ -38,6 +43,18 @@ export async function fetchPaymentOrder(orderId: string, signal?: AbortSignal) {
     headers: await getAuthenticatedHeaders(),
     signal,
   }));
+}
+
+export async function fetchPaymentOrders(signal?: AbortSignal) {
+  const response = await fetch('/api/manual-payment-orders', {
+    headers: await getAuthenticatedHeaders(),
+    signal,
+  });
+  const data = await response.json() as ManualOrdersResponse;
+  if (!response.ok || !data.orders) {
+    throw new Error(data.error || 'Riwayat pembayaran belum dapat dimuat.');
+  }
+  return data.orders;
 }
 
 export async function submitManualPaymentProof(options: {

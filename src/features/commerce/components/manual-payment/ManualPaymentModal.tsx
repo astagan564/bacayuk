@@ -18,7 +18,9 @@ export function ManualPaymentModal(props: ManualPaymentModalProps) {
             <div>
               <p className="text-[11px] font-bold text-secondary">Pembayaran langsung ke BacaYuk</p>
               <h2 className="mb-0 text-2xl leading-tight text-balance">
-                {props.isVipOnly ? 'Aktifkan VIP keluarga' : 'Beli buku untuk unduhan offline'}
+                {(props.initialOrder?.purchaseType === 'vip' || props.isVipOnly)
+                  ? 'Aktifkan VIP keluarga'
+                  : 'Beli buku untuk unduhan offline'}
               </h2>
             </div>
           </div>
@@ -36,4 +38,3 @@ export function ManualPaymentModal(props: ManualPaymentModalProps) {
     </div>
   );
 }
-

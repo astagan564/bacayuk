@@ -28,19 +28,22 @@ function readFileAsDataUrl(file: File): Promise<string> {
 
 type Options = Pick<
   ManualPaymentModalProps,
-  'story' | 'isVipOnly' | 'onOrderSubmitted'
+  'story' | 'isVipOnly' | 'initialOrder' | 'onOrderSubmitted'
 >;
 
 export function useManualPaymentController({
   story,
   isVipOnly = false,
+  initialOrder,
   onOrderSubmitted,
 }: Options) {
   const adminSettings = adminStore.getSettings();
   const basePrice = story?.ebookPrice || adminSettings.defaultEbookPrice;
   const checkout = usePaymentCheckoutForm({ story, isVipOnly, basePrice });
-  const [order, setOrder] = useState<ManualPaymentOrder | null>(null);
-  const [paymentMethod, setPaymentMethod] = useState<ManualPaymentMethod>('manual_qris');
+  const [order, setOrder] = useState<ManualPaymentOrder | null>(initialOrder || null);
+  const [paymentMethod, setPaymentMethod] = useState<ManualPaymentMethod>(
+    initialOrder?.paymentMethod || 'manual_qris',
+  );
   const [proofFile, setProofFile] = useState<File | null>(null);
   const [payerNote, setPayerNote] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);

@@ -405,6 +405,28 @@ export async function getDanaQrisOrderForUser(orderId: string, userId: string) {
   return data as DanaPaymentOrderRow;
 }
 
+export async function listDanaQrisOrdersForUser(userId: string) {
+  const supabase = getSupabaseAdminClient();
+  const { error: expiryError } = await supabase
+    .from('payment_orders')
+    .update({ status: 'expired', updated_at: new Date().toISOString() })
+    .eq('user_id', userId)
+    .eq('provider', 'dana')
+    .eq('status', 'pending_payment')
+    .lt('expires_at', new Date().toISOString());
+  if (expiryError) throw new Error(`Status QRIS belum dapat diperbarui: ${expiryError.message}`);
+
+  const { data, error } = await supabase
+    .from('payment_orders')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('provider', 'dana')
+    .order('created_at', { ascending: false })
+    .limit(20);
+  if (error) throw new Error(`Riwayat QRIS belum dapat dimuat: ${error.message}`);
+  return (data || []) as DanaPaymentOrderRow[];
+}
+
 export function getDanaQrisInstructions(order: DanaPaymentOrderRow) {
   return {
     bankTransfer: null,
@@ -434,6 +456,10 @@ export function toDanaOrderResponse(order: DanaPaymentOrderRow) {
     payerNote: null,
     reviewNote: null,
     paidAt: order.paid_at,
+    whatsappNotificationStatus: 'not_requested' as const,
+    whatsappNotificationAttempts: 0,
+    whatsappNotificationSentAt: null,
+    whatsappNotificationError: null,
     createdAt: order.created_at,
     instructions: getDanaQrisInstructions(order),
   };
