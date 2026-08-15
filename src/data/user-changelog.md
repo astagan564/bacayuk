@@ -6,6 +6,10 @@
 - User dapat melanjutkan pembayaran, memeriksa status verifikasi Admin, atau mengirim ulang bukti yang ditolak.
 - Bukti yang sudah dikirim tidak lagi kedaluwarsa saat masih menunggu keputusan Admin.
 
+### QRIS lebih mudah dipindai
+- Gambar QRIS pada halaman pembayaran dapat ditekan untuk membukanya dalam tampilan fokus layar penuh.
+- Tampilan QRIS dapat ditutup melalui tombol tutup, area gelap di luar gambar, atau tombol Escape.
+
 ## Halaman kini lebih mudah dibuka kembali - 2026-08-11
 
 ### Setiap area memiliki alamat halaman sendiri

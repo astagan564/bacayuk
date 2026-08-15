@@ -18,3 +18,7 @@ Endpoint `GET /api/manual-payment-orders` tidak menerima ID user dari browser. I
 Order `pending_payment` dan `rejected` dapat kedaluwarsa sesuai `expires_at`. Setelah bukti berhasil dikirim dan status menjadi `pending_review`, tenggat pembayaran tidak lagi membatalkan order karena dana sudah diklaim telah dikirim dan perlu keputusan Admin.
 
 Admin hanya dapat menyetujui atau menolak order `pending_review`. Persetujuan tetap menerbitkan entitlement melalui fungsi server yang sudah ada.
+
+## Tampilan QRIS
+
+Gambar QRIS pada instruksi pembayaran dapat ditekan untuk membuka preview layar penuh dengan kontras tinggi. Preview menyediakan tombol tutup, penutupan melalui backdrop, dan tombol Escape. Saat preview ditutup, fokus keyboard kembali ke tombol gambar QRIS.
