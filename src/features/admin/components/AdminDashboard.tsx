@@ -55,10 +55,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const {
     users: userList,
     readingLogs,
+    error: usersError,
+    isLoading: isLoadingUsers,
     searchQuery: userSearchQuery,
     setSearchQuery: setUserSearchQuery,
+    refreshUsers,
     handleExportCsv: handleExportUsersCSV,
-  } = useAdminUsersController({ showToast });
+  } = useAdminUsersController({ adminPin: adminPin || '', showToast });
 
   const {
     coupons,
@@ -149,7 +152,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           />
         )}
 
-        {activeTab === 'users' && <UsersTab users={userList} readingLogs={readingLogs} searchQuery={userSearchQuery} onSearchQueryChange={setUserSearchQuery} onExportCsv={handleExportUsersCSV} />}
+        {activeTab === 'users' && <UsersTab users={userList} readingLogs={readingLogs} error={usersError} isLoading={isLoadingUsers} searchQuery={userSearchQuery} onSearchQueryChange={setUserSearchQuery} onRefresh={() => void refreshUsers()} onExportCsv={handleExportUsersCSV} />}
 
         {activeTab === 'finance' && <FinanceTab totalRevenue={totalRevenue} successfulTransactions={successTrxs} pendingTransactions={pendingTrxs} transactions={transactions} transactionsError={transactionsError} isLoadingTransactions={isLoadingTransactions} coupons={coupons} showCouponForm={showCouponForm} newCouponCode={newCouponCode} newCouponType={newCouponType} newCouponValue={newCouponValue} onToggleCouponForm={() => setShowCouponForm(!showCouponForm)} onCouponCodeChange={setNewCouponCode} onCouponTypeChange={setNewCouponType} onCouponValueChange={setNewCouponValue} onCreateCoupon={handleCreateCoupon} onToggleCoupon={handleToggleCoupon} onDeleteCoupon={handleDeleteCoupon} onApproveTransaction={handleApproveTransaction} onRejectTransaction={handleRejectTransaction} onRetryWhatsAppNotification={handleRetryWhatsAppNotification} onRefreshTransactions={() => void refreshTransactions()} />}
 
