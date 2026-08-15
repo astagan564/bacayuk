@@ -29,6 +29,7 @@ export interface CreateTransactionRequest {
   customerName?: string;
   customerEmail?: string;
   couponCode: string | null;
+  whatsappContactId?: number;
 }
 
 export interface CreateTransactionResponse {

@@ -12,7 +12,7 @@ import {
 import { Link } from '@tanstack/react-router';
 import bacayukLogo from '@/assets/bacayuk-logo.svg';
 
-const LAST_UPDATED = '13 Agustus 2026';
+const LAST_UPDATED = '15 Agustus 2026';
 const CONTACT_EMAIL = import.meta.env.VITE_LEGAL_CONTACT_EMAIL || 'privacy@bacayuk.web.id';
 
 const sections = [
@@ -136,7 +136,11 @@ export function LegalPage() {
                   <p>Kami menyimpan ID order, buku atau paket yang dibeli, nominal, status, metode pembayaran, waktu transaksi, identitas pembeli, bukti pembayaran yang dikirim, status VIP, dan jumlah unduhan. Bukti pembayaran disimpan privat dan hanya digunakan admin untuk mencocokkan dana masuk.</p>
                 </div>
                 <div>
-                  <h3 className="text-base font-extrabold text-primary">4. Data teknis dan konten</h3>
+                  <h3 className="text-base font-extrabold text-primary">4. Kontak WhatsApp transaksi</h3>
+                  <p>Jika pengguna memilih notifikasi transaksi, kami menyimpan nomor WhatsApp, label kontak, pilihan nomor utama, waktu persetujuan atau penghentian, status verifikasi, serta salinan nomor yang dipilih pada order. Kontak dapat diubah atau dihapus dari Pengaturan Orang Tua. Pengiriman pesan pelanggan baru diaktifkan setelah template yang sesuai disetujui dan kepemilikan nomor diverifikasi.</p>
+                </div>
+                <div>
+                  <h3 className="text-base font-extrabold text-primary">5. Data teknis dan konten</h3>
                   <p>Server dan penyedia infrastruktur dapat memproses alamat IP, jenis perangkat/browser, waktu akses, serta catatan kesalahan untuk keamanan dan operasional. Materi yang dimasukkan pengelola ke Book Studio dapat diproses oleh layanan AI untuk menghasilkan atau memperbaiki buku.</p>
                 </div>
               </div>
@@ -150,6 +154,7 @@ export function LegalPage() {
                   'Menyediakan akses buku sesuai status pengguna.',
                   'Menyimpan progres dan preferensi membaca.',
                   'Memproses pembayaran dan menerbitkan lisensi unduhan.',
+                  'Menyimpan pilihan kontak dan persetujuan notifikasi transaksi.',
                   'Membubuhkan identitas pembeli sebagai watermark pada file.',
                   'Mencegah penyalahgunaan, penipuan, dan akses tanpa izin.',
                   'Menangani dukungan serta permintaan hak data.',
@@ -171,6 +176,7 @@ export function LegalPage() {
                 {[
                   ['Supabase', 'Autentikasi, database, dan penyimpanan aplikasi.'],
                   ['Google dan Meta', 'Penyedia login OAuth; masing-masing memproses data sesuai kebijakannya.'],
+                  ['WhatsApp Business Platform', 'Mengirim notifikasi transaksi yang dipilih pengguna setelah kanal pelanggan diaktifkan.'],
                   ['Bank atau PJP QRIS merchant', 'Menerima pembayaran langsung dan menyediakan catatan transaksi yang diperiksa admin.'],
                   ['Google Gemini', 'Pemrosesan materi Book Studio/AI yang dikirim oleh pengelola saat fitur digunakan.'],
                   ['Vercel', 'Hosting aplikasi, jaringan, dan log operasional.'],

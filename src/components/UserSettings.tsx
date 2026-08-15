@@ -20,6 +20,7 @@ import { userSettingsStore, UserSettings } from '../utils/userSettingsStore';
 import { userAuthStore, type UserAccount } from '../utils/userAuthStore';
 import { deleteAccount, fetchAccountDataExport } from '@/features/account/api/accountPrivacyApi';
 import { clearLocalAccountData, getLocalAccountData } from '@/features/account/utils/accountLocalData';
+import { WhatsAppContactsPanel } from '@/features/account';
 import { fetchPaymentOrders } from '@/features/commerce/api/manualPaymentApi';
 import {
   ManualPaymentModal,
@@ -263,6 +264,8 @@ export const UserSettingsView: React.FC<UserSettingsProps> = ({ onBack, isNight 
               onResume={setSelectedPaymentOrder}
             />
           )}
+
+          {currentUser && <WhatsAppContactsPanel />}
 
           {currentUser && (
             <section className="rounded-3xl border-2 border-default bg-surface p-6 shadow-sm">

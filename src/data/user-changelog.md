@@ -1,3 +1,11 @@
+## Nomor WhatsApp untuk status pembelian - 2026-08-15
+
+### Nomor dapat disimpan dan dipilih saat checkout
+- Saat memulai pembelian, pengguna dapat memilih nomor WhatsApp yang sudah tersimpan atau menambahkan nomor baru setelah menyetujui penggunaan untuk notifikasi transaksi.
+- Satu akun dapat menyimpan beberapa nomor dan menentukan nomor utama.
+- Nomor dapat ditambah, diubah, dijadikan utama, atau dihapus melalui **Pengaturan Orang Tua**.
+- Pengiriman pesan otomatis kepada pembeli belum aktif sampai template pelanggan disetujui Meta dan nomor selesai diverifikasi.
+
 ## Pembayaran dapat dilanjutkan kembali - 2026-08-15
 
 ### Pesanan tidak hilang setelah halaman ditutup

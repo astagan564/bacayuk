@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased] - 2026-08-11
 
 ### Added
+- **User-managed WhatsApp contacts**: OAuth users can save multiple Indonesian WhatsApp numbers, choose a default, select or add a number during checkout with explicit transaction-notification consent, and edit or delete contacts in Parent Settings. Orders retain the selected contact snapshot; customer message delivery remains disabled until approved Meta templates and number verification are configured.
 - **Manual payment launch flow**: Added authenticated book/VIP orders, bank-transfer or merchant-QRIS instructions, private proof uploads, pending-review status, and Admin approval/rejection that issues the existing server-side entitlement.
 - **QRIS payment choices**: Added dedicated QRIS assets for Rp15.000 and Rp25.000 book orders plus Rp100.000 VIP orders, a static QRIS fallback where customers enter promo totals manually, and bluBisnis transfer as the second payment choice.
 - **DANA sandbox callback**: Added a public Finish Notify endpoint with SNAP RSA signature verification, exact order/merchant/amount checks, idempotent entitlement issuance, and DANA provider reconciliation fields.

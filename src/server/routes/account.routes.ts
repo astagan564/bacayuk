@@ -1,6 +1,12 @@
 import type { Express, Request, Response } from 'express';
 import { getSupabaseAdminClient } from '../clients/supabaseAdminClient';
 import { AuthenticationError, requireAuthenticatedUser } from '../middleware/userAuth';
+import {
+  createWhatsAppContact,
+  deleteWhatsAppContact,
+  listWhatsAppContacts,
+  updateWhatsAppContact,
+} from '../services/whatsappContact.service';
 
 function sendAccountError(res: Response, error: unknown) {
   if (error instanceof AuthenticationError) {
@@ -25,14 +31,58 @@ async function selectRows<T>(
 }
 
 export function registerAccountRoutes(app: Express) {
+  app.get('/api/account/whatsapp-contacts', async (req, res) => {
+    try {
+      const user = await requireAuthenticatedUser(req);
+      res.json({ contacts: await listWhatsAppContacts(user.id) });
+    } catch (error) {
+      sendAccountError(res, error);
+    }
+  });
+
+  app.post('/api/account/whatsapp-contacts', async (req, res) => {
+    try {
+      const user = await requireAuthenticatedUser(req);
+      const contact = await createWhatsAppContact(user.id, req.body || {});
+      res.status(201).json({ contact });
+    } catch (error) {
+      sendAccountError(res, error);
+    }
+  });
+
+  app.put('/api/account/whatsapp-contacts/:contactId', async (req, res) => {
+    try {
+      const user = await requireAuthenticatedUser(req);
+      const contactId = Number(req.params.contactId);
+      if (!Number.isSafeInteger(contactId) || contactId <= 0) throw new Error('ID nomor WhatsApp tidak valid.');
+      const contact = await updateWhatsAppContact(user.id, contactId, req.body || {});
+      res.json({ contact });
+    } catch (error) {
+      sendAccountError(res, error);
+    }
+  });
+
+  app.delete('/api/account/whatsapp-contacts/:contactId', async (req, res) => {
+    try {
+      const user = await requireAuthenticatedUser(req);
+      const contactId = Number(req.params.contactId);
+      if (!Number.isSafeInteger(contactId) || contactId <= 0) throw new Error('ID nomor WhatsApp tidak valid.');
+      await deleteWhatsAppContact(user.id, contactId);
+      res.json({ deleted: true });
+    } catch (error) {
+      sendAccountError(res, error);
+    }
+  });
+
   app.get('/api/account/export', async (req, res) => {
     try {
       const user = await requireAuthenticatedUser(req);
       const supabase = getSupabaseAdminClient();
       const email = user.email || '';
 
-      const [profiles, readingActivity, paymentOrders, entitlements, legacyTransactions, legacyReceipts] = await Promise.all([
+      const [profiles, whatsappContacts, readingActivity, paymentOrders, entitlements, legacyTransactions, legacyReceipts] = await Promise.all([
         selectRows(supabase.from('users').select('id, name, email, phone, login_method, created_at').eq('id', user.id)),
+        selectRows(supabase.from('user_whatsapp_contacts').select('phone_e164, label, is_default, order_notifications_enabled, consented_at, opted_out_at, verified_at, created_at, updated_at').eq('user_id', user.id)),
         selectRows(supabase.from('user_reading_activities').select('story_id, story_title, last_page_read, total_pages, is_completed, updated_at').eq('user_id', user.id)),
         selectRows(supabase.from('payment_orders').select('order_id, purchase_type, story_id, story_title, amount, charged_amount, customer_fee_amount, discount_amount, coupon_code, status, payment_method, paid_at, created_at').eq('user_id', user.id)),
         selectRows(supabase.from('user_entitlements').select('entitlement_type, story_id, story_title, source_order_id, payment_method, amount, starts_at, expires_at, token_expires_at, download_count, download_limit, created_at').eq('user_id', user.id)),
@@ -51,6 +101,7 @@ export function registerAccountRoutes(app: Express) {
           profile: profiles[0] || null,
         },
         readingActivity,
+        communicationPreferences: { whatsappContacts },
         commerce: { paymentOrders, entitlements, legacyTransactions, legacyReceipts },
       });
     } catch (error) {

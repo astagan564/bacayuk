@@ -46,6 +46,47 @@ export function ManualPaymentCheckoutPanel({ controller }: { controller: ManualP
         </label>
       </div>
 
+      <fieldset className="grid gap-3 rounded-xl border border-brand-green/25 bg-brand-green/10 p-4">
+        <legend className="px-1 text-xs font-extrabold text-brand-green">WhatsApp untuk status pesanan</legend>
+        {controller.whatsappContacts.length > 0 && (
+          <label className="grid gap-1.5 text-xs font-bold text-secondary">
+            Pilih nomor tersimpan
+            <select
+              value={controller.selectedWhatsAppContactId || ''}
+              disabled={controller.isProcessing || controller.isLoadingWhatsAppContacts}
+              onChange={(event) => controller.setSelectedWhatsAppContactId(event.target.value ? Number(event.target.value) : null)}
+              className="reader-field rounded-xl px-3 py-2.5 text-sm"
+            >
+              {controller.whatsappContacts.filter((contact) => contact.orderNotificationsEnabled).map((contact) => (
+                <option key={contact.id} value={contact.id}>{contact.label} · +{contact.phoneE164}{contact.isDefault ? ' (utama)' : ''}</option>
+              ))}
+              <option value="">+ Tambah nomor baru</option>
+            </select>
+          </label>
+        )}
+        {!controller.selectedWhatsAppContactId && (
+          <>
+            <label className="grid gap-1.5 text-xs font-bold text-secondary">
+              Nomor WhatsApp
+              <input
+                value={controller.newWhatsAppNumber}
+                inputMode="tel"
+                autoComplete="tel"
+                disabled={controller.isProcessing}
+                onChange={(event) => controller.setNewWhatsAppNumber(event.target.value)}
+                placeholder="081234567890"
+                className="reader-field rounded-xl px-3 py-2.5 text-sm"
+              />
+            </label>
+            <label className="flex items-start gap-2 text-xs leading-5 text-secondary">
+              <input type="checkbox" checked={controller.whatsappConsent} disabled={controller.isProcessing} onChange={(event) => controller.setWhatsappConsent(event.target.checked)} className="mt-1" />
+              <span>Saya setuju menerima status pesanan BacaYuk melalui WhatsApp. Nomor ini akan tersimpan dan dapat diubah atau dihapus melalui Pengaturan Orang Tua.</span>
+            </label>
+          </>
+        )}
+        <p className="text-[10px] leading-5 text-secondary">Verifikasi nomor dan notifikasi customer akan diaktifkan setelah template customer dari Meta tersedia.</p>
+      </fieldset>
+
       <fieldset className="grid gap-3">
         <legend className="mb-1 text-xs font-extrabold text-secondary">Pilih metode pembayaran</legend>
         <div className="grid gap-3 sm:grid-cols-2">
@@ -113,7 +154,7 @@ export function ManualPaymentCheckoutPanel({ controller }: { controller: ManualP
       <button
         type="button"
         onClick={controller.startOrder}
-        disabled={controller.isProcessing || controller.isApplyingCoupon}
+        disabled={controller.isProcessing || controller.isApplyingCoupon || controller.isLoadingWhatsAppContacts}
         className="btn-primary flex w-full items-center justify-center gap-2 px-5 py-3.5 text-sm disabled:opacity-60"
       >
         {controller.isProcessing ? (

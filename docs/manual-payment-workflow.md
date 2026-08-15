@@ -13,6 +13,18 @@ Setelah login kembali, user dapat membuka **Pengaturan Orang Tua → Pembayaran 
 
 Endpoint `GET /api/manual-payment-orders` tidak menerima ID user dari browser. Identitas user selalu diambil dari bearer token Supabase, lalu query dibatasi dengan `user_id` tersebut.
 
+## Kontak WhatsApp pembeli
+
+Login Google dan Facebook tidak selalu memberikan nomor telepon. Karena itu, saat memulai pembelian user memilih nomor WhatsApp yang sudah tersimpan atau menambahkan nomor baru dengan persetujuan notifikasi transaksi yang eksplisit.
+
+- Satu akun dapat menyimpan beberapa nomor dan menetapkan satu nomor utama.
+- Nomor dapat ditambah, diubah, dijadikan utama, atau dihapus melalui **Pengaturan Orang Tua → Nomor WhatsApp**.
+- Endpoint kontak mengambil identitas user dari bearer token; browser tidak dapat menentukan `user_id` milik akun lain.
+- Setiap order menyimpan ID kontak dan salinan nomor yang dipilih saat checkout. Perubahan nomor berikutnya tidak diam-diam mengalihkan tujuan order lama.
+- Penghapusan akun membersihkan nomor dari catatan transaksi yang dipertahankan, sedangkan penghapusan satu kontak tidak menghapus riwayat order.
+
+Fondasi kontak dan persetujuan ini belum berarti notifikasi pelanggan sudah dikirim. Pengiriman baru boleh diaktifkan setelah template Utility pelanggan di WhatsApp Manager disetujui dan alur verifikasi kepemilikan nomor selesai. Template Admin tetap merupakan alur terpisah.
+
 ## Aturan kedaluwarsa
 
 Order `pending_payment` dan `rejected` dapat kedaluwarsa sesuai `expires_at`. Setelah bukti berhasil dikirim dan status menjadi `pending_review`, tenggat pembayaran tidak lagi membatalkan order karena dana sudah diklaim telah dikirim dan perlu keputusan Admin.
