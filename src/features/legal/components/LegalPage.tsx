@@ -94,7 +94,7 @@ export function LegalPage() {
               <SectionTitle eyebrow="Versi singkat">Hal terpenting untuk diketahui</SectionTitle>
               <div className="grid gap-4 md:grid-cols-3">
                 {[
-                  [UserRoundCheck, 'Akun orang tua', 'Login menggunakan Google atau Facebook. Anak tidak perlu membuat akun media sosial.'],
+                  [UserRoundCheck, 'Akun orang tua', 'Login menggunakan email, Google, atau Facebook. Anak tidak perlu membuat akun media sosial.'],
                   [Database, 'Data seperlunya', 'Kami menggunakan identitas dasar, aktivitas membaca, dan catatan transaksi untuk menjalankan layanan.'],
                   [Trash2, 'Bisa diminta hapus', 'Orang tua dapat meminta penghapusan akun dan data, dengan pengecualian catatan yang wajib disimpan menurut hukum.'],
                 ].map(([Icon, title, text]) => {
@@ -125,7 +125,7 @@ export function LegalPage() {
               <div className="space-y-5">
                 <div>
                   <h3 className="text-base font-extrabold text-primary">1. Data akun orang tua</h3>
-                  <p>Ketika login melalui Google atau Facebook, kami menerima pengenal akun, nama, alamat email, penyedia login, dan—jika tersedia—foto profil dasar. BacaYuk tidak menerima kata sandi Google atau Facebook.</p>
+                  <p>Ketika memakai email, kami memproses nama orang tua dan alamat email, sementara Supabase Auth memverifikasi kata sandi. Untuk login Google atau Facebook, kami menerima pengenal akun, nama, alamat email, penyedia login, dan—jika tersedia—foto profil dasar. BacaYuk tidak menerima kata sandi Google atau Facebook dan tidak menyimpan kata sandi email dalam bentuk teks biasa.</p>
                 </div>
                 <div>
                   <h3 className="text-base font-extrabold text-primary">2. Aktivitas membaca</h3>
@@ -166,7 +166,7 @@ export function LegalPage() {
                   </li>
                 ))}
               </ul>
-              <p className="mt-5 text-sm">Kami tidak menjual data pribadi pengguna dan tidak menggunakan data login Google atau Facebook untuk periklanan berbasis profil.</p>
+              <p className="mt-5 text-sm">Kami tidak menjual data pribadi pengguna dan tidak menggunakan data login email, Google, atau Facebook untuk periklanan berbasis profil.</p>
             </section>
 
             <section id="mitra" className="scroll-mt-24 book-panel rounded-3xl p-5 sm:p-8">
@@ -174,7 +174,7 @@ export function LegalPage() {
               <p>Kami membagikan data hanya sejauh diperlukan agar fungsi terkait berjalan:</p>
               <div className="mt-4 divide-y divide-default rounded-2xl border border-default">
                 {[
-                  ['Supabase', 'Autentikasi, database, dan penyimpanan aplikasi.'],
+                  ['Supabase', 'Autentikasi email dan sosial, database, serta penyimpanan aplikasi.'],
                   ['Google dan Meta', 'Penyedia login OAuth; masing-masing memproses data sesuai kebijakannya.'],
                   ['WhatsApp Business Platform', 'Mengirim notifikasi transaksi yang dipilih pengguna setelah kanal pelanggan diaktifkan.'],
                   ['Bank atau PJP QRIS merchant', 'Menerima pembayaran langsung dan menyediakan catatan transaksi yang diperiksa admin.'],

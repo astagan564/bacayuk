@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased] - 2026-08-11
 
 ### Added
+- **Email and password authentication**: Parents can create an account and sign in with email and password through Supabase Auth while Google and Facebook OAuth remain available.
 - **Social sharing preview**: Added the 1200×630 BacaYuk Open Graph image with absolute Open Graph, Twitter Card, and structured-data metadata for consistent link previews.
 - **Crawler discovery files**: Added a production `sitemap.xml` for public BacaYuk pages and a `robots.txt` that advertises the sitemap while excluding Admin, account settings, and API routes from crawling.
 - **User-managed WhatsApp contacts**: OAuth users can save multiple Indonesian WhatsApp numbers, choose a default, select or add a number during checkout with explicit transaction-notification consent, and edit or delete contacts in Parent Settings. Orders retain the selected contact snapshot; customer message delivery remains disabled until approved Meta templates and number verification are configured.

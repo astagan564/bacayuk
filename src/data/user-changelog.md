@@ -1,3 +1,10 @@
+## Masuk dengan email - 2026-08-15
+
+### Akun orang tua kini punya pilihan tambahan
+- Orang tua dapat membuat akun dan masuk menggunakan email serta kata sandi.
+- Login Google dan Facebook tetap tersedia seperti sebelumnya.
+- Akun baru mungkin perlu dikonfirmasi melalui tautan yang dikirim ke email sebelum dapat digunakan.
+
 ## Nomor WhatsApp untuk status pembelian - 2026-08-15
 
 ### Nomor dapat disimpan dan dipilih saat checkout

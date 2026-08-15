@@ -9,6 +9,11 @@ export interface UserAccount {
   aiStoriesUsed?: number;
 }
 
+export interface EmailSignUpResult {
+  user: UserAccount | null;
+  requiresEmailConfirmation: boolean;
+}
+
 import type { User } from '@supabase/supabase-js';
 import { supabase } from './supabaseClient';
 import { paymentStore } from './paymentStore';
@@ -79,6 +84,37 @@ export const userAuthStore = {
       options: { redirectTo: window.location.origin },
     });
     if (error) throw error;
+  },
+
+  async signInWithEmail(email: string, password: string): Promise<UserAccount> {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: email.trim().toLowerCase(),
+      password,
+    });
+    if (error) throw error;
+    if (!data.user) throw new Error('Akun tidak dapat dimuat setelah login.');
+
+    authenticatedUser = accountFromAuthUser(data.user);
+    return authenticatedUser;
+  },
+
+  async signUpWithEmail(email: string, password: string, name: string): Promise<EmailSignUpResult> {
+    const { data, error } = await supabase.auth.signUp({
+      email: email.trim().toLowerCase(),
+      password,
+      options: {
+        data: { parent_name: name.trim() },
+        emailRedirectTo: window.location.origin,
+      },
+    });
+    if (error) throw error;
+
+    const user = data.user && data.session ? accountFromAuthUser(data.user) : null;
+    authenticatedUser = user;
+    return {
+      user,
+      requiresEmailConfirmation: !data.session,
+    };
   },
 
   rememberStoryAfterLogin(storyId?: string): void {
