@@ -12,7 +12,7 @@ import {
 import { Link } from '@tanstack/react-router';
 import bacayukLogo from '@/assets/bacayuk-logo.svg';
 
-const LAST_UPDATED = '13 Agustus 2026';
+const LAST_UPDATED = '16 Agustus 2026';
 const CONTACT_EMAIL = import.meta.env.VITE_LEGAL_CONTACT_EMAIL || 'privacy@bacayuk.web.id';
 
 const sections = [
@@ -113,7 +113,7 @@ export function LegalPage() {
             <section id="privacy" className="scroll-mt-24 book-panel rounded-3xl p-5 sm:p-8">
               <SectionTitle eyebrow="Kebijakan Privasi">Siapa yang mengelola data</SectionTitle>
               <p>
-                BacaYuk adalah layanan buku cerita anak interaktif yang tersedia melalui <strong className="text-primary">www.bacayuk.web.id</strong>. Dalam kebijakan ini, “BacaYuk”, “kami”, dan “layanan” merujuk pada pengelola aplikasi BacaYuk.
+                BacaYuk adalah layanan buku cerita anak interaktif yang tersedia melalui <strong className="text-primary">www.bacayuk.web.id</strong>. Dalam kebijakan ini, “BacaYuk”, “kami”, dan “layanan” merujuk pada <strong className="text-primary">M Husni Kusuma Thohari</strong> selaku pemilik dan pengelola platform BacaYuk, yang merupakan Penyelenggara Sistem Elektronik (PSE) Lingkup Privat resmi yang terdaftar di <a href="https://pse.komdigi.go.id/pse" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 font-bold text-brand-green hover:underline">Kementerian Komunikasi dan Digital (Komdigi) Republik Indonesia<ExternalLink className="h-4 w-4"/></a> dengan Nomor TDPSE <strong className="text-primary">023925.02/DJAI.PSE/08/2026</strong>.
               </p>
               <p className="mt-4">
                 Kebijakan ini berlaku untuk katalog, pembaca buku, akun orang tua, pembayaran, unduhan, serta fitur administrasi dan pembuatan buku. Dengan memakai BacaYuk, pengguna menyatakan telah membaca kebijakan ini.
@@ -181,13 +181,13 @@ export function LegalPage() {
                   </div>
                 ))}
               </div>
-              <p className="mt-4 text-sm">Data dapat diproses di lokasi tempat penyedia layanan beroperasi, dengan perlindungan kontraktual dan teknis yang tersedia dari penyedia tersebut.</p>
+              <p className="mt-4 text-sm">Data dapat diproses di lokasi tempat penyedia layanan beroperasi, pemrosesan tunduk pada ketentuan dan perlindungan yang berlaku pada hubungan BacaYuk dengan penyedia terkait.</p>
             </section>
 
             <section id="anak" className="scroll-mt-24 rounded-3xl border border-brand-gold/35 bg-brand-gold/10 p-5 sm:p-8">
               <SectionTitle eyebrow="Keluarga">Perlindungan anak</SectionTitle>
               <p>
-                BacaYuk ditujukan untuk digunakan anak dengan pendampingan orang tua atau wali. Akun, pembelian, dan permintaan data harus dilakukan oleh orang tua/wali. Kami tidak meminta anak membuat akun Google atau Facebook dan tidak bermaksud mengumpulkan data pribadi anak secara langsung.
+                BacaYuk ditujukan untuk digunakan anak dengan pendampingan orang tua atau wali. Akun, pembelian, dan permintaan data harus dilakukan oleh orang tua/wali. Orang yang membuat akun menyatakan bahwa ia orang tua/wali atau orang dewasa yang berwenang mendampingi anak yang menggunakan layanan. Kami tidak meminta anak membuat akun Google atau Facebook dan tidak meminta anak memberikan informasi identitas pribadi secara langsung seperti nama lengkap, alamat email, nomor telepon, alamat rumah, atau sekolah. Saat anak menggunakan fitur membaca melalui akun orang tua/wali, BacaYuk dapat memproses data penggunaan terbatas seperti progres membaca sesuai yang dijelaskan dalam kebijakan ini.
               </p>
               <p className="mt-4">Jangan memasukkan nama lengkap anak, alamat, sekolah, nomor kontak, atau informasi sensitif lain ke rekaman maupun fitur masukan. Jika orang tua mengetahui data anak terkirim tanpa semestinya, hubungi kami untuk pemeriksaan dan penghapusan.</p>
             </section>
@@ -223,7 +223,7 @@ export function LegalPage() {
                   ))}
                 </ol>
                 <div className="mt-6 rounded-2xl bg-surface p-4 text-sm">
-                  <strong className="text-primary">Data pada perangkat:</strong> gunakan tombol “Bersihkan data perangkat” di Pengaturan Orang Tua untuk menghapus preferensi, bookmark, progres lokal, cache, dan rekaman suara. Menghapus koneksi BacaYuk dari Google/Facebook tidak otomatis menghapus data yang tersimpan di BacaYuk.
+                  <strong className="text-primary">Data pada perangkat:</strong> gunakan tombol “Bersihkan data perangkat” di Pengaturan Orang Tua untuk menghapus preferensi, bookmark, progres lokal, cache, dan rekaman suara.<br></br> <strong className="font-bold text-primary"><span className="bg-brand-rose px-1 rounded">Menghapus koneksi BacaYuk dari Google/Facebook tidak otomatis menghapus data yang tersimpan di BacaYuk.</span></strong> 
                 </div>
               </div>
             </section>
@@ -232,7 +232,7 @@ export function LegalPage() {
               <SectionTitle eyebrow="Ketentuan Layanan">Aturan penggunaan BacaYuk</SectionTitle>
               <div className="space-y-5">
                 <div><h3 className="text-base font-extrabold text-primary">Akun dan pengawasan</h3><p>Orang tua/wali bertanggung jawab menjaga akses akun dan mendampingi penggunaan oleh anak. Pengguna wajib memberikan informasi yang benar dan tidak menyalahgunakan akun orang lain.</p></div>
-                <div><h3 className="text-base font-extrabold text-primary">Hak atas konten</h3><p>Buku, ilustrasi, audio, merek, dan materi BacaYuk dilindungi hak kekayaan intelektual. Akses diberikan untuk penggunaan pribadi dan keluarga, bukan untuk dijual kembali, didistribusikan massal, diunggah ulang, atau digunakan sebagai bahan pelatihan sistem lain tanpa izin tertulis.</p></div>
+                <div><h3 className="text-base font-extrabold text-primary">Hak atas konten</h3><p>Buku, ilustrasi, audio, merek, dan materi BacaYuk dilindungi hak kekayaan intelektual. Pembelian tidak mengalihkan hak cipta atau kepemilikan atas buku maupun aset BacaYuk. Akses diberikan untuk penggunaan pribadi dan keluarga, bukan untuk dijual kembali, didistribusikan massal, diunggah ulang, atau digunakan sebagai bahan pelatihan sistem lain tanpa izin tertulis.</p></div>
                 <div><h3 className="text-base font-extrabold text-primary">Ketersediaan layanan</h3><p>Kami berupaya menjaga layanan tetap tersedia, tetapi tidak menjamin tanpa gangguan. Fitur dapat diperbaiki, diganti, dibatasi, atau dihentikan untuk keamanan, kepatuhan, dan pengembangan produk.</p></div>
                 <div><h3 className="text-base font-extrabold text-primary">Penggunaan yang dilarang</h3><p>Pengguna dilarang membobol sistem, melewati pembatasan akses, memalsukan pembayaran, menghapus watermark, menyalin konten secara tidak sah, mengirim materi berbahaya, atau mengganggu pengguna dan layanan lain.</p></div>
                 <div><h3 className="text-base font-extrabold text-primary">Batas tanggung jawab</h3><p>BacaYuk merupakan layanan literasi pendamping dan bukan pengganti nasihat pendidikan, medis, atau profesional. Sepanjang diizinkan hukum, tanggung jawab kami dibatasi pada kerugian langsung yang terbukti terkait layanan.</p></div>
@@ -243,7 +243,7 @@ export function LegalPage() {
               <SectionTitle eyebrow="Transaksi">Pembayaran, VIP, dan unduhan</SectionTitle>
               <ul className="space-y-3 text-sm">
                 <li><strong className="text-primary">Pembelian buku:</strong> membuka lisensi unduhan untuk buku yang dipilih sesuai harga yang tampil saat checkout.</li>
-                <li><strong className="text-primary">VIP:</strong> membuka unduhan semua buku selama masa langganan aktif dan dapat mencakup fitur tambahan yang ditandai tersedia.</li>
+                <li><strong className="text-primary">VIP:</strong> membuka unduhan semua buku selama masa langganan aktif dan dapat mencakup fitur tambahan yang ditandai tersedia. VIP tidak diperpanjang secara otomatis kecuali dinyatakan secara jelas saat checkout.</li>
                 <li><strong className="text-primary">Konfirmasi:</strong> akses diterbitkan setelah admin mencocokkan bukti dengan dana yang benar-benar masuk ke rekening atau aplikasi merchant.</li>
                 <li><strong className="text-primary">Unduhan:</strong> file bersifat pribadi, dapat diberi watermark identitas pembeli, serta tunduk pada batas waktu/jumlah unduhan yang ditampilkan.</li>
                 <li><strong className="text-primary">Pengembalian dana:</strong> permintaan ditinjau berdasarkan status transaksi, apakah akses/file telah digunakan, gangguan layanan yang terbukti, serta hukum perlindungan konsumen yang berlaku.</li>
@@ -265,7 +265,7 @@ export function LegalPage() {
             </section>
 
             <div className="flex flex-col gap-3 rounded-2xl border border-default p-4 text-xs sm:flex-row sm:items-center sm:justify-between">
-              <span>Dokumen ini dapat diperbarui ketika layanan atau ketentuan hukum berubah.</span>
+              <span>Dokumen ini dapat diperbarui ketika layanan atau ketentuan hukum berubah. Perubahan material akan diberitahukan melalui layanan atau sarana kontak yang tersedia bila diperlukan.</span>
               <a href="https://www.bacayuk.web.id/legal" className="inline-flex items-center gap-1 font-bold text-brand-green hover:underline">
                 www.bacayuk.web.id/legal <ExternalLink className="h-3.5 w-3.5" />
               </a>
