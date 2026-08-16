@@ -25,7 +25,13 @@ export function usePurchaseFlowController({
   const [state, setState] = useState<PurchaseFlowState>({ kind: 'idle' });
 
   const closeFlow = useCallback(() => setState({ kind: 'idle' }), []);
-  const offerVip = useCallback(() => setState({ kind: 'vip_offer' }), []);
+  const offerVip = useCallback(() => {
+    if (userAuthStore.isVip()) {
+      showToast('Keanggotaan VIP keluarga Anda masih aktif.');
+      return;
+    }
+    setState({ kind: 'vip_offer' });
+  }, [showToast]);
   const startVipSubscription = useCallback(() => {
     if (!userAuthStore.getUser()) {
       showToast('Silakan login terlebih dahulu untuk berlangganan VIP.');

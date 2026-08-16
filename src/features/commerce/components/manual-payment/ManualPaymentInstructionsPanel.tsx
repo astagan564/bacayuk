@@ -1,5 +1,7 @@
-import { Building2, CheckCircle2, Clock3, QrCode, RefreshCw, Upload } from 'lucide-react';
+import { useCallback, useRef, useState } from 'react';
+import { Building2, CheckCircle2, Clock3, Maximize2, QrCode, RefreshCw, Upload } from 'lucide-react';
 import type { ManualPaymentController } from '@/features/commerce/hooks/useManualPaymentController';
+import { QrisImageLightbox } from './QrisImageLightbox';
 
 function formatExpiry(value: string | null) {
   if (!value) return '-';
@@ -10,6 +12,12 @@ function formatExpiry(value: string | null) {
 }
 
 export function ManualPaymentInstructionsPanel({ controller }: { controller: ManualPaymentController }) {
+  const [isQrisPreviewOpen, setIsQrisPreviewOpen] = useState(false);
+  const qrisTriggerRef = useRef<HTMLButtonElement>(null);
+  const closeQrisPreview = useCallback(() => {
+    setIsQrisPreviewOpen(false);
+    window.requestAnimationFrame(() => qrisTriggerRef.current?.focus());
+  }, []);
   const order = controller.order;
   const instructions = controller.instructions;
   if (!order || !instructions) return null;
@@ -66,7 +74,7 @@ export function ManualPaymentInstructionsPanel({ controller }: { controller: Man
           className="btn-secondary flex w-full items-center justify-center gap-2 px-5 py-3.5 text-sm disabled:opacity-60"
         >
           <RefreshCw className={`h-5 w-5 ${controller.isProcessing ? 'animate-spin' : ''}`} />
-          <span>{controller.isProcessing ? 'Memeriksa statusâ€¦' : 'Periksa status sekarang'}</span>
+          <span>{controller.isProcessing ? 'Memeriksa status…' : 'Periksa status sekarang'}</span>
         </button>
         <p className="text-[11px] leading-5 text-secondary">Status juga diperbarui otomatis setiap 10 detik.</p>
       </div>
@@ -97,22 +105,40 @@ export function ManualPaymentInstructionsPanel({ controller }: { controller: Man
 
       <div className="grid gap-3 sm:grid-cols-2">
         {instructions.qrisImageUrl && (
-          <button
-            type="button"
-            onClick={() => controller.setPaymentMethod(order.provider === 'dana' ? 'dana_qris' : 'manual_qris')}
-            aria-pressed={qrisSelected}
+          <div
             className={`rounded-xl border p-4 text-left ${qrisSelected ? 'border-brand-blue bg-brand-blue/10' : 'border-default bg-surface'}`}
           >
-            <QrCode className="mb-2 h-5 w-5 text-brand-blue" />
-            <p className="text-[10px] font-extrabold uppercase tracking-wider text-brand-blue">QRIS</p>
-            <p className="text-sm font-extrabold">
-              {instructions.qrisAmountMode === 'manual' ? 'QRIS isi nominal' : `QRIS Rp ${order.amount.toLocaleString('id-ID')}`}
-            </p>
-            <img
-              src={instructions.qrisImageUrl}
-              alt={`QRIS BacaYuk senilai Rp ${order.amount.toLocaleString('id-ID')}`}
-              className="mx-auto mt-3 max-h-64 rounded-lg bg-white p-2"
-            />
+            <button
+              type="button"
+              onClick={() => controller.setPaymentMethod(order.provider === 'dana' ? 'dana_qris' : 'manual_qris')}
+              aria-pressed={qrisSelected}
+              className="w-full text-left"
+            >
+              <QrCode className="mb-2 h-5 w-5 text-brand-blue" />
+              <p className="text-[10px] font-extrabold uppercase tracking-wider text-brand-blue">QRIS</p>
+              <p className="text-sm font-extrabold">
+                {instructions.qrisAmountMode === 'manual' ? 'QRIS isi nominal' : `QRIS Rp ${order.amount.toLocaleString('id-ID')}`}
+              </p>
+            </button>
+            <button
+              ref={qrisTriggerRef}
+              type="button"
+              onClick={() => {
+                controller.setPaymentMethod(order.provider === 'dana' ? 'dana_qris' : 'manual_qris');
+                setIsQrisPreviewOpen(true);
+              }}
+              className="group relative mx-auto mt-3 block overflow-hidden rounded-lg bg-white p-2 focus:outline-none focus:ring-4 focus:ring-brand-blue/40"
+              aria-label="Perbesar QRIS ke layar penuh"
+            >
+              <img
+                src={instructions.qrisImageUrl}
+                alt={`QRIS BacaYuk senilai Rp ${order.amount.toLocaleString('id-ID')}`}
+                className="max-h-64 transition-transform group-hover:scale-[1.02]"
+              />
+              <span className="absolute bottom-3 right-3 inline-flex items-center gap-1 rounded-full bg-slate-950/85 px-2.5 py-1.5 text-[10px] font-bold text-white shadow-lg">
+                <Maximize2 className="h-3.5 w-3.5" /> Perbesar
+              </span>
+            </button>
             <p className="mt-2 text-[11px] font-semibold text-secondary">
               {instructions.qrisAutomaticVerification
                 ? 'Nominal sudah terpasang dan pembayaran akan dikonfirmasi otomatis.'
@@ -120,7 +146,7 @@ export function ManualPaymentInstructionsPanel({ controller }: { controller: Man
                   ? <>Masukkan nominal tepat <strong>Rp {order.amount.toLocaleString('id-ID')}</strong> di aplikasi pembayaran.</>
                   : 'Nominal sudah terpasang. Jangan ubah jumlah pembayaran.'}
             </p>
-          </button>
+          </div>
         )}
 
         {instructions.bankTransfer && (
@@ -206,6 +232,13 @@ export function ManualPaymentInstructionsPanel({ controller }: { controller: Man
           ? 'Tidak perlu mengunggah bukti. Halaman ini memeriksa konfirmasi pembayaran DANA secara otomatis.'
           : 'Bukti hanya membantu pencocokan. Admin tetap memeriksa mutasi rekening sebelum membuka akses.'}
       </p>
+      {isQrisPreviewOpen && instructions.qrisImageUrl && (
+        <QrisImageLightbox
+          imageUrl={instructions.qrisImageUrl}
+          amount={order.amount}
+          onClose={closeQrisPreview}
+        />
+      )}
     </div>
   );
 }

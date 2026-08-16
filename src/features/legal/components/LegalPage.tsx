@@ -94,7 +94,7 @@ export function LegalPage() {
               <SectionTitle eyebrow="Versi singkat">Hal terpenting untuk diketahui</SectionTitle>
               <div className="grid gap-4 md:grid-cols-3">
                 {[
-                  [UserRoundCheck, 'Akun orang tua', 'Login menggunakan Google atau Facebook. Anak tidak perlu membuat akun media sosial.'],
+                  [UserRoundCheck, 'Akun orang tua', 'Login menggunakan email, Google, atau Facebook. Anak tidak perlu membuat akun media sosial.'],
                   [Database, 'Data seperlunya', 'Kami menggunakan identitas dasar, aktivitas membaca, dan catatan transaksi untuk menjalankan layanan.'],
                   [Trash2, 'Bisa diminta hapus', 'Orang tua dapat meminta penghapusan akun dan data, dengan pengecualian catatan yang wajib disimpan menurut hukum.'],
                 ].map(([Icon, title, text]) => {
@@ -125,7 +125,7 @@ export function LegalPage() {
               <div className="space-y-5">
                 <div>
                   <h3 className="text-base font-extrabold text-primary">1. Data akun orang tua</h3>
-                  <p>Ketika login melalui Google atau Facebook, kami menerima pengenal akun, nama, alamat email, penyedia login, dan—jika tersedia—foto profil dasar. BacaYuk tidak menerima kata sandi Google atau Facebook.</p>
+                  <p>Ketika memakai email, kami memproses nama orang tua dan alamat email, sementara Supabase Auth memverifikasi kata sandi. Untuk login Google atau Facebook, kami menerima pengenal akun, nama, alamat email, penyedia login, dan—jika tersedia—foto profil dasar. BacaYuk tidak menerima kata sandi Google atau Facebook dan tidak menyimpan kata sandi email dalam bentuk teks biasa.</p>
                 </div>
                 <div>
                   <h3 className="text-base font-extrabold text-primary">2. Aktivitas membaca</h3>
@@ -136,7 +136,11 @@ export function LegalPage() {
                   <p>Kami menyimpan ID order, buku atau paket yang dibeli, nominal, status, metode pembayaran, waktu transaksi, identitas pembeli, bukti pembayaran yang dikirim, status VIP, dan jumlah unduhan. Bukti pembayaran disimpan privat dan hanya digunakan admin untuk mencocokkan dana masuk.</p>
                 </div>
                 <div>
-                  <h3 className="text-base font-extrabold text-primary">4. Data teknis dan konten</h3>
+                  <h3 className="text-base font-extrabold text-primary">4. Kontak WhatsApp transaksi</h3>
+                  <p>Jika pengguna memilih notifikasi transaksi, kami menyimpan nomor WhatsApp, label kontak, pilihan nomor utama, waktu persetujuan atau penghentian, status verifikasi, serta salinan nomor yang dipilih pada order. Kontak dapat diubah atau dihapus dari Pengaturan Orang Tua. Pengiriman pesan pelanggan baru diaktifkan setelah template yang sesuai disetujui dan kepemilikan nomor diverifikasi.</p>
+                </div>
+                <div>
+                  <h3 className="text-base font-extrabold text-primary">5. Data teknis dan konten</h3>
                   <p>Server dan penyedia infrastruktur dapat memproses alamat IP, jenis perangkat/browser, waktu akses, serta catatan kesalahan untuk keamanan dan operasional. Materi yang dimasukkan pengelola ke Book Studio dapat diproses oleh layanan AI untuk menghasilkan atau memperbaiki buku.</p>
                 </div>
               </div>
@@ -150,6 +154,7 @@ export function LegalPage() {
                   'Menyediakan akses buku sesuai status pengguna.',
                   'Menyimpan progres dan preferensi membaca.',
                   'Memproses pembayaran dan menerbitkan lisensi unduhan.',
+                  'Menyimpan pilihan kontak dan persetujuan notifikasi transaksi.',
                   'Membubuhkan identitas pembeli sebagai watermark pada file.',
                   'Mencegah penyalahgunaan, penipuan, dan akses tanpa izin.',
                   'Menangani dukungan serta permintaan hak data.',
@@ -161,7 +166,7 @@ export function LegalPage() {
                   </li>
                 ))}
               </ul>
-              <p className="mt-5 text-sm">Kami tidak menjual data pribadi pengguna dan tidak menggunakan data login Google atau Facebook untuk periklanan berbasis profil.</p>
+              <p className="mt-5 text-sm">Kami tidak menjual data pribadi pengguna dan tidak menggunakan data login email, Google, atau Facebook untuk periklanan berbasis profil.</p>
             </section>
 
             <section id="mitra" className="scroll-mt-24 book-panel rounded-3xl p-5 sm:p-8">
@@ -169,8 +174,9 @@ export function LegalPage() {
               <p>Kami membagikan data hanya sejauh diperlukan agar fungsi terkait berjalan:</p>
               <div className="mt-4 divide-y divide-default rounded-2xl border border-default">
                 {[
-                  ['Supabase', 'Autentikasi, database, dan penyimpanan aplikasi.'],
+                  ['Supabase', 'Autentikasi email dan sosial, database, serta penyimpanan aplikasi.'],
                   ['Google dan Meta', 'Penyedia login OAuth; masing-masing memproses data sesuai kebijakannya.'],
+                  ['WhatsApp Business Platform', 'Mengirim notifikasi transaksi yang dipilih pengguna setelah kanal pelanggan diaktifkan.'],
                   ['Bank atau PJP QRIS merchant', 'Menerima pembayaran langsung dan menyediakan catatan transaksi yang diperiksa admin.'],
                   ['Google Gemini', 'Pemrosesan materi Book Studio/AI yang dikirim oleh pengelola saat fitur digunakan.'],
                   ['Vercel', 'Hosting aplikasi, jaringan, dan log operasional.'],

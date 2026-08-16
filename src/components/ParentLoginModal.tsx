@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { CheckCircle2, Gift, Lock, ShieldCheck, Sparkles, X } from 'lucide-react';
+import { CheckCircle2, Gift, Lock, Mail, ShieldCheck, Sparkles, X } from 'lucide-react';
 import { userAuthStore } from '../utils/userAuthStore';
 import type { UserAccount } from '../utils/userAuthStore';
 
@@ -12,14 +12,22 @@ interface ParentLoginModalProps {
 
 export const ParentLoginModal: React.FC<ParentLoginModalProps> = ({
   onClose,
+  onLoginSuccess,
   attemptedStoryTitle,
 }) => {
   const [submittingProvider, setSubmittingProvider] = useState<'google' | 'facebook' | null>(null);
+  const [emailMode, setEmailMode] = useState<'signin' | 'signup'>('signin');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [parentName, setParentName] = useState('');
+  const [isSubmittingEmail, setIsSubmittingEmail] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [noticeMsg, setNoticeMsg] = useState<string | null>(null);
 
   const handleSignIn = async (provider: 'google' | 'facebook') => {
     setSubmittingProvider(provider);
     setErrorMsg(null);
+    setNoticeMsg(null);
     try {
       if (provider === 'google') await userAuthStore.signInWithGoogle();
       else await userAuthStore.signInWithFacebook();
@@ -30,11 +38,72 @@ export const ParentLoginModal: React.FC<ParentLoginModalProps> = ({
     }
   };
 
-  const isSubmitting = submittingProvider !== null;
+  const handleEmailAuth = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setErrorMsg(null);
+    setNoticeMsg(null);
+
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!normalizedEmail || !password) {
+      setErrorMsg('Isi email dan kata sandi terlebih dahulu.');
+      return;
+    }
+    if (emailMode === 'signup' && parentName.trim().length < 2) {
+      setErrorMsg('Masukkan nama orang tua minimal 2 karakter.');
+      return;
+    }
+    if (emailMode === 'signup' && password.length < 8) {
+      setErrorMsg('Kata sandi baru minimal 8 karakter.');
+      return;
+    }
+
+    setIsSubmittingEmail(true);
+    try {
+      if (emailMode === 'signin') {
+        const user = await userAuthStore.signInWithEmail(normalizedEmail, password);
+        await onLoginSuccess(user);
+        return;
+      }
+
+      const result = await userAuthStore.signUpWithEmail(normalizedEmail, password, parentName);
+      if (result.user) {
+        await onLoginSuccess(result.user);
+        return;
+      }
+
+      if (result.requiresEmailConfirmation) {
+        setNoticeMsg('Periksa inbox email Anda untuk mengonfirmasi akun, lalu kembali dan masuk.');
+        setEmailMode('signin');
+        setPassword('');
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message.toLowerCase() : '';
+      if (message.includes('invalid login credentials')) {
+        setErrorMsg('Email atau kata sandi tidak cocok.');
+      } else if (message.includes('email not confirmed')) {
+        setErrorMsg('Email belum dikonfirmasi. Periksa inbox Anda terlebih dahulu.');
+      } else if (message.includes('user already registered')) {
+        setErrorMsg('Email ini sudah terdaftar. Silakan pilih Masuk.');
+      } else if (message.includes('password')) {
+        setErrorMsg('Kata sandi belum memenuhi persyaratan keamanan.');
+      } else {
+        setErrorMsg('Autentikasi email gagal. Coba lagi beberapa saat.');
+      }
+    } finally {
+      setIsSubmittingEmail(false);
+    }
+  };
+
+  const isSubmitting = submittingProvider !== null || isSubmittingEmail;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--color-overlay)] p-4 backdrop-blur-sm animate-fade-in">
-      <div className="app-modal relative flex max-h-[calc(100dvh-2rem)] w-full max-w-lg flex-col gap-6 overflow-y-auto rounded-[1.35rem] p-6 sm:p-8">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="parent-login-title"
+        className="app-modal relative flex max-h-[calc(100dvh-2rem)] w-full max-w-lg flex-col gap-6 overflow-y-auto rounded-[1.35rem] p-6 sm:p-8"
+      >
         <div className="flex items-start justify-between border-b border-default pb-3">
           <div className="flex items-center gap-3">
             <div className="shrink-0 rounded-2xl bg-brand-green p-3 font-black text-white shadow-md">
@@ -45,7 +114,7 @@ export const ParentLoginModal: React.FC<ParentLoginModalProps> = ({
                 <Gift className="h-3.5 w-3.5 text-brand-green" />
                 <span>Akses pembaca</span>
               </div>
-              <h2 className="text-xl font-black tracking-tight sm:text-2xl">Masuk akun orang tua</h2>
+              <h2 id="parent-login-title" className="text-xl font-black tracking-tight sm:text-2xl">Masuk akun orang tua</h2>
             </div>
           </div>
           <button
@@ -66,17 +135,106 @@ export const ParentLoginModal: React.FC<ParentLoginModalProps> = ({
           </div>
           <p className="font-medium leading-relaxed text-secondary">
             {attemptedStoryTitle
-              ? <>Masuk dengan Google atau Facebook untuk membuka cerita <strong>“{attemptedStoryTitle}”</strong> dan koleksi lainnya.</>
-              : 'Gunakan akun Google atau Facebook untuk melanjutkan ke koleksi BacaYuk.'}
+              ? <>Masuk dengan email, Google, atau Facebook untuk membuka cerita <strong>“{attemptedStoryTitle}”</strong> dan koleksi lainnya.</>
+              : 'Gunakan email, Google, atau Facebook untuk melanjutkan ke koleksi BacaYuk.'}
           </p>
         </div>
 
         <div className="grid grid-cols-2 gap-2 text-[11px] font-bold text-secondary">
           <div className="flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4 shrink-0 text-success" /><span>Sesi Supabase Auth</span></div>
-          <div className="flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4 shrink-0 text-success" /><span>OAuth aman</span></div>
+          <div className="flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4 shrink-0 text-success" /><span>Kredensial terlindungi</span></div>
         </div>
 
-        {errorMsg && <div className="rounded-xl border border-error/30 bg-error/10 p-3 text-xs font-bold text-error">{errorMsg}</div>}
+        {errorMsg && <div role="alert" className="rounded-xl border border-error/30 bg-error/10 p-3 text-xs font-bold text-error">{errorMsg}</div>}
+        {noticeMsg && <div role="status" className="rounded-xl border border-success/30 bg-success/10 p-3 text-xs font-bold text-success">{noticeMsg}</div>}
+
+        <div className="rounded-2xl border border-default p-4">
+          <div className="mb-4 grid grid-cols-2 rounded-xl bg-surface p-1 text-xs font-black">
+            <button
+              type="button"
+              onClick={() => { setEmailMode('signin'); setErrorMsg(null); setNoticeMsg(null); }}
+              disabled={isSubmitting}
+              className={`rounded-lg px-3 py-2 transition-colors ${emailMode === 'signin' ? 'bg-card text-primary shadow-sm' : 'text-secondary'}`}
+            >
+              Masuk
+            </button>
+            <button
+              type="button"
+              onClick={() => { setEmailMode('signup'); setErrorMsg(null); setNoticeMsg(null); }}
+              disabled={isSubmitting}
+              className={`rounded-lg px-3 py-2 transition-colors ${emailMode === 'signup' ? 'bg-card text-primary shadow-sm' : 'text-secondary'}`}
+            >
+              Daftar akun
+            </button>
+          </div>
+
+          <form className="space-y-3" onSubmit={(event) => void handleEmailAuth(event)}>
+            {emailMode === 'signup' && (
+              <div>
+                <label htmlFor="parent-name" className="mb-1 block text-xs font-bold text-primary">Nama orang tua</label>
+                <input
+                  id="parent-name"
+                  type="text"
+                  autoComplete="name"
+                  value={parentName}
+                  onChange={(event) => setParentName(event.target.value)}
+                  disabled={isSubmitting}
+                  required
+                  minLength={2}
+                  className="reader-field w-full rounded-xl px-3.5 py-3 text-sm outline-none focus:border-brand-green"
+                  placeholder="Nama orang tua"
+                />
+              </div>
+            )}
+            <div>
+              <label htmlFor="login-email" className="mb-1 block text-xs font-bold text-primary">Email</label>
+              <input
+                id="login-email"
+                type="email"
+                inputMode="email"
+                autoComplete="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                disabled={isSubmitting}
+                required
+                className="reader-field w-full rounded-xl px-3.5 py-3 text-sm outline-none focus:border-brand-green"
+                placeholder="orangtua@email.com"
+              />
+            </div>
+            <div>
+              <label htmlFor="login-password" className="mb-1 block text-xs font-bold text-primary">Kata sandi</label>
+              <input
+                id="login-password"
+                type="password"
+                autoComplete={emailMode === 'signup' ? 'new-password' : 'current-password'}
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                disabled={isSubmitting}
+                required
+                minLength={emailMode === 'signup' ? 8 : undefined}
+                className="reader-field w-full rounded-xl px-3.5 py-3 text-sm outline-none focus:border-brand-green"
+                placeholder={emailMode === 'signup' ? 'Minimal 8 karakter' : 'Masukkan kata sandi'}
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-brand-green px-4 py-3 text-xs font-black text-white shadow-sm transition-transform hover:scale-[1.01] disabled:opacity-50"
+            >
+              {isSubmittingEmail ? (
+                <><div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" /><span>Memproses…</span></>
+              ) : (
+                <><Mail className="h-4 w-4" /><span>{emailMode === 'signin' ? 'Masuk dengan email' : 'Buat akun dengan email'}</span></>
+              )}
+            </button>
+          </form>
+        </div>
+
+        <div className="flex items-center gap-3 text-[10px] font-extrabold uppercase tracking-wider text-muted" aria-hidden="true">
+          <span className="h-px flex-1 bg-[var(--border-default)]" />
+          <span>atau gunakan</span>
+          <span className="h-px flex-1 bg-[var(--border-default)]" />
+        </div>
 
         <button
           type="button"
@@ -119,7 +277,7 @@ export const ParentLoginModal: React.FC<ParentLoginModalProps> = ({
 
         <div className="reader-soft-panel flex items-center gap-2 rounded-xl p-3 text-[11px] text-secondary">
           <ShieldCheck className="h-4 w-4 shrink-0 text-brand-green" />
-          <span>Login diverifikasi melalui penyedia OAuth dan Supabase Auth.</span>
+          <span>Email, kata sandi, dan login sosial diverifikasi melalui Supabase Auth.</span>
         </div>
         <p className="text-center text-[10px] leading-5 text-muted">
           Dengan melanjutkan, Anda menyetujui <a href="/legal#terms" className="font-bold text-brand-green underline">Ketentuan Layanan</a> dan telah membaca <a href="/legal#privacy" className="font-bold text-brand-green underline">Kebijakan Privasi</a>.

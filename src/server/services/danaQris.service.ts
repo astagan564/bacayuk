@@ -3,6 +3,7 @@ import type { User } from '@supabase/supabase-js';
 import QRCode from 'qrcode';
 import { getSupabaseAdminClient } from '../clients/supabaseAdminClient';
 import { resolveTransactionRequest } from './payment.service';
+import { resolveWhatsAppContactForOrder } from './whatsappContact.service';
 
 const DANA_NOTIFY_PATH = '/api/payments/dana/notify';
 const DANA_GENERATE_PATH = '/v1.0/qr/qr-mpm-generate.htm';
@@ -57,6 +58,8 @@ export interface DanaPaymentOrderRow {
   paid_at: string | null;
   created_at: string;
   updated_at: string;
+  whatsapp_contact_id: number | null;
+  customer_whatsapp: string | null;
 }
 
 export interface DanaFinishNotifyBody {
@@ -291,6 +294,7 @@ async function requestDanaQris(options: {
 
 export async function createDanaQrisOrder(user: User, body: Record<string, unknown>) {
   const resolved = await resolveTransactionRequest(body, user);
+  const whatsappContact = await resolveWhatsAppContactForOrder(user.id, body.whatsappContactId);
   const supabase = getSupabaseAdminClient();
   const now = new Date();
   const { data: existing, error: existingError } = await supabase
@@ -307,7 +311,16 @@ export async function createDanaQrisOrder(user: User, body: Record<string, unkno
     .limit(1)
     .maybeSingle();
   if (existingError) throw new Error(`Pesanan QRIS aktif belum dapat diperiksa: ${existingError.message}`);
-  const existingOrder = existing as DanaPaymentOrderRow | null;
+  let existingOrder = existing as DanaPaymentOrderRow | null;
+  if (existingOrder && existingOrder.whatsapp_contact_id !== whatsappContact.id) {
+    const { data: updated, error: updateError } = await supabase.from('payment_orders').update({
+      whatsapp_contact_id: whatsappContact.id,
+      customer_whatsapp: whatsappContact.phoneE164,
+      updated_at: new Date().toISOString(),
+    }).eq('order_id', existingOrder.order_id).eq('user_id', user.id).select('*').single();
+    if (updateError) throw new Error(`Nomor WhatsApp QRIS belum dapat diperbarui: ${updateError.message}`);
+    existingOrder = updated as DanaPaymentOrderRow;
+  }
   if (existingOrder?.provider_qr_url) return existingOrder;
 
   let activeOrder = existingOrder;
@@ -328,6 +341,8 @@ export async function createDanaQrisOrder(user: User, body: Record<string, unkno
       provider: 'dana',
       payment_method: 'dana_qris',
       provider_external_id: createExternalId(),
+      whatsapp_contact_id: whatsappContact.id,
+      customer_whatsapp: whatsappContact.phoneE164,
       expires_at: expiresAt.toISOString(),
     };
     const { data: inserted, error: insertError } = await supabase
@@ -405,6 +420,28 @@ export async function getDanaQrisOrderForUser(orderId: string, userId: string) {
   return data as DanaPaymentOrderRow;
 }
 
+export async function listDanaQrisOrdersForUser(userId: string) {
+  const supabase = getSupabaseAdminClient();
+  const { error: expiryError } = await supabase
+    .from('payment_orders')
+    .update({ status: 'expired', updated_at: new Date().toISOString() })
+    .eq('user_id', userId)
+    .eq('provider', 'dana')
+    .eq('status', 'pending_payment')
+    .lt('expires_at', new Date().toISOString());
+  if (expiryError) throw new Error(`Status QRIS belum dapat diperbarui: ${expiryError.message}`);
+
+  const { data, error } = await supabase
+    .from('payment_orders')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('provider', 'dana')
+    .order('created_at', { ascending: false })
+    .limit(20);
+  if (error) throw new Error(`Riwayat QRIS belum dapat dimuat: ${error.message}`);
+  return (data || []) as DanaPaymentOrderRow[];
+}
+
 export function getDanaQrisInstructions(order: DanaPaymentOrderRow) {
   return {
     bankTransfer: null,
@@ -434,6 +471,10 @@ export function toDanaOrderResponse(order: DanaPaymentOrderRow) {
     payerNote: null,
     reviewNote: null,
     paidAt: order.paid_at,
+    whatsappNotificationStatus: 'not_requested' as const,
+    whatsappNotificationAttempts: 0,
+    whatsappNotificationSentAt: null,
+    whatsappNotificationError: null,
     createdAt: order.created_at,
     instructions: getDanaQrisInstructions(order),
   };

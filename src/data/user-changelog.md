@@ -1,3 +1,30 @@
+## Masuk dengan email - 2026-08-15
+
+### Akun orang tua kini punya pilihan tambahan
+- Orang tua dapat membuat akun dan masuk menggunakan email serta kata sandi.
+- Login Google dan Facebook tetap tersedia seperti sebelumnya.
+- Akun baru mungkin perlu dikonfirmasi melalui tautan yang dikirim ke email sebelum dapat digunakan.
+
+## Nomor WhatsApp untuk status pembelian - 2026-08-15
+
+### Nomor dapat disimpan dan dipilih saat checkout
+- Saat memulai pembelian, pengguna dapat memilih nomor WhatsApp yang sudah tersimpan atau menambahkan nomor baru setelah menyetujui penggunaan untuk notifikasi transaksi.
+- Satu akun dapat menyimpan beberapa nomor dan menentukan nomor utama.
+- Nomor dapat ditambah, diubah, dijadikan utama, atau dihapus melalui **Pengaturan Orang Tua**.
+- Pengiriman pesan otomatis kepada pembeli belum aktif sampai template pelanggan disetujui Meta dan nomor selesai diverifikasi.
+
+## Pembayaran dapat dilanjutkan kembali - 2026-08-15
+
+### Pesanan tidak hilang setelah halaman ditutup
+- Pengaturan Orang Tua kini memiliki bagian **Pembayaran Saya** untuk melihat transaksi milik akun yang sedang login.
+- Pembayaran yang belum selesai dapat dibuka kembali tanpa membuat pesanan baru, termasuk setelah modal pembayaran, halaman, atau sesi login sebelumnya ditutup.
+- User dapat melanjutkan pembayaran, memeriksa status verifikasi Admin, atau mengirim ulang bukti yang ditolak.
+- Bukti yang sudah dikirim tidak lagi kedaluwarsa saat masih menunggu keputusan Admin.
+
+### QRIS lebih mudah dipindai
+- Gambar QRIS pada halaman pembayaran dapat ditekan untuk membukanya dalam tampilan fokus layar penuh.
+- Tampilan QRIS dapat ditutup melalui tombol tutup, area gelap di luar gambar, atau tombol Escape.
+
 ## Halaman kini lebih mudah dibuka kembali - 2026-08-11
 
 ### Setiap area memiliki alamat halaman sendiri

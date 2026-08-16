@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ArrowLeft,
   Bell,
@@ -20,6 +20,13 @@ import { userSettingsStore, UserSettings } from '../utils/userSettingsStore';
 import { userAuthStore, type UserAccount } from '../utils/userAuthStore';
 import { deleteAccount, fetchAccountDataExport } from '@/features/account/api/accountPrivacyApi';
 import { clearLocalAccountData, getLocalAccountData } from '@/features/account/utils/accountLocalData';
+import { WhatsAppContactsPanel } from '@/features/account';
+import { fetchPaymentOrders } from '@/features/commerce/api/manualPaymentApi';
+import {
+  ManualPaymentModal,
+  UserPaymentOrdersPanel,
+  type ManualPaymentOrder,
+} from '@/features/commerce';
 
 interface UserSettingsProps {
   onBack: () => void;
@@ -35,6 +42,11 @@ export const UserSettingsView: React.FC<UserSettingsProps> = ({ onBack, isNight 
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [deletePhrase, setDeletePhrase] = useState('');
   const [deleteEmail, setDeleteEmail] = useState('');
+  const [paymentOrders, setPaymentOrders] = useState<ManualPaymentOrder[]>([]);
+  const [paymentOrdersError, setPaymentOrdersError] = useState<string | null>(null);
+  const [isLoadingPaymentOrders, setIsLoadingPaymentOrders] = useState(false);
+  const [selectedPaymentOrder, setSelectedPaymentOrder] = useState<ManualPaymentOrder | null>(null);
+  const paymentOrdersAbortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     setSettings(userSettingsStore.getSettings());
@@ -52,6 +64,42 @@ export const UserSettingsView: React.FC<UserSettingsProps> = ({ onBack, isNight 
       subscription.unsubscribe();
     };
   }, []);
+
+  const loadPaymentOrders = useCallback(async () => {
+    paymentOrdersAbortRef.current?.abort();
+    if (!currentUser) {
+      setPaymentOrders([]);
+      setPaymentOrdersError(null);
+      setIsLoadingPaymentOrders(false);
+      setSelectedPaymentOrder(null);
+      return;
+    }
+    const requestedUserId = currentUser.id;
+    const abortController = new AbortController();
+    paymentOrdersAbortRef.current = abortController;
+    setIsLoadingPaymentOrders(true);
+    setPaymentOrdersError(null);
+    try {
+      const orders = await fetchPaymentOrders(abortController.signal);
+      if (!abortController.signal.aborted && userAuthStore.getUser()?.id === requestedUserId) {
+        setPaymentOrders(orders);
+      }
+    } catch (error) {
+      if (!abortController.signal.aborted) {
+        setPaymentOrdersError(error instanceof Error ? error.message : 'Riwayat pembayaran belum dapat dimuat.');
+      }
+    } finally {
+      if (paymentOrdersAbortRef.current === abortController) {
+        paymentOrdersAbortRef.current = null;
+        setIsLoadingPaymentOrders(false);
+      }
+    }
+  }, [currentUser]);
+
+  useEffect(() => {
+    void loadPaymentOrders();
+    return () => paymentOrdersAbortRef.current?.abort();
+  }, [loadPaymentOrders]);
 
   const showToast = (message: string) => {
     setToastMsg(message);
@@ -140,6 +188,7 @@ export const UserSettingsView: React.FC<UserSettingsProps> = ({ onBack, isNight 
   };
 
   return (
+    <>
     <div className="min-h-screen pt-24 pb-12 px-4 sm:px-6">
       <div className="max-w-2xl mx-auto space-y-6">
         
@@ -205,6 +254,18 @@ export const UserSettingsView: React.FC<UserSettingsProps> = ({ onBack, isNight 
               </div>
             )}
           </section>
+
+          {currentUser && (
+            <UserPaymentOrdersPanel
+              orders={paymentOrders}
+              error={paymentOrdersError}
+              isLoading={isLoadingPaymentOrders}
+              onRefresh={() => void loadPaymentOrders()}
+              onResume={setSelectedPaymentOrder}
+            />
+          )}
+
+          {currentUser && <WhatsAppContactsPanel />}
 
           {currentUser && (
             <section className="rounded-3xl border-2 border-default bg-surface p-6 shadow-sm">
@@ -377,5 +438,20 @@ export const UserSettingsView: React.FC<UserSettingsProps> = ({ onBack, isNight 
         </div>
       </div>
     </div>
+    {selectedPaymentOrder && (
+      <ManualPaymentModal
+        initialOrder={selectedPaymentOrder}
+        isVipOnly={selectedPaymentOrder.purchaseType === 'vip'}
+        onClose={() => {
+          setSelectedPaymentOrder(null);
+          void loadPaymentOrders();
+        }}
+        onOrderSubmitted={() => {
+          setSelectedPaymentOrder(null);
+          void loadPaymentOrders();
+        }}
+      />
+    )}
+    </>
   );
 };

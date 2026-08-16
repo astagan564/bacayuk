@@ -1,5 +1,6 @@
 import {
   BarChart3,
+  BadgeCheck,
   BookOpen,
   Clock,
   Eye,
@@ -39,18 +40,25 @@ export function StoryCatalogHero({
 
           <div>
             <h1 className="max-w-3xl text-4xl sm:text-6xl leading-[0.98] text-balance">
-              Rak cerita yang siap dibaca bersama.
+              BacaYuk, rak cerita yang siap dibaca bersama.
             </h1>
             <p className="mt-4 max-w-2xl text-sm sm:text-base leading-7 font-medium text-secondary text-pretty">
-              Pilih buku, lanjutkan halaman terakhir, rekam suara orang tua, atau simpan versi offline untuk waktu membaca yang lebih tenang.
+              BacaYuk adalah aplikasi buku cerita anak interaktif untuk orang tua dan anak. Pilih buku, lanjutkan halaman terakhir, rekam suara orang tua, atau simpan versi offline untuk waktu membaca yang lebih tenang.
             </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-2.5 pt-1">
-            <button type="button" onClick={onOpenVip} className="btn-primary inline-flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm">
-              <Lock className="w-4 h-4" />
-              <span>Gabung VIP</span>
-            </button>
+            {controller.isVipUser ? (
+              <div className="reader-soft-panel inline-flex items-center gap-2 rounded-xl border border-brand-green/30 px-4 py-2.5 text-xs font-black text-brand-green sm:text-sm">
+                <BadgeCheck className="h-4 w-4" />
+                <span>VIP aktif</span>
+              </div>
+            ) : (
+              <button type="button" onClick={onOpenVip} className="btn-primary inline-flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm">
+                <Lock className="w-4 h-4" />
+                <span>Gabung VIP</span>
+              </button>
+            )}
 
             <button type="button" onClick={onOpenStoryMaker} className="btn-primary inline-flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm">
               <Wand2 className="w-4 h-4" />

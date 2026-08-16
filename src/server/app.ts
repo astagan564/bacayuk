@@ -11,6 +11,7 @@ import { registerStoryEnhancementRoutes } from './routes/storyEnhancement.routes
 import { registerTranslationRoutes } from './routes/translation.routes';
 import { registerSettingsRoutes } from './routes/settings.routes';
 import { registerAccountRoutes } from './routes/account.routes';
+import { registerAdminUsersRoutes } from './routes/adminUsers.routes';
 
 export async function createApp(options: { serveClient?: boolean } = {}) {
   const app = express();
@@ -31,6 +32,7 @@ export async function createApp(options: { serveClient?: boolean } = {}) {
   registerPaymentRoutes(app);
   registerSettingsRoutes(app);
   registerAccountRoutes(app);
+  registerAdminUsersRoutes(app);
 
   if (serveClient) {
     if (!isProductionServer) {
@@ -51,4 +53,3 @@ export async function createApp(options: { serveClient?: boolean } = {}) {
 
   return app;
 }
-

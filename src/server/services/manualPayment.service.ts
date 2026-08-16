@@ -10,10 +10,16 @@ import {
   isWhatsAppPaymentNotificationConfigured,
   sendPaymentReviewWhatsAppTemplate,
 } from './whatsappNotification.service';
+import {
+  getExpirableManualPaymentStatuses,
+  shouldExpireManualPaymentOrder,
+} from './manualPaymentStatus';
+import { resolveWhatsAppContactForOrder } from './whatsappContact.service';
 
 const PAYMENT_PROOF_BUCKET = 'payment-proofs';
 const MAX_PROOF_BYTES = 1_572_864;
 const REUSABLE_MANUAL_STATUSES = ['pending_payment', 'pending_review', 'rejected'] as const;
+const EXPIRABLE_MANUAL_STATUSES = getExpirableManualPaymentStatuses();
 const QRIS_ASSET_PATHS = {
   book15000: '/payments/qris/qris-15k.png',
   book25000: '/payments/qris/qris-25k.png',
@@ -65,6 +71,8 @@ export interface ManualPaymentOrderRow {
   whatsapp_notification_sent_at: string | null;
   whatsapp_notification_message_id: string | null;
   whatsapp_notification_error: string | null;
+  whatsapp_contact_id: number | null;
+  customer_whatsapp: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -127,14 +135,13 @@ export function getManualPaymentInstructions(
 }
 
 async function expireOrderIfNeeded(order: ManualPaymentOrderRow | null) {
-  if (!order?.expires_at || new Date(order.expires_at).getTime() > Date.now()) return order;
-  if (!REUSABLE_MANUAL_STATUSES.includes(order.status as typeof REUSABLE_MANUAL_STATUSES[number])) return order;
+  if (!order || !shouldExpireManualPaymentOrder(order.status, order.expires_at)) return order;
 
   const { error } = await getSupabaseAdminClient()
     .from('payment_orders')
     .update({ status: 'expired', updated_at: new Date().toISOString() })
     .eq('order_id', order.order_id)
-    .in('status', [...REUSABLE_MANUAL_STATUSES]);
+    .in('status', EXPIRABLE_MANUAL_STATUSES);
   if (error) throw new Error(`Status pesanan belum dapat diperbarui: ${error.message}`);
   return { ...order, status: 'expired' as const };
 }
@@ -144,6 +151,7 @@ export async function createManualPaymentOrder(
   body: Record<string, unknown>,
 ): Promise<{ order: ManualPaymentOrderRow; instructions: ManualPaymentInstructions }> {
   const resolved = await resolveTransactionRequest(body, user);
+  const whatsappContact = await resolveWhatsAppContactForOrder(user.id, body.whatsappContactId);
   const selectedMethod: ManualPaymentMethod = body.paymentMethod === 'manual_qris'
     ? 'manual_qris'
     : 'manual_bank_transfer';
@@ -163,7 +171,17 @@ export async function createManualPaymentOrder(
     .maybeSingle();
   if (existingError) throw new Error(`Pesanan aktif belum dapat diperiksa: ${existingError.message}`);
 
-  const currentOrder = await expireOrderIfNeeded(existing as ManualPaymentOrderRow | null);
+  let currentOrder = await expireOrderIfNeeded(existing as ManualPaymentOrderRow | null);
+  if (currentOrder && ['pending_payment', 'rejected'].includes(currentOrder.status)
+    && currentOrder.whatsapp_contact_id !== whatsappContact.id) {
+    const { data: updated, error: updateError } = await supabase.from('payment_orders').update({
+      whatsapp_contact_id: whatsappContact.id,
+      customer_whatsapp: whatsappContact.phoneE164,
+      updated_at: new Date().toISOString(),
+    }).eq('order_id', currentOrder.order_id).eq('user_id', user.id).select('*').single();
+    if (updateError) throw new Error(`Nomor WhatsApp pesanan belum dapat diperbarui: ${updateError.message}`);
+    currentOrder = updated as ManualPaymentOrderRow;
+  }
   if (currentOrder && currentOrder.status !== 'expired') {
     return {
       order: currentOrder,
@@ -194,6 +212,8 @@ export async function createManualPaymentOrder(
     status: 'pending_payment',
     provider: 'manual',
     payment_method: selectedMethod,
+    whatsapp_contact_id: whatsappContact.id,
+    customer_whatsapp: whatsappContact.phoneE164,
     expires_at: expiresAt,
   };
   const { data, error } = await supabase.from('payment_orders').insert(row).select('*').single();
@@ -212,6 +232,28 @@ export async function getManualPaymentOrderForUser(orderId: string, userId: stri
   if (error) throw new Error(`Pesanan belum dapat dimuat: ${error.message}`);
   if (!data) throw new Error('Pesanan pembayaran manual tidak ditemukan untuk akun ini.');
   return expireOrderIfNeeded(data as ManualPaymentOrderRow);
+}
+
+export async function listManualPaymentOrdersForUser(userId: string) {
+  const supabase = getSupabaseAdminClient();
+  const { error: expiryError } = await supabase
+    .from('payment_orders')
+    .update({ status: 'expired', updated_at: new Date().toISOString() })
+    .eq('user_id', userId)
+    .eq('provider', 'manual')
+    .in('status', EXPIRABLE_MANUAL_STATUSES)
+    .lt('expires_at', new Date().toISOString());
+  if (expiryError) throw new Error(`Status pembayaran belum dapat diperbarui: ${expiryError.message}`);
+
+  const { data, error } = await supabase
+    .from('payment_orders')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('provider', 'manual')
+    .order('created_at', { ascending: false })
+    .limit(20);
+  if (error) throw new Error(`Riwayat pembayaran belum dapat dimuat: ${error.message}`);
+  return (data || []) as ManualPaymentOrderRow[];
 }
 
 function detectProofMimeType(bytes: Buffer): 'image/jpeg' | 'image/png' | 'image/webp' | null {
@@ -467,6 +509,7 @@ export async function rejectManualPaymentOrder(
       review_note: note.slice(0, 500),
       reviewed_at: now,
       reviewed_by: reviewedBy,
+      expires_at: new Date(Date.now() + getExpiryHours() * 60 * 60 * 1000).toISOString(),
       updated_at: now,
     })
     .eq('order_id', orderId)

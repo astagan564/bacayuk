@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased] - 2026-08-11
 
 ### Added
+- **Email and password authentication**: Parents can create an account and sign in with email and password through Supabase Auth while Google and Facebook OAuth remain available.
+- **Social sharing preview**: Added the 1200×630 BacaYuk Open Graph image with absolute Open Graph, Twitter Card, and structured-data metadata for consistent link previews.
+- **Crawler discovery files**: Added a production `sitemap.xml` for public BacaYuk pages and a `robots.txt` that advertises the sitemap while excluding Admin, account settings, and API routes from crawling.
+- **User-managed WhatsApp contacts**: OAuth users can save multiple Indonesian WhatsApp numbers, choose a default, select or add a number during checkout with explicit transaction-notification consent, and edit or delete contacts in Parent Settings. Orders retain the selected contact snapshot; customer message delivery remains disabled until approved Meta templates and number verification are configured.
 - **Manual payment launch flow**: Added authenticated book/VIP orders, bank-transfer or merchant-QRIS instructions, private proof uploads, pending-review status, and Admin approval/rejection that issues the existing server-side entitlement.
 - **QRIS payment choices**: Added dedicated QRIS assets for Rp15.000 and Rp25.000 book orders plus Rp100.000 VIP orders, a static QRIS fallback where customers enter promo totals manually, and bluBisnis transfer as the second payment choice.
 - **DANA sandbox callback**: Added a public Finish Notify endpoint with SNAP RSA signature verification, exact order/merchant/amount checks, idempotent entitlement issuance, and DANA provider reconciliation fields.
@@ -64,6 +68,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Desktop reader control boundaries**: Split desktop page navigation, reading preferences, and reader tools into focused components while retaining the shared navigation controller and control contract.
 
 ### Fixed
+- **Active VIP homepage state**: Replaced the `Gabung VIP` purchase action with a non-purchasing `VIP aktif` indicator for active members and prevented the VIP offer flow from reopening through another trigger.
+- **OAuth homepage branding**: Standardized the public app name as `BacaYuk` and added a visible, server-readable homepage purpose statement plus privacy and terms links for Google OAuth brand verification.
+- **Admin registered-user directory**: The Admin Users page now loads registered application accounts and recent reading activity from the protected backend instead of showing only the current browser session and local reading logs.
+- **Focused QRIS preview**: QRIS images in checkout can now be opened in a high-contrast full-screen view with backdrop, close button, outside-click, and Escape-key dismissal for easier scanning.
+- **Resumable user payments**: Added a tenant-scoped payment history in Parent Settings so unpaid, pending-review, and rejected book/VIP orders can be reopened after the checkout modal, page, or login session is closed. Orders with submitted proof no longer expire while awaiting Admin verification.
 - **Duplicate story maker dialog**: Removed a duplicate `StoryMakerModal` render that could mount the same AI story creation interface twice.
 - **Direct-link navigation**: Replaced transient view-only navigation with URL-backed navigation so browser refresh and direct entry preserve the requested frontend section.
 - **Hidden draft typing errors**: Normalized manuscript and AI page drafts before Story mapping and removed implicit callback types from the Admin data store, allowing the complete project to pass strict TypeScript checks.

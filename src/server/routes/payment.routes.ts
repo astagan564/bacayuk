@@ -6,6 +6,7 @@ import {
   createDanaQrisOrder,
   getDanaQrisOrderForUser,
   isDanaQrisEnabled,
+  listDanaQrisOrdersForUser,
   toDanaOrderResponse,
 } from '../services/danaQris.service';
 import {
@@ -13,6 +14,7 @@ import {
   createManualPaymentOrder,
   getManualPaymentInstructions,
   getManualPaymentOrderForUser,
+  listManualPaymentOrdersForUser,
   listManualPaymentOrdersForAdmin,
   rejectManualPaymentOrder,
   retryManualPaymentWhatsAppNotification,
@@ -161,6 +163,29 @@ export function registerPaymentRoutes(app: Express) {
       res.status(201).json({ order: toManualOrderResponse(order, instructions) });
     } catch (error) {
       if (!(error instanceof AuthenticationError)) console.error('Error creating manual payment order:', error);
+      sendRouteError(res, error);
+    }
+  });
+
+  app.get('/api/manual-payment-orders', async (req, res) => {
+    try {
+      const user = await requireAuthenticatedUser(req);
+      const [manualOrders, danaOrders] = await Promise.all([
+        listManualPaymentOrdersForUser(user.id),
+        listDanaQrisOrdersForUser(user.id),
+      ]);
+      const orders = [
+        ...manualOrders.map((order) => toManualOrderResponse(
+          order,
+          getManualPaymentInstructions(order.purchase_type, order.amount, order.payment_method),
+        )),
+        ...danaOrders.map(toDanaOrderResponse),
+      ]
+        .sort((left, right) => Date.parse(right.createdAt) - Date.parse(left.createdAt))
+        .slice(0, 20);
+      res.json({ orders });
+    } catch (error) {
+      if (!(error instanceof AuthenticationError)) console.error('Error listing user payment orders:', error);
       sendRouteError(res, error);
     }
   });
@@ -445,4 +470,3 @@ export function registerPaymentRoutes(app: Express) {
     }
   });
 }
-

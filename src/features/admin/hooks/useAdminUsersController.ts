@@ -1,21 +1,39 @@
-import { useCallback, useState } from 'react';
-import { adminStore, LEGACY_DEMO_USER_IDS } from '@/utils/adminStore';
+import { useCallback, useEffect, useState } from 'react';
 import type { UserReadingActivity } from '@/utils/adminStore';
-import { userAuthStore } from '@/utils/userAuthStore';
 import type { UserAccount } from '@/utils/userAuthStore';
+import { fetchAdminUsers } from '@/features/admin/api/adminUsersApi';
 import { exportUsersCsv } from '@/features/admin/helpers/exportUsersCsv';
 
 interface AdminUsersControllerOptions {
+  adminPin: string;
   showToast: (message: string) => void;
 }
 
-export function useAdminUsersController({ showToast }: AdminUsersControllerOptions) {
-  const [readingLogs] = useState<UserReadingActivity[]>(() => adminStore.getReadingLogs());
-  const [users] = useState<UserAccount[]>(() => {
-    const currentUser = userAuthStore.getUser();
-    return currentUser && !LEGACY_DEMO_USER_IDS.has(currentUser.id) ? [currentUser] : [];
-  });
+export function useAdminUsersController({ adminPin, showToast }: AdminUsersControllerOptions) {
+  const [readingLogs, setReadingLogs] = useState<UserReadingActivity[]>([]);
+  const [users, setUsers] = useState<UserAccount[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const refreshUsers = useCallback(async () => {
+    if (!adminPin) return;
+    setIsLoading(true);
+    setError(null);
+    try {
+      const data = await fetchAdminUsers(adminPin);
+      setUsers(data.users);
+      setReadingLogs(data.readingLogs);
+    } catch (loadError) {
+      setError(loadError instanceof Error ? loadError.message : 'Data pengguna belum dapat dimuat.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [adminPin]);
+
+  useEffect(() => {
+    void refreshUsers();
+  }, [refreshUsers]);
 
   const handleExportCsv = useCallback(() => {
     exportUsersCsv(users);
@@ -25,8 +43,11 @@ export function useAdminUsersController({ showToast }: AdminUsersControllerOptio
   return {
     users,
     readingLogs,
+    error,
+    isLoading,
     searchQuery,
     setSearchQuery,
+    refreshUsers,
     handleExportCsv,
   };
 }

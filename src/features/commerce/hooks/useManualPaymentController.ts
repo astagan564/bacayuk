@@ -14,6 +14,8 @@ import type {
   ManualPaymentOrder,
 } from '@/features/commerce/types/manualPayment';
 import type { PurchaseType } from '@/features/commerce/types/paymentGateway';
+import { createWhatsAppContact, fetchWhatsAppContacts } from '@/features/account/api/whatsappContactApi';
+import type { WhatsAppContact } from '@/features/account/types/whatsappContact';
 
 const MAX_PROOF_BYTES = 1_572_864;
 
@@ -28,24 +30,48 @@ function readFileAsDataUrl(file: File): Promise<string> {
 
 type Options = Pick<
   ManualPaymentModalProps,
-  'story' | 'isVipOnly' | 'onOrderSubmitted'
+  'story' | 'isVipOnly' | 'initialOrder' | 'onOrderSubmitted'
 >;
 
 export function useManualPaymentController({
   story,
   isVipOnly = false,
+  initialOrder,
   onOrderSubmitted,
 }: Options) {
   const adminSettings = adminStore.getSettings();
   const basePrice = story?.ebookPrice || adminSettings.defaultEbookPrice;
   const checkout = usePaymentCheckoutForm({ story, isVipOnly, basePrice });
-  const [order, setOrder] = useState<ManualPaymentOrder | null>(null);
-  const [paymentMethod, setPaymentMethod] = useState<ManualPaymentMethod>('manual_qris');
+  const [order, setOrder] = useState<ManualPaymentOrder | null>(initialOrder || null);
+  const [paymentMethod, setPaymentMethod] = useState<ManualPaymentMethod>(
+    initialOrder?.paymentMethod || 'manual_qris',
+  );
   const [proofFile, setProofFile] = useState<File | null>(null);
   const [payerNote, setPayerNote] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [whatsappContacts, setWhatsAppContacts] = useState<WhatsAppContact[]>([]);
+  const [selectedWhatsAppContactId, setSelectedWhatsAppContactId] = useState<number | null>(null);
+  const [newWhatsAppNumber, setNewWhatsAppNumber] = useState('');
+  const [whatsappConsent, setWhatsAppConsent] = useState(false);
+  const [isLoadingWhatsAppContacts, setIsLoadingWhatsAppContacts] = useState(!initialOrder);
   const abortRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    if (initialOrder) return undefined;
+    const abortController = new AbortController();
+    void fetchWhatsAppContacts(abortController.signal).then((contacts) => {
+      setWhatsAppContacts(contacts);
+      const preferred = contacts.find((contact) => contact.isDefault && contact.orderNotificationsEnabled)
+        || contacts.find((contact) => contact.orderNotificationsEnabled);
+      setSelectedWhatsAppContactId(preferred?.id || null);
+    }).catch((error) => {
+      if (!abortController.signal.aborted) setErrorMessage(error instanceof Error ? error.message : 'Nomor WhatsApp belum dapat dimuat.');
+    }).finally(() => {
+      if (!abortController.signal.aborted) setIsLoadingWhatsAppContacts(false);
+    });
+    return () => abortController.abort();
+  }, [initialOrder]);
 
   const instructions = order?.instructions;
   const availableMethods = useMemo(() => ({
@@ -70,12 +96,28 @@ export function useManualPaymentController({
     const abortController = new AbortController();
     abortRef.current = abortController;
     try {
+      let whatsappContactId = selectedWhatsAppContactId;
+      if (!whatsappContactId) {
+        if (!newWhatsAppNumber.trim()) throw new Error('Isi atau pilih nomor WhatsApp untuk menerima status pesanan.');
+        if (!whatsappConsent) throw new Error('Konfirmasi persetujuan notifikasi WhatsApp terlebih dahulu.');
+        const contact = await createWhatsAppContact({
+          phone: newWhatsAppNumber,
+          label: whatsappContacts.length === 0 ? 'Utama' : 'Nomor pembayaran',
+          consentConfirmed: true,
+          orderNotificationsEnabled: true,
+          isDefault: whatsappContacts.length === 0,
+        }, abortController.signal);
+        whatsappContactId = contact.id;
+        setWhatsAppContacts((current) => [...current, contact]);
+        setSelectedWhatsAppContactId(contact.id);
+      }
       const nextOrder = await createManualPaymentOrder({
         purchaseType: checkout.purchaseType,
         storyId: story?.id,
         storyTitle: story?.title,
         couponCode: checkout.appliedCouponCode,
         paymentMethod,
+        whatsappContactId,
       }, abortController.signal);
       if (nextOrder.amount !== checkout.finalPrice) {
         throw new Error('Harga atau kupon berubah. Tutup lalu buka kembali pembayaran.');
@@ -92,7 +134,7 @@ export function useManualPaymentController({
       if (abortRef.current === abortController) abortRef.current = null;
       setIsProcessing(false);
     }
-  }, [checkout, paymentMethod, story]);
+  }, [checkout, newWhatsAppNumber, paymentMethod, selectedWhatsAppContactId, story, whatsappConsent, whatsappContacts.length]);
 
   const refreshOrder = useCallback(async (silent = false) => {
     if (!order) return;
@@ -187,6 +229,11 @@ export function useManualPaymentController({
     paymentMethod,
     proofFile,
     payerNote,
+    whatsappContacts,
+    selectedWhatsAppContactId,
+    newWhatsAppNumber,
+    whatsappConsent,
+    isLoadingWhatsAppContacts,
     isProcessing,
     errorMessage,
     setCouponInput: checkout.setCouponInput,
@@ -195,6 +242,9 @@ export function useManualPaymentController({
     setPaymentMethod,
     setProofFile,
     setPayerNote,
+    setSelectedWhatsAppContactId,
+    setNewWhatsAppNumber,
+    setWhatsappConsent: setWhatsAppConsent,
     startOrder,
     refreshOrder,
     submitProof,

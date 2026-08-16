@@ -60,6 +60,7 @@ export interface ManualPaymentOrder {
 export interface ManualPaymentModalProps {
   story?: Story;
   isVipOnly?: boolean;
+  initialOrder?: ManualPaymentOrder;
   onClose: () => void;
   onOrderSubmitted: (order: ManualPaymentOrder) => void;
 }
