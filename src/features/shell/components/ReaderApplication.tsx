@@ -72,7 +72,6 @@ export function ReaderApplication({
           hasUnreadChangelog={changelog.hasUnreadChangelog}
           isNight={readerSettings.isNight}
           isWhatsNewOpen={changelog.isDropdownOpen}
-          onAdmin={openAdmin}
           onChangelog={changelog.openModal}
           onCloseWhatsNew={changelog.closeDropdown}
           onHome={readerSession.backToLibrary}

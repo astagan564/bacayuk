@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Lock, Mail, ShieldCheck, X } from 'lucide-react';
+import { Mail, ShieldCheck, X } from 'lucide-react';
+import bacayukMark from '@/assets/bacayuk-mark.svg';
 import { userAuthStore } from '../utils/userAuthStore';
 import type { UserAccount } from '../utils/userAuthStore';
 
@@ -107,9 +108,7 @@ export const ParentLoginModal: React.FC<ParentLoginModalProps> = ({
         {/* Header — compact, single line */}
         <div className="flex items-start justify-between border-b border-default pb-3">
           <div className="flex items-center gap-3">
-            <div className="shrink-0 rounded-2xl bg-brand-green p-3 font-black text-white shadow-md">
-              <Lock className="h-6 w-6" />
-            </div>
+            <img src={bacayukMark} alt="BacaYuk" className="h-24 w-auto sm:h-26" />
             <div>
               <h2 id="parent-login-title" className="text-xl font-black tracking-tight sm:text-2xl">Masuk akun orang tua</h2>
               <p className="text-xs font-medium text-secondary">
@@ -268,7 +267,7 @@ export const ParentLoginModal: React.FC<ParentLoginModalProps> = ({
             </button>
 
             {/* Security note — compact, inside the social column */}
-            <div className="flex items-center gap-2 rounded-xl p-2 text-[10px] text-muted">
+            <div className="flex items-center justify-center gap-2 rounded-xl p-2 text-[10px] text-muted">
               <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-brand-green" />
               <span>Login aman & data terlindungi</span>
             </div>

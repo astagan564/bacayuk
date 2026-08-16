@@ -27,7 +27,7 @@
   <circle cx="326" cy="104" r="9" fill="#FF7C73"/>
   <circle cx="65" cy="53" r="8" fill="#8DDA73"/>
   <g aria-label="BacaYuk">
-    <text x="360" y="224" fill="#164B73" font-family="Nunito, Quicksand, Arial Rounded MT Bold, Arial, sans-serif" font-size="142" font-weight="800" letter-spacing="-5">Baca</text>
+    <text x="360" y="224" fill="#168FDC" font-family="Nunito, Quicksand, Arial Rounded MT Bold, Arial, sans-serif" font-size="142" font-weight="800" letter-spacing="-5">Baca</text>
     <text x="685" y="224" fill="#168FDC" font-family="Nunito, Quicksand, Arial Rounded MT Bold, Arial, sans-serif" font-size="142" font-weight="800" letter-spacing="-5">Yuk</text>
     <path d="M708 253C786 276 892 275 974 246" stroke="#F7C948" stroke-width="13" stroke-linecap="round"/>
     <path d="M974 246L956 236M974 246L961 263" stroke="#F7C948" stroke-width="13" stroke-linecap="round"/>

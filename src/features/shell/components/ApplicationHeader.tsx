@@ -10,7 +10,6 @@ import {
 } from 'lucide-react';
 import packageJson from '../../../../package.json';
 import bacaYukLogo from '../../../assets/bacayuk-logo.svg';
-import bacaYukMark from '../../../assets/bacayuk-mark.svg';
 import type { UserAccount } from '../../../utils/userAuthStore';
 
 interface ApplicationHeaderProps {
@@ -18,7 +17,6 @@ interface ApplicationHeaderProps {
   hasUnreadChangelog: boolean;
   isNight: boolean;
   isWhatsNewOpen: boolean;
-  onAdmin: () => void;
   onChangelog: () => void;
   onHome: () => void;
   onLogin: () => void;
@@ -35,7 +33,6 @@ export function ApplicationHeader({
   hasUnreadChangelog,
   isNight,
   isWhatsNewOpen,
-  onAdmin,
   onChangelog,
   onCloseWhatsNew,
   onHome,
@@ -52,7 +49,7 @@ export function ApplicationHeader({
         onClick={onHome}
         className="flex min-w-0 flex-1 items-center gap-2 sm:gap-2.5 cursor-pointer transition-opacity hover:opacity-85"
       >
-        <img src={bacaYukMark} alt="BacaYuk" className="h-10 w-10 shrink-0 sm:hidden" />
+        <img src={bacaYukLogo} alt="BacaYuk" className="h-10 w-auto shrink-0 sm:hidden" />
         <div className="hidden min-w-0 flex-col justify-center sm:flex">
           <img src={bacaYukLogo} alt="BacaYuk" className="h-10 w-auto max-w-[150px]" />
           <p className="ml-[48px] -mt-2 text-[11px] font-semibold text-secondary">
@@ -130,15 +127,6 @@ export function ApplicationHeader({
         >
           <Settings className="w-4 h-4" />
           <span className="hidden sm:inline">Pengaturan</span>
-        </button>
-
-        <button
-          onClick={onAdmin}
-          className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition-transform hover:scale-[1.02] shrink-0 auth-chip hover:bg-surface text-secondary"
-          title="Buka Panel Kontrol Admin Internal"
-        >
-          <ShieldCheck className="w-4 h-4" />
-          <span className="hidden sm:inline">Admin</span>
         </button>
 
         <button

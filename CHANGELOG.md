@@ -69,6 +69,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Payment checkout lifecycle boundaries**: Split customer and coupon state, Midtrans Snap orchestration, and verified receipt finalization into focused Commerce modules while retaining the existing payment-gateway facade.
 - **Story metadata editor boundaries**: Split Book Studio identity, catalog preview, reader access, and offline-download settings into focused typed components coordinated through one functional draft-update boundary.
 - **Desktop reader control boundaries**: Split desktop page navigation, reading preferences, and reader tools into focused components while retaining the shared navigation controller and control contract.
+- **Application header boundaries**: Split the application header into focused components while retaining the existing navigation controller and control contract. Remove admin button for non-admin users and hide it for public users.
 
 ### Fixed
 - **Active VIP homepage state**: Replaced the `Gabung VIP` purchase action with a non-purchasing `VIP aktif` indicator for active members and prevented the VIP offer flow from reopening through another trigger.
