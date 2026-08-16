@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 2026-08-11
 
+## [0.2.0] - 2026-08-16
+
 ### Added
 - **WhatsApp number ownership verification**: Added authenticated OTP request/confirmation endpoints, hashed short-lived challenges with resend and attempt limits, Meta Authentication template delivery, and an in-app verification form. Checkout now rejects notification contacts until ownership is verified.
 - **Email and password authentication**: Parents can create an account and sign in with email and password through Supabase Auth while Google and Facebook OAuth remain available.
