@@ -3,8 +3,10 @@ import { getSupabaseAdminClient } from '../clients/supabaseAdminClient';
 import { AuthenticationError, requireAuthenticatedUser } from '../middleware/userAuth';
 import {
   createWhatsAppContact,
+  confirmWhatsAppContactVerification,
   deleteWhatsAppContact,
   listWhatsAppContacts,
+  requestWhatsAppContactVerification,
   updateWhatsAppContact,
 } from '../services/whatsappContact.service';
 
@@ -69,6 +71,29 @@ export function registerAccountRoutes(app: Express) {
       if (!Number.isSafeInteger(contactId) || contactId <= 0) throw new Error('ID nomor WhatsApp tidak valid.');
       await deleteWhatsAppContact(user.id, contactId);
       res.json({ deleted: true });
+    } catch (error) {
+      sendAccountError(res, error);
+    }
+  });
+
+  app.post('/api/account/whatsapp-contacts/:contactId/request-verification', async (req, res) => {
+    try {
+      const user = await requireAuthenticatedUser(req);
+      const contactId = Number(req.params.contactId);
+      if (!Number.isSafeInteger(contactId) || contactId <= 0) throw new Error('ID nomor WhatsApp tidak valid.');
+      res.json(await requestWhatsAppContactVerification(user.id, contactId));
+    } catch (error) {
+      sendAccountError(res, error);
+    }
+  });
+
+  app.post('/api/account/whatsapp-contacts/:contactId/confirm-verification', async (req, res) => {
+    try {
+      const user = await requireAuthenticatedUser(req);
+      const contactId = Number(req.params.contactId);
+      if (!Number.isSafeInteger(contactId) || contactId <= 0) throw new Error('ID nomor WhatsApp tidak valid.');
+      const contact = await confirmWhatsAppContactVerification(user.id, contactId, req.body?.code);
+      res.json({ contact });
     } catch (error) {
       sendAccountError(res, error);
     }

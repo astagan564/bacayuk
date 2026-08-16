@@ -48,7 +48,9 @@ Template pelanggan merupakan kontrak terpisah dari `pesanan_baru_bacayuk`. Templ
 - pembayaran disetujui;
 - bukti pembayaran ditolak dan perlu dikirim ulang.
 
-Aplikasi sudah dapat menyimpan beberapa nomor WhatsApp milik user, persetujuan notifikasi transaksi, nomor utama, dan nomor yang dipilih untuk setiap order. Pengiriman notifikasi pelanggan **belum diaktifkan** sampai nama template, bahasa, parameter, status persetujuan Meta, serta verifikasi kepemilikan nomor diselesaikan. Jangan memakai template Admin untuk menghubungi pelanggan.
+Aplikasi menyimpan beberapa nomor WhatsApp milik user, persetujuan notifikasi transaksi, nomor utama, dan nomor yang dipilih untuk setiap order. Nomor wajib lolos verifikasi kepemilikan sebelum dapat dipakai pada pesanan.
+
+Verifikasi menggunakan template kategori `AUTHENTICATION` dengan kode sekali pakai 6 digit dan tombol **Copy code**. Nama template bebas, tetapi harus sama dengan konfigurasi server. Kode berlaku 10 menit, hanya hash kode yang disimpan, kirim ulang dibatasi satu kali per 60 detik, dan maksimal lima percobaan per kode. Template Utility pembayaran tidak boleh dipakai sebagai pengganti template Authentication ini.
 
 ## Konfigurasi server
 
@@ -61,6 +63,9 @@ WHATSAPP_CLOUD_API_PHONE_NUMBER_ID=<Phone Number ID pengirim>
 WHATSAPP_ADMIN_RECIPIENT=62XXXXXXXXXXX
 WHATSAPP_PAYMENT_REVIEW_TEMPLATE=pesanan_baru_bacayuk
 WHATSAPP_PAYMENT_REVIEW_TEMPLATE_LANGUAGE=id
+WHATSAPP_CONTACT_VERIFICATION_TEMPLATE=<nama template Authentication yang disetujui>
+WHATSAPP_CONTACT_VERIFICATION_TEMPLATE_LANGUAGE=id
+WHATSAPP_CONTACT_VERIFICATION_SECRET=<rahasia acak minimal 32 karakter>
 ```
 
 Nomor penerima harus memakai kode negara tanpa tanda `+`. `WHATSAPP_CLOUD_API_PHONE_NUMBER_ID` harus berasal dari WhatsApp Business Account yang sama dengan tempat template dibuat. Setelah environment variable diubah, lakukan redeploy.

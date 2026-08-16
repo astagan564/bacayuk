@@ -14,7 +14,12 @@ import type {
   ManualPaymentOrder,
 } from '@/features/commerce/types/manualPayment';
 import type { PurchaseType } from '@/features/commerce/types/paymentGateway';
-import { createWhatsAppContact, fetchWhatsAppContacts } from '@/features/account/api/whatsappContactApi';
+import {
+  confirmWhatsAppContactVerification,
+  createWhatsAppContact,
+  fetchWhatsAppContacts,
+  requestWhatsAppContactVerification,
+} from '@/features/account/api/whatsappContactApi';
 import type { WhatsAppContact } from '@/features/account/types/whatsappContact';
 
 const MAX_PROOF_BYTES = 1_572_864;
@@ -55,6 +60,8 @@ export function useManualPaymentController({
   const [newWhatsAppNumber, setNewWhatsAppNumber] = useState('');
   const [whatsappConsent, setWhatsAppConsent] = useState(false);
   const [isLoadingWhatsAppContacts, setIsLoadingWhatsAppContacts] = useState(!initialOrder);
+  const [pendingWhatsAppVerificationId, setPendingWhatsAppVerificationId] = useState<number | null>(null);
+  const [whatsappVerificationCode, setWhatsAppVerificationCode] = useState('');
   const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
@@ -62,8 +69,8 @@ export function useManualPaymentController({
     const abortController = new AbortController();
     void fetchWhatsAppContacts(abortController.signal).then((contacts) => {
       setWhatsAppContacts(contacts);
-      const preferred = contacts.find((contact) => contact.isDefault && contact.orderNotificationsEnabled)
-        || contacts.find((contact) => contact.orderNotificationsEnabled);
+      const preferred = contacts.find((contact) => contact.isDefault && contact.orderNotificationsEnabled && contact.verifiedAt)
+        || contacts.find((contact) => contact.orderNotificationsEnabled && contact.verifiedAt);
       setSelectedWhatsAppContactId(preferred?.id || null);
     }).catch((error) => {
       if (!abortController.signal.aborted) setErrorMessage(error instanceof Error ? error.message : 'Nomor WhatsApp belum dapat dimuat.');
@@ -111,6 +118,16 @@ export function useManualPaymentController({
         setWhatsAppContacts((current) => [...current, contact]);
         setSelectedWhatsAppContactId(contact.id);
       }
+      const selectedContact = whatsappContacts.find((contact) => contact.id === whatsappContactId);
+      const currentContact = selectedContact || (whatsappContactId
+        ? (await fetchWhatsAppContacts(abortController.signal)).find((contact) => contact.id === whatsappContactId)
+        : undefined);
+      if (!currentContact?.verifiedAt) {
+        await requestWhatsAppContactVerification(whatsappContactId);
+        setPendingWhatsAppVerificationId(whatsappContactId);
+        setWhatsAppVerificationCode('');
+        throw new Error('Kode verifikasi telah dikirim ke WhatsApp. Masukkan kode 6 digit untuk melanjutkan.');
+      }
       const nextOrder = await createManualPaymentOrder({
         purchaseType: checkout.purchaseType,
         storyId: story?.id,
@@ -134,7 +151,38 @@ export function useManualPaymentController({
       if (abortRef.current === abortController) abortRef.current = null;
       setIsProcessing(false);
     }
-  }, [checkout, newWhatsAppNumber, paymentMethod, selectedWhatsAppContactId, story, whatsappConsent, whatsappContacts.length]);
+  }, [checkout, newWhatsAppNumber, paymentMethod, selectedWhatsAppContactId, story, whatsappConsent, whatsappContacts]);
+
+  const confirmWhatsAppVerification = useCallback(async () => {
+    if (!pendingWhatsAppVerificationId) return;
+    setIsProcessing(true);
+    setErrorMessage(null);
+    try {
+      const verified = await confirmWhatsAppContactVerification(pendingWhatsAppVerificationId, whatsappVerificationCode);
+      setWhatsAppContacts((current) => current.map((contact) => contact.id === verified.id ? verified : contact));
+      setSelectedWhatsAppContactId(verified.id);
+      setPendingWhatsAppVerificationId(null);
+      setWhatsAppVerificationCode('');
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'Kode verifikasi belum dapat diperiksa.');
+    } finally {
+      setIsProcessing(false);
+    }
+  }, [pendingWhatsAppVerificationId, whatsappVerificationCode]);
+
+  const resendWhatsAppVerification = useCallback(async () => {
+    if (!pendingWhatsAppVerificationId) return;
+    setIsProcessing(true);
+    setErrorMessage(null);
+    try {
+      await requestWhatsAppContactVerification(pendingWhatsAppVerificationId);
+      setErrorMessage('Kode verifikasi baru telah dikirim.');
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'Kode verifikasi belum dapat dikirim ulang.');
+    } finally {
+      setIsProcessing(false);
+    }
+  }, [pendingWhatsAppVerificationId]);
 
   const refreshOrder = useCallback(async (silent = false) => {
     if (!order) return;
@@ -233,6 +281,8 @@ export function useManualPaymentController({
     selectedWhatsAppContactId,
     newWhatsAppNumber,
     whatsappConsent,
+    pendingWhatsAppVerificationId,
+    whatsappVerificationCode,
     isLoadingWhatsAppContacts,
     isProcessing,
     errorMessage,
@@ -245,6 +295,9 @@ export function useManualPaymentController({
     setSelectedWhatsAppContactId,
     setNewWhatsAppNumber,
     setWhatsappConsent: setWhatsAppConsent,
+    setWhatsappVerificationCode: setWhatsAppVerificationCode,
+    confirmWhatsAppVerification,
+    resendWhatsAppVerification,
     startOrder,
     refreshOrder,
     submitProof,

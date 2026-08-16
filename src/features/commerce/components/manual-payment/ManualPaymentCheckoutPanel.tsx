@@ -58,7 +58,7 @@ export function ManualPaymentCheckoutPanel({ controller }: { controller: ManualP
               className="reader-field rounded-xl px-3 py-2.5 text-sm"
             >
               {controller.whatsappContacts.filter((contact) => contact.orderNotificationsEnabled).map((contact) => (
-                <option key={contact.id} value={contact.id}>{contact.label} · +{contact.phoneE164}{contact.isDefault ? ' (utama)' : ''}</option>
+                <option key={contact.id} value={contact.id}>{contact.label} · +{contact.phoneE164}{contact.isDefault ? ' (utama)' : ''}{contact.verifiedAt ? '' : ' · belum diverifikasi'}</option>
               ))}
               <option value="">+ Tambah nomor baru</option>
             </select>
@@ -84,7 +84,16 @@ export function ManualPaymentCheckoutPanel({ controller }: { controller: ManualP
             </label>
           </>
         )}
-        <p className="text-[10px] leading-5 text-secondary">Verifikasi nomor dan notifikasi customer akan diaktifkan setelah template customer dari Meta tersedia.</p>
+        {controller.pendingWhatsAppVerificationId && <div className="grid gap-2 rounded-xl border border-brand-green/30 bg-surface p-3">
+          <label className="grid gap-1 text-xs font-bold text-secondary">Kode verifikasi 6 digit
+            <input value={controller.whatsappVerificationCode} inputMode="numeric" autoComplete="one-time-code" maxLength={6} onChange={(event) => controller.setWhatsappVerificationCode(event.target.value.replace(/\D/g, '').slice(0, 6))} placeholder="000000" className="reader-field rounded-xl px-3 py-2.5 font-mono text-sm tracking-[0.3em]" />
+          </label>
+          <div className="flex flex-wrap gap-2">
+            <button type="button" disabled={controller.isProcessing || controller.whatsappVerificationCode.length !== 6} onClick={controller.confirmWhatsAppVerification} className="btn-primary px-3 py-2 text-xs disabled:opacity-50">Verifikasi nomor</button>
+            <button type="button" disabled={controller.isProcessing} onClick={controller.resendWhatsAppVerification} className="btn-secondary px-3 py-2 text-xs">Kirim ulang</button>
+          </div>
+        </div>}
+        <p className="text-[10px] leading-5 text-secondary">Nomor harus diverifikasi melalui kode WhatsApp sebelum pesanan dibuat.</p>
       </fieldset>
 
       <fieldset className="grid gap-3">

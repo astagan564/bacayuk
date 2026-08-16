@@ -40,3 +40,19 @@ export async function deleteWhatsAppContact(id: number) {
     headers: await getAuthenticatedHeaders(),
   }));
 }
+
+export async function requestWhatsAppContactVerification(id: number) {
+  return parseJson<{ alreadyVerified: boolean; retryAfterSeconds: number }>(await fetch(`/api/account/whatsapp-contacts/${id}/request-verification`, {
+    method: 'POST',
+    headers: await getAuthenticatedHeaders(),
+  }));
+}
+
+export async function confirmWhatsAppContactVerification(id: number, code: string) {
+  const data = await parseJson<{ contact: WhatsAppContact }>(await fetch(`/api/account/whatsapp-contacts/${id}/confirm-verification`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...await getAuthenticatedHeaders() },
+    body: JSON.stringify({ code }),
+  }));
+  return data.contact;
+}

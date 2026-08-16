@@ -23,7 +23,7 @@ Login Google dan Facebook tidak selalu memberikan nomor telepon. Karena itu, saa
 - Setiap order menyimpan ID kontak dan salinan nomor yang dipilih saat checkout. Perubahan nomor berikutnya tidak diam-diam mengalihkan tujuan order lama.
 - Penghapusan akun membersihkan nomor dari catatan transaksi yang dipertahankan, sedangkan penghapusan satu kontak tidak menghapus riwayat order.
 
-Fondasi kontak dan persetujuan ini belum berarti notifikasi pelanggan sudah dikirim. Pengiriman baru boleh diaktifkan setelah template Utility pelanggan di WhatsApp Manager disetujui dan alur verifikasi kepemilikan nomor selesai. Template Admin tetap merupakan alur terpisah.
+Kontak wajib diverifikasi dengan kode sekali pakai melalui template Authentication WhatsApp sebelum dapat dipilih untuk pesanan. Template Utility pelanggan dan template Admin tetap merupakan alur terpisah.
 
 ## Aturan kedaluwarsa
 

@@ -2,8 +2,10 @@ import { useCallback, useEffect, useState } from 'react';
 import { Check, LoaderCircle, MessageCircle, Pencil, Plus, Star, Trash2, X } from 'lucide-react';
 import {
   createWhatsAppContact,
+  confirmWhatsAppContactVerification,
   deleteWhatsAppContact,
   fetchWhatsAppContacts,
+  requestWhatsAppContactVerification,
   updateWhatsAppContact,
 } from '@/features/account/api/whatsappContactApi';
 import type { WhatsAppContact } from '@/features/account/types/whatsappContact';
@@ -16,6 +18,9 @@ export function WhatsAppContactsPanel() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [isWorking, setIsWorking] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [verifyingId, setVerifyingId] = useState<number | null>(null);
+  const [verificationCode, setVerificationCode] = useState('');
+  const [verificationMessage, setVerificationMessage] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setIsWorking(true);
@@ -55,6 +60,36 @@ export function WhatsAppContactsPanel() {
     }
   };
 
+  const requestVerification = async (id: number) => {
+    setIsWorking(true); setError(null); setVerificationMessage(null);
+    try {
+      const result = await requestWhatsAppContactVerification(id);
+      if (result.alreadyVerified) await load();
+      else {
+        setVerifyingId(id);
+        setVerificationCode('');
+        setVerificationMessage('Kode 6 digit telah dikirim. Kode berlaku 10 menit.');
+        setIsWorking(false);
+      }
+    } catch (nextError) {
+      setError(nextError instanceof Error ? nextError.message : 'Kode verifikasi belum dapat dikirim.');
+      setIsWorking(false);
+    }
+  };
+
+  const confirmVerification = async () => {
+    if (!verifyingId) return;
+    setIsWorking(true); setError(null);
+    try {
+      await confirmWhatsAppContactVerification(verifyingId, verificationCode);
+      setVerifyingId(null); setVerificationCode(''); setVerificationMessage(null);
+      await load();
+    } catch (nextError) {
+      setError(nextError instanceof Error ? nextError.message : 'Kode verifikasi belum dapat diperiksa.');
+      setIsWorking(false);
+    }
+  };
+
   return (
     <section className="rounded-3xl border-2 border-default bg-surface p-6 shadow-sm" aria-labelledby="whatsapp-contacts-title">
       <div className="flex items-start gap-3">
@@ -68,9 +103,10 @@ export function WhatsAppContactsPanel() {
             <div>
               <div className="flex items-center gap-2"><strong className="text-sm">{contact.label}</strong>{contact.isDefault && <span className="rounded-full bg-brand-gold/20 px-2 py-0.5 text-[10px] font-bold text-warning">Utama</span>}</div>
               <p className="mt-1 font-mono text-xs">+{contact.phoneE164}</p>
-              <p className="mt-1 text-[10px] opacity-60">{contact.verifiedAt ? 'Terverifikasi' : 'Belum diverifikasi — verifikasi diaktifkan setelah template customer tersedia'}</p>
+              <p className={`mt-1 text-[10px] font-semibold ${contact.verifiedAt ? 'text-success' : 'text-warning'}`}>{contact.verifiedAt ? 'Terverifikasi' : 'Belum diverifikasi'}</p>
             </div>
             <div className="flex gap-1.5">
+              {!contact.verifiedAt && <button type="button" disabled={isWorking} onClick={() => void requestVerification(contact.id)} className="rounded-lg border border-brand-green/40 px-3 py-2 text-[10px] font-bold text-brand-green">Kirim kode</button>}
               {!contact.isDefault && <button type="button" title="Jadikan utama" disabled={isWorking} onClick={() => void runAction(() => updateWhatsAppContact(contact.id, { isDefault: true }), 'Gagal memperbarui nomor utama.')} className="rounded-lg border border-default p-2"><Star className="h-4 w-4" /></button>}
               <button type="button" title="Ubah nomor" disabled={isWorking} onClick={() => { setEditingId(contact.id); setPhone(contact.phoneE164); setLabel(contact.label); setConsent(true); }} className="rounded-lg border border-default p-2"><Pencil className="h-4 w-4" /></button>
               <button type="button" title="Hapus nomor" disabled={isWorking} onClick={() => { if (window.confirm(`Hapus nomor +${contact.phoneE164}?`)) void runAction(() => deleteWhatsAppContact(contact.id), 'Gagal menghapus nomor.'); }} className="rounded-lg border border-error/30 p-2 text-error"><Trash2 className="h-4 w-4" /></button>
@@ -78,6 +114,17 @@ export function WhatsAppContactsPanel() {
           </div>
         ))}
       </div>
+
+      {verifyingId && <div className="mt-4 grid gap-3 rounded-2xl border border-brand-green/30 bg-brand-green/5 p-4">
+        <h3 className="text-sm font-extrabold">Verifikasi nomor WhatsApp</h3>
+        {verificationMessage && <p className="text-xs leading-5">{verificationMessage}</p>}
+        <label className="grid max-w-xs gap-1 text-xs font-bold">Kode verifikasi<input value={verificationCode} inputMode="numeric" autoComplete="one-time-code" maxLength={6} onChange={(event) => setVerificationCode(event.target.value.replace(/\D/g, '').slice(0, 6))} placeholder="000000" className="reader-field rounded-xl px-3 py-2.5 font-mono text-sm tracking-[0.3em]" /></label>
+        <div className="flex flex-wrap gap-2">
+          <button type="button" disabled={isWorking || verificationCode.length !== 6} onClick={() => void confirmVerification()} className="btn-primary px-4 py-2.5 text-xs disabled:opacity-50">Verifikasi</button>
+          <button type="button" disabled={isWorking} onClick={() => void requestVerification(verifyingId)} className="btn-secondary px-4 py-2.5 text-xs">Kirim ulang</button>
+          <button type="button" disabled={isWorking} onClick={() => { setVerifyingId(null); setVerificationCode(''); setVerificationMessage(null); }} className="btn-secondary px-4 py-2.5 text-xs">Batal</button>
+        </div>
+      </div>}
 
       <div className="mt-5 grid gap-3 rounded-2xl border border-default bg-card p-4">
         <h3 className="text-sm font-extrabold">{editingId ? 'Ubah nomor WhatsApp' : 'Tambah nomor WhatsApp'}</h3>

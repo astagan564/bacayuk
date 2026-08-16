@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased] - 2026-08-11
 
 ### Added
+- **WhatsApp number ownership verification**: Added authenticated OTP request/confirmation endpoints, hashed short-lived challenges with resend and attempt limits, Meta Authentication template delivery, and an in-app verification form. Checkout now rejects notification contacts until ownership is verified.
 - **Email and password authentication**: Parents can create an account and sign in with email and password through Supabase Auth while Google and Facebook OAuth remain available.
 - **Social sharing preview**: Added the 1200×630 BacaYuk Open Graph image with absolute Open Graph, Twitter Card, and structured-data metadata for consistent link previews.
 - **Crawler discovery files**: Added a production `sitemap.xml` for public BacaYuk pages and a `robots.txt` that advertises the sitemap while excluding Admin, account settings, and API routes from crawling.
