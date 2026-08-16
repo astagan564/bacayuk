@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { CheckCircle2, Gift, Lock, Mail, ShieldCheck, Sparkles, X } from 'lucide-react';
+import { CheckCircle2, Gift, Lock, Mail, ShieldCheck, X } from 'lucide-react';
 import { userAuthStore } from '../utils/userAuthStore';
 import type { UserAccount } from '../utils/userAuthStore';
 
@@ -130,7 +130,6 @@ export const ParentLoginModal: React.FC<ParentLoginModalProps> = ({
 
         <div className="reader-soft-panel flex flex-col gap-1.5 rounded-2xl p-4 text-xs">
           <div className="flex items-center gap-2 text-sm font-black text-primary">
-            <Sparkles className="h-4 w-4 text-brand-gold" />
             <span>Pilih cara masuk</span>
           </div>
           <p className="font-medium leading-relaxed text-secondary">
@@ -141,8 +140,8 @@ export const ParentLoginModal: React.FC<ParentLoginModalProps> = ({
         </div>
 
         <div className="grid grid-cols-2 gap-2 text-[11px] font-bold text-secondary">
-          <div className="flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4 shrink-0 text-success" /><span>Sesi Supabase Auth</span></div>
-          <div className="flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4 shrink-0 text-success" /><span>Kredensial terlindungi</span></div>
+          <div className="flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4 shrink-0 text-success" /><span>Login aman</span></div>
+          <div className="flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4 shrink-0 text-success" /><span>Data akun terlindungi</span></div>
         </div>
 
         {errorMsg && <div role="alert" className="rounded-xl border border-error/30 bg-error/10 p-3 text-xs font-bold text-error">{errorMsg}</div>}
@@ -277,7 +276,7 @@ export const ParentLoginModal: React.FC<ParentLoginModalProps> = ({
 
         <div className="reader-soft-panel flex items-center gap-2 rounded-xl p-3 text-[11px] text-secondary">
           <ShieldCheck className="h-4 w-4 shrink-0 text-brand-green" />
-          <span>Email, kata sandi, dan login sosial diverifikasi melalui Supabase Auth.</span>
+          <span>Informasi akun dan proses masuk Anda dilindungi dengan aman.</span>
         </div>
         <p className="text-center text-[10px] leading-5 text-muted">
           Dengan melanjutkan, Anda menyetujui <a href="/legal#terms" className="font-bold text-brand-green underline">Ketentuan Layanan</a> dan telah membaca <a href="/legal#privacy" className="font-bold text-brand-green underline">Kebijakan Privasi</a>.
