@@ -5,7 +5,6 @@ import {
   Moon,
   Settings,
   ShieldCheck,
-  Sparkles,
   Sun,
   User,
 } from 'lucide-react';
@@ -104,7 +103,6 @@ export function ApplicationHeader({
               <div className="absolute right-0 top-full mt-2 w-64 sm:w-72 rounded-2xl shadow-xl overflow-hidden z-50 app-modal">
                 <div className="p-3 sm:p-4 border-b border-default bg-surface/50">
                   <h3 className="text-sm sm:text-base font-bold flex items-center gap-2 text-primary">
-                    <Sparkles className="w-4 h-4 text-warning" />
                     Update Terbaru v{packageJson.version}
                   </h3>
                 </div>
@@ -112,7 +110,7 @@ export function ApplicationHeader({
                   <ul className="list-disc pl-4 space-y-1">
                     <li><strong>Menambah pilihan login orang tua</strong> masuk menggunakan email, google atau facebook.</li>
                     <li><strong>Nomor WhatsApp untuk status pembelian</strong> Nomor dapat ditambah, diubah, dijadikan utama, atau dihapus melalui <strong>Pengaturan Orang Tua</strong>.</li>
-                    <li><strong>Perbaikan bug</strong> dan peningkatan performa.</li> 
+                    <li><strong>Update dokumen legal</strong> dan peningkatan performa.</li> 
                   </ul>
                 </div>
                 <div className="p-3 border-t border-default bg-surface/50">
