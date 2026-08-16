@@ -110,9 +110,9 @@ export function ApplicationHeader({
                 </div>
                 <div className="p-3 sm:p-4 text-xs sm:text-sm space-y-2 text-secondary">
                   <ul className="list-disc pl-4 space-y-1">
-                    <li><strong>Buat buku lebih cepat</strong> dari ide atau naskah singkat.</li>
-                    <li><strong>Mode baca baru</strong> menampilkan gambar kiri dan teks kanan.</li>
-                    <li><strong>Terjemahan, suara, kuis, dan ilustrasi</strong> kini lebih akurat.</li>
+                    <li><strong>Menambah pilihan login orang tua</strong> masuk menggunakan email, google atau facebook.</li>
+                    <li><strong>Nomor WhatsApp untuk status pembelian</strong> Nomor dapat ditambah, diubah, dijadikan utama, atau dihapus melalui <strong>Pengaturan Orang Tua</strong>.</li>
+                    <li><strong>Perbaikan bug</strong> dan peningkatan performa.</li> 
                   </ul>
                 </div>
                 <div className="p-3 border-t border-default bg-surface/50">
