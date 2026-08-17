@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-08-17
+
+### Added
+- **Multi-step checkout wizard**: Refactored the manual payment modal into a structured 3-step checkout wizard (Step 1: Purchase Type, Order Summary & Coupon; Step 2: Customer Account & WhatsApp Notification Contact; Step 3: Payment Method & Order Confirmation) to eliminate modal scrolling on both desktop and mobile screens while retaining all features and validation.
+- **Wizard step animations and indicators**: Added animated step indicators (dots) with width transitions, directional horizontal slide animations (`step-slide-in`, `step-slide-back`), and full `prefers-reduced-motion` compliance.
+
+### Changed
+- **Payment modal mobile responsiveness**: Optimized modal title typography (`text-xl sm:text-2xl`) and resolved cascading grid `min-width` overflow issues on narrow viewports by enforcing strict container width constraints (`min-w-0`, `overflow-hidden`, and `w-full` form controls).
+- **Accessible form grouping**: Replaced `<fieldset>` and `<legend>` on the WhatsApp notification card with semantic `role="group"` and standard containers to prevent browser-native `min-inline-size: min-content` expansion from breaking mobile layouts.
+
 ## [0.2.0] - 2026-08-16
 
 ### Added

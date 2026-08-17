@@ -105,9 +105,9 @@ export function ApplicationHeader({
                 </div>
                 <div className="p-3 sm:p-4 text-xs sm:text-sm space-y-2 text-secondary">
                   <ul className="list-disc pl-4 space-y-1">
-                    <li><strong>Menambah pilihan login orang tua</strong> masuk menggunakan email, google atau facebook.</li>
-                    <li><strong>Nomor WhatsApp untuk status pembelian</strong> Nomor dapat ditambah, diubah, dijadikan utama, atau dihapus melalui <strong>Pengaturan Orang Tua</strong>.</li>
-                    <li><strong>Update dokumen legal</strong> dan peningkatan performa.</li> 
+                    <li><strong>Alur pembayaran 3 langkah</strong> kini lebih terarah, rapi, dan tanpa perlu scroll.</li>
+                    <li><strong>Optimalisasi tampilan mobile</strong> untuk form checkout dan pilihan nomor WhatsApp.</li>
+                    <li><strong>Pilihan login & WhatsApp</strong> masuk dengan email dan kelola nomor notifikasi pesanan.</li>
                   </ul>
                 </div>
                 <div className="p-3 border-t border-default bg-surface/50">

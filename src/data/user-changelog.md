@@ -1,3 +1,15 @@
+## Tampilan pembayaran baru yang lebih rapi - 2026-08-17
+
+### Pembayaran kini terbagi dalam 3 langkah terarah
+- Modal pembayaran dirancang bertahap agar lebih nyaman digunakan tanpa perlu menggulir (scroll) layar di komputer maupun ponsel.
+- **Langkah 1**: Memilih jenis pembelian (Beli Buku atau Langganan VIP), melihat ringkasan pesanan, dan memasukkan kode kupon.
+- **Langkah 2**: Memeriksa identitas akun pembeli dan memilih nomor WhatsApp untuk pembaruan status pesanan.
+- **Langkah 3**: Memilih metode pembayaran (QRIS atau Transfer Bank) serta melanjutkan ke pembayaran.
+- Terdapat tombol navigasi kembali dan indikator langkah untuk memudahkan berpindah antar tahapan.
+
+### Pengalaman di perangkat seluler lebih optimal
+- Tampilan teks, pilihan nomor WhatsApp, dan rincian harga dioptimalkan agar pas dengan layar ponsel tanpa ada bagian yang terpotong.
+
 ## Masuk dengan email - 2026-08-15
 
 ### Akun orang tua kini punya pilihan tambahan
