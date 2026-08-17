@@ -131,7 +131,7 @@ export function StoryCatalogCard({
                 className="btn-primary inline-flex items-center justify-center gap-2 px-3 py-2.5 text-xs"
               >
                 <BookOpen className="w-4 h-4" />
-                <span>{progress.hasSavedBookmark ? `Lanjut halaman ${targetPage + 1}` : 'Baca sekarang'}</span>
+                <span>{progress.hasSavedBookmark ? `Lanjut halaman ${targetPage + 1}` : 'Baca gratis'}</span>
               </button>
             )}
 
@@ -158,7 +158,7 @@ export function StoryCatalogCard({
                 className="inline-flex items-center justify-center gap-2 rounded-xl border border-default bg-surface px-3 py-2.5 text-xs font-bold text-secondary transition-all hover:bg-surface-hover hover:text-primary active:scale-[0.98]"
               >
                 <Download className="w-4 h-4" />
-                <span>Unduh Rp {((story.ebookPrice || defaultEbookPrice) / 1000).toFixed(0)}rb</span>
+                <span>Unduh</span>
               </button>
             )}
           </div>
