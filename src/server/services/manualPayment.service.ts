@@ -152,6 +152,8 @@ export async function createManualPaymentOrder(
 ): Promise<{ order: ManualPaymentOrderRow; instructions: ManualPaymentInstructions }> {
   const resolved = await resolveTransactionRequest(body, user);
   const whatsappContact = await resolveWhatsAppContactForOrder(user.id, body.whatsappContactId);
+  const whatsappContactId = whatsappContact?.id ?? null;
+  const customerWhatsApp = whatsappContact?.phoneE164 ?? null;
   const selectedMethod: ManualPaymentMethod = body.paymentMethod === 'manual_qris'
     ? 'manual_qris'
     : 'manual_bank_transfer';
@@ -173,10 +175,10 @@ export async function createManualPaymentOrder(
 
   let currentOrder = await expireOrderIfNeeded(existing as ManualPaymentOrderRow | null);
   if (currentOrder && ['pending_payment', 'rejected'].includes(currentOrder.status)
-    && currentOrder.whatsapp_contact_id !== whatsappContact.id) {
+    && currentOrder.whatsapp_contact_id !== whatsappContactId) {
     const { data: updated, error: updateError } = await supabase.from('payment_orders').update({
-      whatsapp_contact_id: whatsappContact.id,
-      customer_whatsapp: whatsappContact.phoneE164,
+      whatsapp_contact_id: whatsappContactId,
+      customer_whatsapp: customerWhatsApp,
       updated_at: new Date().toISOString(),
     }).eq('order_id', currentOrder.order_id).eq('user_id', user.id).select('*').single();
     if (updateError) throw new Error(`Nomor WhatsApp pesanan belum dapat diperbarui: ${updateError.message}`);
@@ -212,8 +214,8 @@ export async function createManualPaymentOrder(
     status: 'pending_payment',
     provider: 'manual',
     payment_method: selectedMethod,
-    whatsapp_contact_id: whatsappContact.id,
-    customer_whatsapp: whatsappContact.phoneE164,
+    whatsapp_contact_id: whatsappContactId,
+    customer_whatsapp: customerWhatsApp,
     expires_at: expiresAt,
   };
   const { data, error } = await supabase.from('payment_orders').insert(row).select('*').single();

@@ -1,6 +1,16 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { hashWhatsAppVerificationCode, normalizeIndonesianWhatsAppNumber } from './whatsappContact.service';
+import {
+  hashWhatsAppVerificationCode,
+  normalizeIndonesianWhatsAppNumber,
+  resolveWhatsAppContactForOrder,
+} from './whatsappContact.service';
+
+test('allows an order without a WhatsApp notification contact', async () => {
+  assert.equal(await resolveWhatsAppContactForOrder('test-user', undefined), null);
+  assert.equal(await resolveWhatsAppContactForOrder('test-user', null), null);
+  assert.equal(await resolveWhatsAppContactForOrder('test-user', ''), null);
+});
 
 test('normalizes common Indonesian WhatsApp number formats', () => {
   assert.equal(normalizeIndonesianWhatsAppNumber('0812-3456-7890'), '6281234567890');

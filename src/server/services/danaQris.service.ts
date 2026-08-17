@@ -295,6 +295,8 @@ async function requestDanaQris(options: {
 export async function createDanaQrisOrder(user: User, body: Record<string, unknown>) {
   const resolved = await resolveTransactionRequest(body, user);
   const whatsappContact = await resolveWhatsAppContactForOrder(user.id, body.whatsappContactId);
+  const whatsappContactId = whatsappContact?.id ?? null;
+  const customerWhatsApp = whatsappContact?.phoneE164 ?? null;
   const supabase = getSupabaseAdminClient();
   const now = new Date();
   const { data: existing, error: existingError } = await supabase
@@ -312,10 +314,10 @@ export async function createDanaQrisOrder(user: User, body: Record<string, unkno
     .maybeSingle();
   if (existingError) throw new Error(`Pesanan QRIS aktif belum dapat diperiksa: ${existingError.message}`);
   let existingOrder = existing as DanaPaymentOrderRow | null;
-  if (existingOrder && existingOrder.whatsapp_contact_id !== whatsappContact.id) {
+  if (existingOrder && existingOrder.whatsapp_contact_id !== whatsappContactId) {
     const { data: updated, error: updateError } = await supabase.from('payment_orders').update({
-      whatsapp_contact_id: whatsappContact.id,
-      customer_whatsapp: whatsappContact.phoneE164,
+      whatsapp_contact_id: whatsappContactId,
+      customer_whatsapp: customerWhatsApp,
       updated_at: new Date().toISOString(),
     }).eq('order_id', existingOrder.order_id).eq('user_id', user.id).select('*').single();
     if (updateError) throw new Error(`Nomor WhatsApp QRIS belum dapat diperbarui: ${updateError.message}`);
@@ -341,8 +343,8 @@ export async function createDanaQrisOrder(user: User, body: Record<string, unkno
       provider: 'dana',
       payment_method: 'dana_qris',
       provider_external_id: createExternalId(),
-      whatsapp_contact_id: whatsappContact.id,
-      customer_whatsapp: whatsappContact.phoneE164,
+      whatsapp_contact_id: whatsappContactId,
+      customer_whatsapp: customerWhatsApp,
       expires_at: expiresAt.toISOString(),
     };
     const { data: inserted, error: insertError } = await supabase

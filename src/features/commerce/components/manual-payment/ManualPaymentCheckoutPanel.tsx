@@ -140,7 +140,10 @@ function Step2DetailsPanel({ controller }: { controller: ManualPaymentController
       </div>
 
       <div className="grid gap-3 overflow-hidden rounded-xl border border-brand-green/25 bg-brand-green/10 p-4" role="group" aria-label="WhatsApp untuk status pesanan">
-        <p className="text-xs font-extrabold text-brand-green">WhatsApp untuk status pesanan</p>
+        <div>
+          <p className="text-xs font-extrabold text-brand-green">WhatsApp untuk status pesanan <span className="font-semibold text-secondary">(opsional)</span></p>
+          <p className="mt-1 text-[10px] leading-5 text-secondary">Kosongkan bagian ini jika ingin melanjutkan checkout tanpa notifikasi WhatsApp.</p>
+        </div>
         {controller.whatsappContacts.length > 0 && (
           <label className="grid min-w-0 gap-1.5 text-xs font-bold text-secondary">
             Pilih nomor tersimpan
@@ -153,14 +156,14 @@ function Step2DetailsPanel({ controller }: { controller: ManualPaymentController
               {controller.whatsappContacts.filter((contact) => contact.orderNotificationsEnabled).map((contact) => (
                 <option key={contact.id} value={contact.id}>{contact.label} · +{contact.phoneE164}{contact.isDefault ? ' (utama)' : ''}{contact.verifiedAt ? '' : ' · belum diverifikasi'}</option>
               ))}
-              <option value="">+ Tambah nomor baru</option>
+              <option value="">Tanpa notifikasi / tambah nomor baru</option>
             </select>
           </label>
         )}
         {!controller.selectedWhatsAppContactId && (
           <>
             <label className="grid gap-1.5 text-xs font-bold text-secondary">
-              Nomor WhatsApp
+              Nomor WhatsApp (opsional)
               <input
                 value={controller.newWhatsAppNumber}
                 inputMode="tel"
@@ -177,7 +180,7 @@ function Step2DetailsPanel({ controller }: { controller: ManualPaymentController
             </label>
           </>
         )}
-        {controller.pendingWhatsAppVerificationId && <div className="grid gap-2 rounded-xl border border-brand-green/30 bg-surface p-3">
+        {controller.pendingWhatsAppVerificationId === controller.selectedWhatsAppContactId && <div className="grid gap-2 rounded-xl border border-brand-green/30 bg-surface p-3">
           <label className="grid gap-1 text-xs font-bold text-secondary">Kode verifikasi 6 digit
             <input value={controller.whatsappVerificationCode} inputMode="numeric" autoComplete="one-time-code" maxLength={6} onChange={(event) => controller.setWhatsappVerificationCode(event.target.value.replace(/\D/g, '').slice(0, 6))} placeholder="000000" className="reader-field rounded-xl px-3 py-2.5 font-mono text-sm tracking-[0.3em]" />
           </label>
@@ -186,7 +189,7 @@ function Step2DetailsPanel({ controller }: { controller: ManualPaymentController
             <button type="button" disabled={controller.isProcessing} onClick={controller.resendWhatsAppVerification} className="btn-secondary px-3 py-2 text-xs">Kirim ulang</button>
           </div>
         </div>}
-        <p className="text-[10px] leading-5 text-secondary">Nomor harus diverifikasi melalui kode WhatsApp sebelum pesanan dibuat.</p>
+        <p className="text-[10px] leading-5 text-secondary">Jika nomor diisi atau dipilih, nomor harus terverifikasi. Tanpa nomor, pesanan tetap dapat dibuat.</p>
       </div>
 
       {controller.errorMessage && (
@@ -198,7 +201,7 @@ function Step2DetailsPanel({ controller }: { controller: ManualPaymentController
       <button
         type="button"
         onClick={controller.goToStep3}
-        disabled={controller.isProcessing || controller.isLoadingWhatsAppContacts}
+        disabled={controller.isProcessing}
         className="btn-primary flex w-full items-center justify-center gap-2 px-5 py-3.5 text-sm disabled:opacity-60"
       >
         Lanjut pilih metode pembayaran
@@ -270,7 +273,7 @@ function Step3PaymentPanel({ controller }: { controller: ManualPaymentController
       <button
         type="button"
         onClick={controller.startOrder}
-        disabled={controller.isProcessing || controller.isApplyingCoupon || controller.isLoadingWhatsAppContacts}
+        disabled={controller.isProcessing || controller.isApplyingCoupon}
         className="btn-primary flex w-full items-center justify-center gap-2 px-5 py-3.5 text-sm disabled:opacity-60"
       >
         {controller.isProcessing ? (

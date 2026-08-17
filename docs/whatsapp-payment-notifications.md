@@ -48,7 +48,7 @@ Template pelanggan merupakan kontrak terpisah dari `pesanan_baru_bacayuk`. Templ
 - pembayaran disetujui;
 - bukti pembayaran ditolak dan perlu dikirim ulang.
 
-Aplikasi menyimpan beberapa nomor WhatsApp milik user, persetujuan notifikasi transaksi, nomor utama, dan nomor yang dipilih untuk setiap order. Nomor wajib lolos verifikasi kepemilikan sebelum dapat dipakai pada pesanan.
+Aplikasi menyimpan beberapa nomor WhatsApp milik user, persetujuan notifikasi transaksi, nomor utama, dan nomor opsional yang dipilih untuk setiap order. Jika user memilih notifikasi WhatsApp, nomor wajib lolos verifikasi kepemilikan sebelum dapat dipakai pada pesanan. Checkout tetap dapat dilanjutkan tanpa nomor WhatsApp.
 
 Verifikasi menggunakan template kategori `AUTHENTICATION` dengan kode sekali pakai 6 digit dan tombol **Copy code**. Nama template bebas, tetapi harus sama dengan konfigurasi server. Kode berlaku 10 menit, hanya hash kode yang disimpan, kirim ulang dibatasi satu kali per 60 detik, dan maksimal lima percobaan per kode. Template Utility pembayaran tidak boleh dipakai sebagai pengganti template Authentication ini.
 

@@ -108,12 +108,13 @@ export function useManualPaymentController({
     const abortController = new AbortController();
     abortRef.current = abortController;
     try {
-      let whatsappContactId = selectedWhatsAppContactId;
-      if (!whatsappContactId) {
-        if (!newWhatsAppNumber.trim()) throw new Error('Isi atau pilih nomor WhatsApp untuk menerima status pesanan.');
-        if (!whatsappConsent) throw new Error('Konfirmasi persetujuan notifikasi WhatsApp terlebih dahulu.');
+      let whatsappContactId = selectedWhatsAppContactId ?? undefined;
+      const newWhatsAppNumberValue = newWhatsAppNumber.trim();
+      const wantsNewWhatsAppContact = !whatsappContactId && Boolean(newWhatsAppNumberValue);
+      if (wantsNewWhatsAppContact) {
+        if (!whatsappConsent) throw new Error('Konfirmasi persetujuan notifikasi WhatsApp, atau kosongkan nomor untuk melanjutkan tanpa notifikasi.');
         const contact = await createWhatsAppContact({
-          phone: newWhatsAppNumber,
+          phone: newWhatsAppNumberValue,
           label: whatsappContacts.length === 0 ? 'Utama' : 'Nomor pembayaran',
           consentConfirmed: true,
           orderNotificationsEnabled: true,
@@ -123,15 +124,16 @@ export function useManualPaymentController({
         setWhatsAppContacts((current) => [...current, contact]);
         setSelectedWhatsAppContactId(contact.id);
       }
-      const selectedContact = whatsappContacts.find((contact) => contact.id === whatsappContactId);
-      const currentContact = selectedContact || (whatsappContactId
-        ? (await fetchWhatsAppContacts(abortController.signal)).find((contact) => contact.id === whatsappContactId)
-        : undefined);
-      if (!currentContact?.verifiedAt) {
-        await requestWhatsAppContactVerification(whatsappContactId);
-        setPendingWhatsAppVerificationId(whatsappContactId);
-        setWhatsAppVerificationCode('');
-        throw new Error('Kode verifikasi telah dikirim ke WhatsApp. Masukkan kode 6 digit untuk melanjutkan.');
+      if (whatsappContactId) {
+        const selectedContact = whatsappContacts.find((contact) => contact.id === whatsappContactId);
+        const currentContact = selectedContact
+          || (await fetchWhatsAppContacts(abortController.signal)).find((contact) => contact.id === whatsappContactId);
+        if (!currentContact?.verifiedAt) {
+          await requestWhatsAppContactVerification(whatsappContactId);
+          setPendingWhatsAppVerificationId(whatsappContactId);
+          setWhatsAppVerificationCode('');
+          throw new Error('Kode verifikasi telah dikirim ke WhatsApp. Masukkan kode 6 digit, atau pilih tanpa notifikasi untuk melanjutkan.');
+        }
       }
       const nextOrder = await createManualPaymentOrder({
         purchaseType: checkout.purchaseType,

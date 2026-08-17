@@ -231,8 +231,9 @@ export async function confirmWhatsAppContactVerification(userId: string, contact
 }
 
 export async function resolveWhatsAppContactForOrder(userId: string, contactId: unknown) {
+  if (contactId === undefined || contactId === null || contactId === '') return null;
   const parsedId = Number(contactId);
-  if (!Number.isSafeInteger(parsedId) || parsedId <= 0) throw new Error('Pilih nomor WhatsApp untuk menerima status pesanan.');
+  if (!Number.isSafeInteger(parsedId) || parsedId <= 0) throw new Error('Nomor WhatsApp yang dipilih tidak valid.');
   const { data, error } = await getSupabaseAdminClient().from('user_whatsapp_contacts').select('*')
     .eq('id', parsedId).eq('user_id', userId).maybeSingle();
   if (error) throw new Error(`Nomor WhatsApp belum dapat diperiksa: ${error.message}`);

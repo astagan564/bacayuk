@@ -15,7 +15,7 @@ Endpoint `GET /api/manual-payment-orders` tidak menerima ID user dari browser. I
 
 ## Kontak WhatsApp pembeli
 
-Login Google dan Facebook tidak selalu memberikan nomor telepon. Karena itu, saat memulai pembelian user memilih nomor WhatsApp yang sudah tersimpan atau menambahkan nomor baru dengan persetujuan notifikasi transaksi yang eksplisit.
+Login Google dan Facebook tidak selalu memberikan nomor telepon. Karena itu, kontak WhatsApp pada checkout bersifat opsional. User dapat memilih nomor yang sudah tersimpan, menambahkan nomor baru dengan persetujuan notifikasi transaksi yang eksplisit, atau melanjutkan tanpa notifikasi WhatsApp.
 
 - Satu akun dapat menyimpan beberapa nomor dan menetapkan satu nomor utama.
 - Nomor dapat ditambah, diubah, dijadikan utama, atau dihapus melalui **Pengaturan Orang Tua → Nomor WhatsApp**.
@@ -23,7 +23,7 @@ Login Google dan Facebook tidak selalu memberikan nomor telepon. Karena itu, saa
 - Setiap order menyimpan ID kontak dan salinan nomor yang dipilih saat checkout. Perubahan nomor berikutnya tidak diam-diam mengalihkan tujuan order lama.
 - Penghapusan akun membersihkan nomor dari catatan transaksi yang dipertahankan, sedangkan penghapusan satu kontak tidak menghapus riwayat order.
 
-Kontak wajib diverifikasi dengan kode sekali pakai melalui template Authentication WhatsApp sebelum dapat dipilih untuk pesanan. Template Utility pelanggan dan template Admin tetap merupakan alur terpisah.
+Jika user memilih memakai kontak WhatsApp, kontak tersebut wajib diverifikasi dengan kode sekali pakai melalui template Authentication WhatsApp sebelum dapat dipakai untuk pesanan. Pesanan tanpa kontak tetap dapat dibuat. Template Utility pelanggan dan template Admin tetap merupakan alur terpisah.
 
 ## Aturan kedaluwarsa
 
