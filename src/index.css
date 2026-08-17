@@ -160,6 +160,24 @@
   animation: reader-fade-in 0.28s ease-out both;
 }
 
+@keyframes step-slide-in {
+  from { opacity: 0; transform: translateX(16px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes step-slide-back {
+  from { opacity: 0; transform: translateX(-16px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.animate-step-forward {
+  animation: step-slide-in 0.25s ease-out both;
+}
+
+.animate-step-back {
+  animation: step-slide-back 0.25s ease-out both;
+}
+
 @media (min-width: 1024px) {
   .reader-book-frame {
     width: min(100%, calc((100dvh - 2.5rem) * 16 / 11));
@@ -171,6 +189,8 @@
   .animate-page-turn-prev,
   .animate-fade-in,
   .reader-fade-in,
+  .animate-step-forward,
+  .animate-step-back,
   .animate-bounce,
   .animate-pulse {
     animation-duration: 0.01ms !important;

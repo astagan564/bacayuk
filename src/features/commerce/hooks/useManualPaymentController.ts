@@ -62,6 +62,7 @@ export function useManualPaymentController({
   const [isLoadingWhatsAppContacts, setIsLoadingWhatsAppContacts] = useState(!initialOrder);
   const [pendingWhatsAppVerificationId, setPendingWhatsAppVerificationId] = useState<number | null>(null);
   const [whatsappVerificationCode, setWhatsAppVerificationCode] = useState('');
+  const [checkoutStep, setCheckoutStep] = useState<1 | 2 | 3>(1);
   const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
@@ -85,6 +86,10 @@ export function useManualPaymentController({
     bank: Boolean(instructions?.bankTransfer),
     qris: Boolean(instructions?.qrisImageUrl),
   }), [instructions]);
+
+  const goToStep1 = useCallback(() => setCheckoutStep(1), []);
+  const goToStep2 = useCallback(() => setCheckoutStep(2), []);
+  const goToStep3 = useCallback(() => setCheckoutStep(3), []);
 
   const selectPurchaseType = useCallback((nextPurchaseType: PurchaseType) => {
     checkout.selectPurchaseType(nextPurchaseType);
@@ -262,6 +267,10 @@ export function useManualPaymentController({
     isVipOnly,
     basePrice,
     vipPrice: VIP_MONTHLY_PRICE,
+    checkoutStep,
+    goToStep1,
+    goToStep2,
+    goToStep3,
     purchaseType: checkout.purchaseType,
     customerName: checkout.customerName,
     customerEmail: checkout.customerEmail,
