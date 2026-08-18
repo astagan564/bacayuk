@@ -1,9 +1,18 @@
 {
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
+  "functions": {
+    "api/index.ts": {
+      "includeFiles": "dist/index.html"
+    }
+  },
   "rewrites": [
     {
       "source": "/api/(.*)",
+      "destination": "/api/index"
+    },
+    {
+      "source": "/read/(.*)",
       "destination": "/api/index"
     },
     {
