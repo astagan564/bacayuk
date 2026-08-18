@@ -11,7 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Dynamic per-book SEO metadata**: Added a server-side Express middleware to inject dynamic `<title>`, `<meta>` (Open Graph, Twitter), and `Book` JSON-LD schema into the `index.html` payload for `/read/:storyId` crawler requests. TanStack Router's `loader` and `head()` API manage these same metadata tags during client-side SPA navigation. Missing stories gracefully fall back to 404 with generic UI metadata.
 
 ### Changed
+- **Extended Open Graph image metadata**: Added `og:image:alt` and `og:image:type` to the dynamic SEO payload for improved accessibility and better crawler rendering of Supabase cover images.
 - **Optional checkout WhatsApp contact**: Buyers can continue manual or DANA QRIS checkout without a WhatsApp number. Contact consent and ownership verification are enforced only when the buyer opts into WhatsApp order notifications.
+
+### Fixed
+- **Vercel middleware bypass**: Fixed an issue where Vercel automatically served `/read/:storyId` requests directly from the static CDN. Configured `vercel.json` rewrites and `api/index.ts` to explicitly route `/read/(.*)` through the Express serverless function, allowing the `seoMiddleware` to run in production.
 
 ## [0.3.0] - 2026-08-17
 
