@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Dynamic per-book SEO metadata**: Added a server-side Express middleware to inject dynamic `<title>`, `<meta>` (Open Graph, Twitter), and `Book` JSON-LD schema into the `index.html` payload for `/read/:storyId` crawler requests. TanStack Router's `loader` and `head()` API manage these same metadata tags during client-side SPA navigation. Missing stories gracefully fall back to 404 with generic UI metadata.
+
 ### Changed
 - **Optional checkout WhatsApp contact**: Buyers can continue manual or DANA QRIS checkout without a WhatsApp number. Contact consent and ownership verification are enforced only when the buyer opts into WhatsApp order notifications.
 

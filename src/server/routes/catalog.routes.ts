@@ -4,6 +4,7 @@ import type { Story } from '../../types';
 import { getSupabaseAdminClient } from '../clients/supabaseAdminClient';
 import { isValidAdminPin } from '../middleware/adminAuth';
 import { normalizeStory } from '../utils/storybookNormalization';
+import { getPublishedStoryById } from '../services/storyService';
 
 export function registerCatalogRoutes(app: Express) {
   app.get('/api/stories', async (_req, res) => {
@@ -30,6 +31,21 @@ export function registerCatalogRoutes(app: Express) {
     } catch (error) {
       console.warn('Falling back to bundled stories:', error);
       res.json({ stories: INITIAL_STORIES.map(normalizeStory), fallback: true });
+    }
+  });
+
+  app.get('/api/stories/:storyId', async (req, res) => {
+    try {
+      const story = await getPublishedStoryById(req.params.storyId);
+
+      if (!story) {
+        return res.status(404).json({ error: 'Story not found' });
+      }
+
+      return res.json({ story });
+    } catch (error) {
+      console.error('Failed to load story:', error);
+      return res.status(500).json({ error: 'Gagal memuat buku.' });
     }
   });
 

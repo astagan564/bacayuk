@@ -12,6 +12,7 @@ import { registerTranslationRoutes } from './routes/translation.routes';
 import { registerSettingsRoutes } from './routes/settings.routes';
 import { registerAccountRoutes } from './routes/account.routes';
 import { registerAdminUsersRoutes } from './routes/adminUsers.routes';
+import { registerSeoMiddleware } from './middleware/seoMiddleware';
 
 export async function createApp(options: { serveClient?: boolean } = {}) {
   const app = express();
@@ -45,6 +46,7 @@ export async function createApp(options: { serveClient?: boolean } = {}) {
     } else {
       const distPath = path.join(process.cwd(), 'dist');
       app.use(express.static(distPath));
+      registerSeoMiddleware(app, distPath);
       app.get('*', (_req, res) => {
         res.sendFile(path.join(distPath, 'index.html'));
       });

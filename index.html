@@ -5,6 +5,8 @@
     <link rel="icon" type="image/svg+xml" href="/src/assets/bacayuk-mark.svg">
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="application-name" content="BacaYuk" />
+    <meta name="theme-color" content="#0ea5e9" />
+    <!-- DEFAULT_SEO_START -->
     <meta name="description" content="BacaYuk adalah aplikasi buku cerita anak interaktif untuk orang tua dan anak, dengan bacaan bergambar, narasi suara, dan dukungan membaca bersama." />
     <link rel="canonical" href="https://www.bacayuk.web.id/" />
     <meta property="og:site_name" content="BacaYuk" />
@@ -23,20 +25,55 @@
     <meta name="twitter:description" content="Aplikasi buku cerita anak interaktif untuk membaca bersama keluarga." />
     <meta name="twitter:image" content="https://www.bacayuk.web.id/bacayuk-og.png" />
     <meta name="twitter:image:alt" content="BacaYuk, aplikasi buku cerita anak interaktif untuk keluarga" />
-    <meta name="theme-color" content="#0ea5e9" />
     <title>BacaYuk | Buku Cerita Anak Interaktif</title>
+    <!-- DEFAULT_SEO_END -->
     <script type="application/ld+json">
-      {
-        "@context": "https://schema.org",
-        "@type": "WebApplication",
-        "name": "BacaYuk",
-        "url": "https://www.bacayuk.web.id/",
-        "image": "https://www.bacayuk.web.id/bacayuk-og.png",
-        "description": "Aplikasi buku cerita anak interaktif untuk orang tua dan anak.",
-        "applicationCategory": "EducationalApplication",
-        "operatingSystem": "Web"
-      }
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Organization",
+          "@id": "https://www.bacayuk.web.id/#organization",
+          "name": "BacaYuk",
+          "url": "https://www.bacayuk.web.id/",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "https://www.bacayuk.web.id/bacayuk-mark.svg"
+          },
+          "sameAs": [
+            "https://www.instagram.com/bacayuk.web.id/",
+            "https://www.facebook.com/bacayukwebid"
+          ]
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://www.bacayuk.web.id/#website",
+          "url": "https://www.bacayuk.web.id/",
+          "name": "BacaYuk",
+          "publisher": {
+            "@id": "https://www.bacayuk.web.id/#organization"
+          }
+        },
+        {
+          "@type": "WebApplication",
+          "@id": "https://www.bacayuk.web.id/#webapp",
+          "name": "BacaYuk",
+          "url": "https://www.bacayuk.web.id/",
+          "image": "https://www.bacayuk.web.id/bacayuk-og.png",
+          "description": "Aplikasi buku cerita anak interaktif untuk orang tua dan anak.",
+          "applicationCategory": "EducationalApplication",
+          "operatingSystem": "Web",
+          "publisher": {
+            "@id": "https://www.bacayuk.web.id/#organization"
+          },
+          "isPartOf": {
+            "@id": "https://www.bacayuk.web.id/#website"
+          },
+        }
+      ]
+    }
     </script>
+    <!-- SEO_DYNAMIC_JSONLD -->
     <style>
       .oauth-home-fallback {
         box-sizing: border-box;

@@ -1,8 +1,8 @@
-import { createRootRoute } from '@tanstack/react-router';
+import { createRootRoute, HeadContent, Scripts } from '@tanstack/react-router';
 import App from '@/App';
 
 export const Route = createRootRoute({
-  component: App,
+  component: RootComponent,
   notFoundComponent: () => (
     <main className="min-h-screen grid place-items-center bg-surface px-6 text-center">
       <div>
@@ -15,3 +15,13 @@ export const Route = createRootRoute({
     </main>
   ),
 });
+
+function RootComponent() {
+  return (
+    <>
+      <HeadContent />
+      <App />
+      <Scripts />
+    </>
+  );
+}
