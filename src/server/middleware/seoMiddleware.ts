@@ -64,6 +64,8 @@ export function registerSeoMiddleware(app: Express, distPath: string) {
       `<meta property="og:description" content="${escapeAttr(seoMeta.description)}" />`,
       `<meta property="og:url" content="${escapeAttr(seoMeta.url)}" />`,
       `<meta property="og:image" content="${escapeAttr(seoMeta.image)}" />`,
+      `<meta property="og:image:alt" content="${escapeAttr(seoMeta.imageAlt)}" />`,
+      `<meta property="og:image:type" content="${escapeAttr(seoMeta.imageType)}" />`,
       `<meta property="og:type" content="book" />`,
       `<meta name="twitter:card" content="summary_large_image" />`,
       `<meta name="twitter:title" content="${escapeAttr(seoMeta.title)}" />`,

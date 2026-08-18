@@ -46,6 +46,14 @@ export const Route = createFileRoute('/read/$storyId')({
           content: seoMeta.image,
         },
         {
+          property: 'og:image:alt',
+          content: seoMeta.imageAlt,
+        },
+        {
+          property: 'og:image:type',
+          content: seoMeta.imageType,
+        },
+        {
           property: 'og:url',
           content: seoMeta.url,
         },
