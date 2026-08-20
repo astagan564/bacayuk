@@ -1,56 +1,80 @@
 import fs from 'fs';
+import path from 'path';
+import 'dotenv/config';
 import { createClient } from '@supabase/supabase-js';
 
-const SUPABASE_URL = process.env.VITE_SUPABASE_URL || 'https://sibwrdbmoasrpcpjgrst.supabase.co';
-const SUPABASE_SECRET_KEY = process.env.SUPABASE_SECRET_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNpYndyZGJtb2FzcnBjcGpncnN0Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NjE0MDQyNSwiZXhwIjoyMTAxNzE2NDI1fQ.9sirWkR1aKiPOVQyxAvHUqVulME7ePFDEcV3BEDVjLM';
+const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
+const SUPABASE_SECRET_KEY = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+if (!SUPABASE_URL || !SUPABASE_SECRET_KEY) {
+  console.error('Error: VITE_SUPABASE_URL and SUPABASE_SECRET_KEY must be configured in environment or .env file.');
+  process.exit(1);
+}
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SECRET_KEY);
 
 async function main() {
   console.log('Connecting to Supabase at:', SUPABASE_URL);
 
-  const raw1 = fs.readFileSync('public/generate-story/bimo-dan-lentera-bintang/story.json', 'utf8');
-  const raw2 = fs.readFileSync('public/generate-story/samudra-dan-rahasia-terumbu-karang/story.json', 'utf8');
-
-  const pkg1 = JSON.parse(raw1);
-  const pkg2 = JSON.parse(raw2);
-
-  const stories = [
-    {
-      id: pkg1.story.id,
-      title: pkg1.story.title,
-      category: pkg1.story.category,
-      status: 'published',
-      story: pkg1.story,
-      sort_order: 12,
-      updated_at: new Date().toISOString()
-    },
-    {
-      id: pkg2.story.id,
-      title: pkg2.story.title,
-      category: pkg2.story.category,
-      status: 'published',
-      story: pkg2.story,
-      sort_order: 13,
-      updated_at: new Date().toISOString()
-    }
-  ];
-
-  for (const storyRow of stories) {
-    console.log(`Upserting story: ${storyRow.title} (${storyRow.id})...`);
-    const { data, error } = await supabase
-      .from('admin_stories')
-      .upsert(storyRow, { onConflict: 'id' })
-      .select();
-
-    if (error) {
-      console.error(`Error inserting ${storyRow.id}:`, error);
-      process.exit(1);
-    }
-    console.log(`Successfully upserted ${storyRow.id}:`, data);
+  const storiesDir = path.join(process.cwd(), 'public', 'generate-story');
+  if (!fs.existsSync(storiesDir)) {
+    console.warn(`Directory not found: ${storiesDir}`);
+    return;
   }
 
-  console.log('All stories integrated into Supabase successfully!');
+  const dirs = fs.readdirSync(storiesDir, { withFileTypes: true })
+    .filter((dirent) => dirent.isDirectory())
+    .map((dirent) => dirent.name);
+
+  // Fetch current maximum sort_order
+  const { data: currentStories } = await supabase
+    .from('admin_stories')
+    .select('id, sort_order')
+    .order('sort_order', { ascending: false });
+
+  let nextSortOrder = (currentStories && currentStories.length > 0 && currentStories[0].sort_order !== null)
+    ? currentStories[0].sort_order + 1
+    : 0;
+
+  const existingMap = new Map((currentStories || []).map((s) => [s.id, s.sort_order]));
+
+  for (const dirName of dirs) {
+    const filePath = path.join(storiesDir, dirName, 'story.json');
+    if (!fs.existsSync(filePath)) {
+      continue;
+    }
+
+    const raw = fs.readFileSync(filePath, 'utf8');
+    const pkg = JSON.parse(raw);
+    const story = pkg.story;
+
+    const assignedSortOrder = existingMap.has(story.id)
+      ? existingMap.get(story.id)
+      : nextSortOrder++;
+
+    const row = {
+      id: story.id,
+      title: story.title,
+      category: story.category,
+      status: story.status || 'published',
+      story: story,
+      sort_order: assignedSortOrder,
+      updated_at: new Date().toISOString()
+    };
+
+    console.log(`Upserting story: ${row.title} (${row.id}) [sort_order: ${row.sort_order}]...`);
+    const { error } = await supabase
+      .from('admin_stories')
+      .upsert(row, { onConflict: 'id' });
+
+    if (error) {
+      console.error(`Error inserting ${row.id}:`, error);
+      process.exit(1);
+    }
+    console.log(`✓ Successfully synced ${row.id}`);
+  }
+
+  console.log('All stories synced to Supabase successfully!');
 }
 
 main().catch((err) => {
