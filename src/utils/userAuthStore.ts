@@ -191,24 +191,8 @@ export const userAuthStore = {
       localStorage.setItem(FREE_READ_HISTORY_KEY, JSON.stringify(history));
     }
     
-    // Sync to Supabase if logged in
-    const user = this.getUser();
-    if (user) {
-      try {
-        await supabase.from('user_reading_activities').upsert({
-          user_id: user.id,
-          user_name: user.name,
-          user_email: user.email,
-          story_id: storyId,
-          story_title: storyTitle || storyId,
-          last_page_read: 0,
-          total_pages: 0,
-          is_completed: false
-        }, { onConflict: 'user_id,story_id' });
-      } catch (e) {
-        console.error('Failed to sync reading activity', e);
-      }
-    }
+    // Detailed progress is recorded through the authenticated server endpoint
+    // once the reader is open. Keep this local history for guest-book limits.
   },
 
   /**

@@ -54,6 +54,22 @@ export interface UserReadingActivity {
   updatedAt: string;
 }
 
+export type ReadingActivityStatus = 'all' | 'reading' | 'completed';
+export type ReadingActivityPeriod = 'all' | 'today' | '7d' | '30d';
+
+export interface ReadingActivityFilters {
+  search: string;
+  status: ReadingActivityStatus;
+  period: ReadingActivityPeriod;
+  page: number;
+}
+
+export interface ReadingActivityMetrics {
+  total: number;
+  activeReaders7d: number;
+  completed: number;
+}
+
 export interface StoryAnalyticsInput {
   id: string;
   title: string;

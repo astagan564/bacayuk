@@ -61,6 +61,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     setSearchQuery: setUserSearchQuery,
     refreshUsers,
     handleExportCsv: handleExportUsersCSV,
+    activityFilters,
+    setActivityFilters,
+    activityMetrics,
+    activityPageSize,
   } = useAdminUsersController({ adminPin: adminPin || '', showToast });
 
   const {
@@ -152,7 +156,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           />
         )}
 
-        {activeTab === 'users' && <UsersTab users={userList} readingLogs={readingLogs} error={usersError} isLoading={isLoadingUsers} searchQuery={userSearchQuery} onSearchQueryChange={setUserSearchQuery} onRefresh={() => void refreshUsers()} onExportCsv={handleExportUsersCSV} />}
+        {activeTab === 'users' && <UsersTab users={userList} readingLogs={readingLogs} error={usersError} isLoading={isLoadingUsers} searchQuery={userSearchQuery} onSearchQueryChange={setUserSearchQuery} onRefresh={() => void refreshUsers()} onExportCsv={handleExportUsersCSV} activityFilters={activityFilters} activityMetrics={activityMetrics} activityPageSize={activityPageSize} onActivityFiltersChange={setActivityFilters} />}
 
         {activeTab === 'finance' && <FinanceTab totalRevenue={totalRevenue} successfulTransactions={successTrxs} pendingTransactions={pendingTrxs} transactions={transactions} transactionsError={transactionsError} isLoadingTransactions={isLoadingTransactions} coupons={coupons} showCouponForm={showCouponForm} newCouponCode={newCouponCode} newCouponType={newCouponType} newCouponValue={newCouponValue} onToggleCouponForm={() => setShowCouponForm(!showCouponForm)} onCouponCodeChange={setNewCouponCode} onCouponTypeChange={setNewCouponType} onCouponValueChange={setNewCouponValue} onCreateCoupon={handleCreateCoupon} onToggleCoupon={handleToggleCoupon} onDeleteCoupon={handleDeleteCoupon} onApproveTransaction={handleApproveTransaction} onRejectTransaction={handleRejectTransaction} onRetryWhatsAppNotification={handleRetryWhatsAppNotification} onRefreshTransactions={() => void refreshTransactions()} />}
 

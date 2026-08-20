@@ -12,6 +12,7 @@ import { registerTranslationRoutes } from './routes/translation.routes';
 import { registerSettingsRoutes } from './routes/settings.routes';
 import { registerAccountRoutes } from './routes/account.routes';
 import { registerAdminUsersRoutes } from './routes/adminUsers.routes';
+import { registerReadingActivityRoutes } from './routes/readingActivity.routes';
 import { registerSeoMiddleware } from './middleware/seoMiddleware';
 
 export async function createApp(options: { serveClient?: boolean } = {}) {
@@ -33,6 +34,7 @@ export async function createApp(options: { serveClient?: boolean } = {}) {
   registerPaymentRoutes(app);
   registerSettingsRoutes(app);
   registerAccountRoutes(app);
+  registerReadingActivityRoutes(app);
   registerAdminUsersRoutes(app);
 
   if (serveClient) {

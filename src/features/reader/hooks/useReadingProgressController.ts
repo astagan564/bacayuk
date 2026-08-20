@@ -63,19 +63,22 @@ export function useReadingProgressController({
   }, [isReaderOpen, selectedStory, showRestReminder]);
 
   useEffect(() => {
-    if (!selectedStory) return;
-    void adminStore.logUserReading({
-      userId: currentUser?.id || 'guest_session',
-      userName: currentUser?.name || 'Pengunjung Tamu',
-      userEmail: currentUser?.email || 'guest@bukucerita.id',
+    if (!selectedStory || !currentUser || !isReaderOpen) return;
+    const timer = window.setTimeout(() => {
+      void adminStore.logUserReading({
+        userId: currentUser.id,
+        userName: currentUser.name,
+        userEmail: currentUser.email,
       storyId: selectedStory.id,
       storyTitle: selectedStory.title,
       lastPageRead: currentPageIndex + 1,
       totalPages: selectedStory.pages.length,
       isCompleted: completedStories[selectedStory.id] || false,
       updatedAt: new Date().toISOString(),
-    });
-  }, [completedStories, currentPageIndex, currentUser, selectedStory]);
+      });
+    }, 2_000);
+    return () => window.clearTimeout(timer);
+  }, [completedStories, currentPageIndex, currentUser, isReaderOpen, selectedStory]);
 
   const saveBookmark = useCallback((storyId: string, pageIndex: number) => {
     setBookmarks((currentBookmarks) => {

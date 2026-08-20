@@ -10,6 +10,10 @@ export type {
   DiscountCoupon,
   DropoffAnalytics,
   PromoBanner,
+  ReadingActivityFilters,
+  ReadingActivityMetrics,
+  ReadingActivityPeriod,
+  ReadingActivityStatus,
   TransactionRecord,
   UserReadingActivity,
 } from '@/features/admin/types/adminStore';

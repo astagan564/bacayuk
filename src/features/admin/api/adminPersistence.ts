@@ -1,4 +1,5 @@
 import { supabase } from '@/utils/supabaseClient';
+import { getAuthenticatedHeaders } from '@/utils/authenticatedFetch';
 import type {
   AdminSettings,
   DiscountCoupon,
@@ -74,15 +75,22 @@ export async function persistTransactionStatus(transaction: TransactionRecord): 
 }
 
 export async function persistReadingActivity(activity: UserReadingActivity): Promise<void> {
-  await supabase.from('user_reading_activities').upsert({
-    user_id: activity.userId,
-    user_name: activity.userName,
-    user_email: activity.userEmail,
-    story_id: activity.storyId,
-    story_title: activity.storyTitle,
-    last_page_read: activity.lastPageRead,
-    total_pages: activity.totalPages,
-    is_completed: activity.isCompleted,
-    updated_at: new Date().toISOString(),
-  }, { onConflict: 'user_id,story_id' });
+  const response = await fetch('/api/reading-activities', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...await getAuthenticatedHeaders(),
+    },
+    body: JSON.stringify({
+      storyId: activity.storyId,
+      storyTitle: activity.storyTitle,
+      lastPageRead: activity.lastPageRead,
+      totalPages: activity.totalPages,
+      isCompleted: activity.isCompleted,
+    }),
+  });
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({})) as { error?: string };
+    throw new Error(body.error || 'Aktivitas membaca tidak dapat disimpan.');
+  }
 }

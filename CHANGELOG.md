@@ -8,9 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Server-side reading activity analytics**: Added an authenticated reading-progress endpoint, a retained activity-event trail, query indexes, and account-deletion cleanup. Activity identity is now derived from the verified Supabase session instead of browser-submitted profile fields.
+- **Admin activity exploration**: Added activity metrics, server-side status/date/search filters, and paginated recent-reading results in Admin → Users.
 - **Dynamic per-book SEO metadata**: Added a server-side Express middleware to inject dynamic `<title>`, `<meta>` (Open Graph, Twitter), and `Book` JSON-LD schema into the `index.html` payload for `/read/:storyId` crawler requests. TanStack Router's `loader` and `head()` API manage these same metadata tags during client-side SPA navigation. Missing stories gracefully fall back to 404 with generic UI metadata.
 
 ### Changed
+- **Reading-progress sync**: Debounced authenticated progress updates by two seconds and stopped attempting direct browser writes to the protected reading-activity table. Guest reading is no longer collapsed into a shared analytics identity.
 - **Extended Open Graph image metadata**: Added `og:image:alt` and `og:image:type` to the dynamic SEO payload for improved accessibility and better crawler rendering of Supabase cover images.
 - **Optional checkout WhatsApp contact**: Buyers can continue manual or DANA QRIS checkout without a WhatsApp number. Contact consent and ownership verification are enforced only when the buyer opts into WhatsApp order notifications.
 

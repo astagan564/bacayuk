@@ -1,143 +1,31 @@
-import type { UserReadingActivity } from '@/utils/adminStore';
+import type { ReactNode } from 'react';
+import type { ReadingActivityFilters, ReadingActivityMetrics, UserReadingActivity } from '@/utils/adminStore';
 import type { UserAccount } from '@/utils/userAuthStore';
-import { AlertCircle, BookOpen, FileSpreadsheet, RefreshCw, Search } from 'lucide-react';
-interface Props { users: UserAccount[]; readingLogs: UserReadingActivity[]; error: string | null; isLoading: boolean; searchQuery: string; onSearchQueryChange: (value: string) => void; onRefresh: () => void; onExportCsv: () => void; }
-export function UsersTab({ users: userList, readingLogs, error, isLoading, searchQuery: userSearchQuery, onSearchQueryChange, onRefresh, onExportCsv: handleExportUsersCSV }: Props) {
-const filteredUsers = userList.filter(
-  (user) =>
-    user.name.toLowerCase().includes(userSearchQuery.toLowerCase()) ||
-    user.email.toLowerCase().includes(userSearchQuery.toLowerCase()) ||
-    (user.phone && user.phone.includes(userSearchQuery))
-);
-return (
-<div className="flex flex-col gap-6">
-  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-    <div>
-      <h3 className="text-xl mb-1">Orang tua terdaftar ({userList.length})</h3>
-      <p className="text-xs text-secondary font-medium">
-        Pantau akun orang tua, kontak, dan aktivitas membaca keluarga.
-      </p>
-    </div>
+import { Activity, AlertCircle, BookOpen, CheckCircle2, ChevronLeft, ChevronRight, FileSpreadsheet, RefreshCw, Search, Users } from 'lucide-react';
 
-    <div className="flex items-center gap-2">
-      <button type="button" onClick={onRefresh} disabled={isLoading} className="btn-secondary py-2.5 px-3 text-xs flex items-center gap-2 disabled:opacity-60">
-        <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-        <span>Muat ulang</span>
-      </button>
-      <button
-        onClick={handleExportUsersCSV}
-        disabled={isLoading || userList.length === 0}
-        className="btn-primary py-2.5 px-4 text-xs flex items-center gap-2 shrink-0 disabled:opacity-60"
-      >
-        <FileSpreadsheet className="w-4 h-4" />
-        <span>Ekspor CSV (Mailchimp/Kirim.Email)</span>
-      </button>
-    </div>
-  </div>
+interface Props {
+  users: UserAccount[]; readingLogs: UserReadingActivity[]; error: string | null; isLoading: boolean;
+  searchQuery: string; onSearchQueryChange: (value: string) => void; onRefresh: () => void; onExportCsv: () => void;
+  activityFilters: ReadingActivityFilters; activityMetrics: ReadingActivityMetrics; activityPageSize: number;
+  onActivityFiltersChange: (filters: ReadingActivityFilters) => void;
+}
 
-  {error && (
-    <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-xs font-semibold text-red-700 flex items-center gap-2">
-      <AlertCircle className="h-4 w-4 shrink-0" />
-      <span>{error}</span>
-    </div>
-  )}
+const formatDateTime = (value: string) => new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value));
 
-  {/* Search filter */}
-  <div className="relative">
-    <Search className="w-4 h-4 absolute left-3.5 top-3 text-muted" />
-    <input
-      type="text"
-      value={userSearchQuery}
-      onChange={(e) => onSearchQueryChange(e.target.value)}
-      placeholder="Cari berdasarkan nama, email, atau nomor WhatsApp..."
-      className="w-full pl-10 pr-3 py-2 rounded-xl border border-default bg-surface text-xs font-medium focus:outline-none focus:ring-2 focus:ring-brand-blue"
-    />
-  </div>
+export function UsersTab({ users: userList, readingLogs, error, isLoading, searchQuery, onSearchQueryChange, onRefresh, onExportCsv, activityFilters, activityMetrics, activityPageSize, onActivityFiltersChange }: Props) {
+  const filteredUsers = userList.filter((user) => user.name.toLowerCase().includes(searchQuery.toLowerCase()) || user.email.toLowerCase().includes(searchQuery.toLowerCase()) || (user.phone && user.phone.includes(searchQuery)));
+  const totalPages = Math.max(1, Math.ceil(activityMetrics.total / activityPageSize));
+  const updateFilters = (next: Partial<ReadingActivityFilters>) => onActivityFiltersChange({ ...activityFilters, ...next, page: next.page ?? 1 });
+  return <div className="flex flex-col gap-6">
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3"><div><h3 className="text-xl mb-1">Orang tua terdaftar ({userList.length})</h3><p className="text-xs text-secondary font-medium">Pantau akun orang tua dan aktivitas membaca keluarga.</p></div><div className="flex items-center gap-2"><button type="button" onClick={onRefresh} disabled={isLoading} className="btn-secondary py-2.5 px-3 text-xs flex items-center gap-2 disabled:opacity-60"><RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />Muat ulang</button><button onClick={onExportCsv} disabled={isLoading || userList.length === 0} className="btn-primary py-2.5 px-4 text-xs flex items-center gap-2 shrink-0 disabled:opacity-60"><FileSpreadsheet className="w-4 h-4" />Ekspor CSV</button></div></div>
+    {error && <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-xs font-semibold text-red-700 flex items-center gap-2"><AlertCircle className="h-4 w-4 shrink-0" />{error}</div>}
+    <div className="relative"><Search className="w-4 h-4 absolute left-3.5 top-3 text-muted" /><input value={searchQuery} onChange={(event) => onSearchQueryChange(event.target.value)} placeholder="Cari nama, email, atau nomor WhatsApp..." className="w-full pl-10 pr-3 py-2 rounded-xl border border-default bg-surface text-xs font-medium focus:outline-none focus:ring-2 focus:ring-brand-blue" /></div>
+    <div className="rounded-2xl border border-default overflow-hidden bg-surface shadow-sm"><div className="overflow-x-auto"><table className="w-full text-left text-xs"><thead className="bg-surface text-secondary font-bold text-[10px]"><tr><th className="p-3">Nama Orang Tua</th><th className="p-3">Email</th><th className="p-3">No. WhatsApp</th><th className="p-3">Login</th><th className="p-3">Tanggal Daftar</th></tr></thead><tbody className="divide-y divide-default font-medium">{filteredUsers.map((user) => <tr key={user.id} className="hover:bg-surface-hover"><td className="p-3 font-bold text-primary">{user.name}</td><td className="p-3 text-secondary">{user.email}</td><td className="p-3 text-secondary">{user.phone || '-'}</td><td className="p-3"><span className="px-2 py-0.5 rounded-full bg-surface border border-default text-primary text-[10px] font-bold uppercase">{user.loginMethod}</span></td><td className="p-3 text-muted">{new Date(user.createdAt).toLocaleDateString('id-ID')}</td></tr>)}{!isLoading && filteredUsers.length === 0 && <tr><td colSpan={5} className="p-8 text-center text-muted">{searchQuery ? 'Tidak ada pengguna yang cocok.' : 'Belum ada pengguna terdaftar.'}</td></tr>}</tbody></table></div></div>
+    <section className="flex flex-col gap-4 pt-4 border-t border-default"><div className="flex items-center justify-between gap-3"><h3 className="text-base font-extrabold flex items-center gap-2"><BookOpen className="w-4 h-4 text-warning" />Aktivitas membaca</h3><span className="text-[11px] text-muted">Progres terbaru tiap buku</span></div><div className="grid grid-cols-1 sm:grid-cols-3 gap-3"><Metric icon={<Activity className="w-4 h-4" />} label="Aktivitas sesuai filter" value={activityMetrics.total} /><Metric icon={<Users className="w-4 h-4" />} label="Pembaca aktif 7 hari" value={activityMetrics.activeReaders7d} /><Metric icon={<CheckCircle2 className="w-4 h-4" />} label="Buku selesai" value={activityMetrics.completed} /></div>
+      <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_auto] gap-2"><div className="relative"><Search className="w-4 h-4 absolute left-3 top-2.5 text-muted" /><input value={activityFilters.search} onChange={(event) => updateFilters({ search: event.target.value })} placeholder="Cari orang tua, email, atau judul buku..." className="w-full pl-9 pr-3 py-2 rounded-xl border border-default bg-surface text-xs" /></div><select value={activityFilters.status} onChange={(event) => updateFilters({ status: event.target.value as ReadingActivityFilters['status'] })} className="rounded-xl border border-default bg-surface px-3 py-2 text-xs"><option value="all">Semua status</option><option value="reading">Sedang dibaca</option><option value="completed">Selesai</option></select><select value={activityFilters.period} onChange={(event) => updateFilters({ period: event.target.value as ReadingActivityFilters['period'] })} className="rounded-xl border border-default bg-surface px-3 py-2 text-xs"><option value="today">Hari ini</option><option value="7d">7 hari terakhir</option><option value="30d">30 hari terakhir</option><option value="all">Semua waktu</option></select></div>
+      <div className="rounded-2xl border border-default overflow-hidden bg-surface"><div className="overflow-x-auto"><table className="w-full text-left text-xs"><thead className="bg-surface text-secondary font-bold text-[10px]"><tr><th className="p-3">Orang tua</th><th className="p-3">Buku</th><th className="p-3">Progres</th><th className="p-3">Status</th><th className="p-3">Terakhir aktif</th></tr></thead><tbody className="divide-y divide-default">{readingLogs.map((log) => <tr key={`${log.userId}-${log.storyId}`}><td className="p-3"><div className="font-bold text-primary">{log.userName}</div><div className="text-muted">{log.userEmail}</div></td><td className="p-3 font-semibold text-secondary">{log.storyTitle}</td><td className="p-3 text-secondary">{log.lastPageRead} / {log.totalPages}</td><td className="p-3"><span className={log.isCompleted ? 'text-brand-green font-bold' : 'text-warning font-bold'}>{log.isCompleted ? 'Selesai' : 'Sedang dibaca'}</span></td><td className="p-3 text-muted whitespace-nowrap">{formatDateTime(log.updatedAt)}</td></tr>)}{!isLoading && readingLogs.length === 0 && <tr><td colSpan={5} className="p-8 text-center text-muted">Tidak ada aktivitas yang sesuai filter.</td></tr>}</tbody></table></div><div className="flex items-center justify-between p-3 border-t border-default text-xs"><span className="text-muted">Halaman {activityFilters.page} dari {totalPages}</span><div className="flex gap-2"><button type="button" onClick={() => updateFilters({ page: activityFilters.page - 1 })} disabled={isLoading || activityFilters.page <= 1} className="btn-secondary p-2 disabled:opacity-50"><ChevronLeft className="w-4 h-4" /></button><button type="button" onClick={() => updateFilters({ page: activityFilters.page + 1 })} disabled={isLoading || activityFilters.page >= totalPages} className="btn-secondary p-2 disabled:opacity-50"><ChevronRight className="w-4 h-4" /></button></div></div></div>
+    </section>
+  </div>;
+}
 
-  {/* User List Table */}
-  <div className="rounded-2xl border border-default overflow-hidden bg-surface shadow-sm">
-    <div className="overflow-x-auto">
-      <table className="w-full text-left text-xs">
-        <thead className="bg-surface text-secondary font-bold text-[10px]">
-          <tr>
-            <th className="p-3">Nama Orang Tua</th>
-            <th className="p-3">Email</th>
-            <th className="p-3">No. WhatsApp</th>
-            <th className="p-3">Metode Login</th>
-            <th className="p-3">Tanggal Daftar</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-default font-medium">
-          {filteredUsers.map((u) => (
-              <tr key={u.id} className="hover:bg-surface-hover transition-colors">
-                <td className="p-3 font-bold text-primary">{u.name}</td>
-                <td className="p-3 text-secondary">{u.email}</td>
-                <td className="p-3 text-secondary">{u.phone || '-'}</td>
-                <td className="p-3">
-                  <span className="px-2 py-0.5 rounded-full bg-surface border border-default text-primary text-[10px] font-bold uppercase">
-                    {u.loginMethod}
-                  </span>
-                </td>
-                <td className="p-3 text-muted">
-                  {new Date(u.createdAt).toLocaleDateString('id-ID')}
-                </td>
-              </tr>
-            ))}
-          {!isLoading && filteredUsers.length === 0 && (
-            <tr>
-              <td colSpan={5} className="p-8 text-center text-muted">
-                {userSearchQuery ? 'Tidak ada pengguna yang cocok dengan pencarian.' : 'Belum ada pengguna aplikasi yang terdaftar.'}
-              </td>
-            </tr>
-          )}
-          {isLoading && userList.length === 0 && (
-            <tr>
-              <td colSpan={5} className="p-8 text-center text-muted">Memuat pengguna terdaftar...</td>
-            </tr>
-          )}
-        </tbody>
-      </table>
-    </div>
-  </div>
-
-  {/* Reading Logs Section */}
-  <div className="flex flex-col gap-3 pt-4 border-t border-default">
-    <h3 className="text-base font-extrabold font-sans mb-1 flex items-center gap-2">
-      <BookOpen className="w-4 h-4 text-warning" />
-      <span>Aktivitas membaca terbaru</span>
-    </h3>
-
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-      {readingLogs.map((log, idx) => (
-        <div
-          key={idx}
-          className="p-3 rounded-xl bg-surface border border-default flex flex-col gap-1 text-xs"
-        >
-          <div className="flex items-center justify-between font-bold text-primary">
-            <span>{log.userName}</span>
-            <span className="text-[10px] font-normal text-muted">
-              {new Date(log.updatedAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
-            </span>
-          </div>
-          <div className="text-secondary font-semibold truncate">
-            📖 {log.storyTitle}
-          </div>
-          <div className="flex items-center justify-between text-[11px] pt-1">
-            <span className="text-muted">Halaman {log.lastPageRead} dari {log.totalPages}</span>
-            {log.isCompleted ? (
-              <span className="text-brand-green font-bold">Selesai</span>
-            ) : (
-              <span className="text-warning font-bold">Sedang dibaca</span>
-            )}
-          </div>
-        </div>
-      ))}
-      {!isLoading && readingLogs.length === 0 && (
-        <div className="md:col-span-3 rounded-xl border border-dashed border-default p-6 text-center text-xs text-muted">
-          Belum ada aktivitas membaca dari pengguna terdaftar.
-        </div>
-      )}
-    </div>
-  </div>
-</div>
-); }
+function Metric({ icon, label, value }: { icon: ReactNode; label: string; value: number }) { return <div className="rounded-xl border border-default bg-surface p-3"><div className="flex items-center gap-2 text-muted text-[11px]">{icon}{label}</div><div className="mt-1 text-2xl font-extrabold text-primary">{value}</div></div>; }

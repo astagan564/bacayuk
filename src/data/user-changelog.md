@@ -1,3 +1,15 @@
+## Aktivitas membaca di Admin lebih jelas - 2026-08-20
+
+### Admin kini bisa melihat aktivitas dengan lebih mudah
+- Di menu **Pengguna**, Admin dapat melihat jumlah aktivitas, pembaca aktif dalam 7 hari, dan buku yang sudah selesai dibaca.
+- Aktivitas dapat dicari berdasarkan nama orang tua, email, atau judul buku; hasilnya juga bisa disaring menurut status dan periode waktu.
+- Daftar aktivitas dibagi per halaman agar tetap cepat dan nyaman saat jumlah pengguna bertambah.
+
+### Catatan membaca lebih andal
+- Progres membaca dari akun yang masuk kini disimpan dengan aman melalui server BacaYuk, bukan langsung dari browser.
+- Pembaruan progres dibuat lebih hemat koneksi saat anak berpindah halaman.
+- Riwayat aktivitas ikut dihapus ketika orang tua menghapus akun mereka.
+
 ## Tampilan pembayaran baru yang lebih rapi - 2026-08-17
 
 ### Pembayaran kini terbagi dalam 3 langkah terarah
